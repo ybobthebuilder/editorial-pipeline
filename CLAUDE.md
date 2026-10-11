@@ -1,0 +1,255 @@
+# Editorial Pipeline — Princípios Arquiteturais
+
+Resumo executivo dos princípios inegociáveis que governam este projeto. Documento de referência rápida para LLMs, arquitetos e engenheiros.
+
+## 1. Fronteira de Responsabilidades
+
+- **n8n e código**: estado, IDs, cálculos, retries, arquivos, render.
+- **LLM**: extração, classificação, identificação de insight, headline, escolha de gramática visual (lista fechada), QA semântico.
+
+**Consequência**: Nenhum AI Agent. Temperatura 0 em extração (exceto headlines).
+
+## 2. Nenhum AI Agent
+
+Workflows usam:
+- Basic LLM Chain
+- Information Extractor com Structured Output Parser
+- Temperatura 0 (exceto headlines)
+
+**Proibido**: modo agente, chamadas recursivas de LLM, lógica condicional dentro do modelo.
+
+## 3. LLM Extrai, Código Calcula
+
+- LLM: extração bruta, classificação
+- Código (validators, Code nodes): deltas (pp vs %), scores, validações, lógica de negócio
+
+**Exemplo**: LLM extrai "84" e "92". Código calcula delta_absolute (8), delta_relative (9.52%), valida faixa, registra.
+
+## 4. Nenhum Acesso Criativo ao PDF
+
+Workflows criativos (insights, visual, covers, QA) acessam **apenas evidências VERIFIED**.
+
+**Regra**: Se a evidência não tem `verified = true` em `verification.status`, a etapa criativa rejeita.
+
+## 5. Máquina de Estados Vive no Banco
+
+- Tabela `state_transitions` define transições válidas.
+- Trigger `guard_transition()` rejeita saltos inválidos.
+- Workflows **nunca** fazem UPDATE direto no status.
+- Workflows **sempre** chamam `mark_running()` e `set_status()`.
+
+**Estados válidos** (13 total):
+
+```
+RECEIVED → PDF_PARSED → EVIDENCE_EXTRACTED → EVIDENCE_VERIFIED 
+→ INSIGHTS_GENERATED → INSIGHTS_RANKED → VISUAL_PLANNED 
+→ COVERS_SPECIFIED → COVERS_RENDERED → QA_PASSED 
+→ AWAITING_APPROVAL → HUMAN_APPROVED → PUBLISHED
+
+Erros: VERIFICATION_FAILED, QA_FAILED, RENDER_FAILED, NEEDS_REVIEW
+Qualquer estado → NEEDS_REVIEW (rewind manual)
+```
+
+## 6. Idempotência Obrigatória
+
+Rodar a mesma etapa duas vezes **não duplica linhas**.
+
+**Padrão**: delete + insert na mesma transação, chaveado por `(job_id, stage)`.
+
+## 7. Proveniência em Cada Linha
+
+Toda linha gerada grava:
+- `job_id` — papel pertence a qual job
+- `stage` — qual etapa gerou
+- `config_source` — "public" | "private"
+- `config_version` — hash ou versão
+- `model` — qual modelo LLM (se aplicável)
+- `execution_id` — rastreabilidade de retry
+
+**Sem proveniência, a linha não entra no banco.**
+
+## 8. Anti-Alucinação por Código
+
+Validações **determinísticas**, nunca confiando na saída crua do LLM:
+
+- `source_text` **deve existir literalmente** no PDF (após normalizar espaços, hífens).
+- Números da claim **devem aparecer** no trecho citado.
+- `evidence_ids` **devem existir** em `verification` e estar `VERIFIED`.
+- Enums **fechados** (nenhum valor inventado).
+- Para valores desconhecidos: `null` ou `"not_reported"`, não invenção.
+
+## 9. Configuração em Camadas
+
+`editorial.get_config(key)` retorna `{ content, source, version, hash }`:
+
+1. **Nível 1 (Público)**: `editorial_baseline.config_baseline` (repo público, auditável)
+2. **Nível 2 (Privado)**: `editorial_intel.config_overrides` (aprendizado, overrides, prompts v2+)
+
+**Resultado**: sobreposição ativa if existe em privado, senão baseline público.
+
+**Chaves iniciais**:
+- `scoring_weights` — pesos para score
+- `visual_library` — gramática visual fechada
+- `verification_thresholds` — limites de confiança
+- `hook_rules` — regras de hook para o orquestrador
+- `archetypes` — arquétipos de paper
+- `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa`
+
+## Dois Repositórios, Dois Schemas
+
+### editorial-pipeline (PÚBLICO)
+- Código, migrations, contratos, validadores
+- Configuração base v1 (config/baseline/*.json)
+- Workflows sanitizados (n8n/workflows/*.json — sem credential IDs, sem pinData, sem URLs privadas)
+- Fixtures sintéticas
+- Docs e README
+
+### editorial-intel (PRIVADO)
+- Sobreposições de configuração aprendidas (prompts v2+, pesos ajustados)
+- Notebooks e queries de análise
+- Relatórios e exports de dados
+- Fixtures com papers reais
+
+**Regra**: O repo público funciona sem o privado. O privado só acrescenta camadas.
+
+---
+
+### editorial (schema, auditável)
+- `state_transitions` — máquina de estados
+- `config_baseline` — espelho do repo público
+- Funções: `guard_transition()`, `mark_running()`, `set_status()`, `get_config()`
+- Contratos e views públicas
+
+### editorial_intel (schema, privado)
+- `papers`, `jobs`, `job_events`
+- `evidence`, `verification`, `insights`
+- `visual_specs`, `cover_specs`
+- `qa_results`, `llm_calls`, `feedback`
+- `experiments`, `analytics`, `config_overrides`
+- Views de qualidade
+
+**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas (EXECUTE nas funções, CRUD nas tabelas de intel, SELECT no baseline).
+
+## Estrutura do Repo Público
+
+```
+editorial-pipeline/
+├── CLAUDE.md                        # Este arquivo
+├── README.md                        # O que é, como auditar, como rodar
+├── docs/
+│   ├── STATE_MACHINE.md            # Diagrama mermaid + tabela de transições
+│   ├── STAGES.md                   # Cartões de etapa (01_INGEST, 02_EXTRACT, ..., 00_ORCHESTRATOR)
+│   ├── PUBLIC_PRIVATE.md           # Fronteira de repos e schemas
+│   ├── ALUCINAÇÃO_GUARD.md         # Checklist de proibições
+│   ├── API_CONTRACTS.md            # O que cada stage recebe/devolve
+│   └── SECURITY.md                 # RLS, roles, secrets
+├── supabase/migrations/
+│   ├── 001_init_editorial_schema.sql
+│   ├── 002_init_editorial_intel_schema.sql
+│   └── ...
+├── contracts/
+│   ├── job_ref.schema.json
+│   ├── evidence.schema.json
+│   ├── verification.schema.json
+│   ├── insight.schema.json
+│   ├── visual_spec.schema.json
+│   ├── cover_spec.schema.json
+│   └── qa_result.schema.json
+├── config/baseline/
+│   ├── scoring_weights.json
+│   ├── visual_library.json
+│   ├── verification_thresholds.json
+│   ├── hook_rules.json
+│   ├── archetypes.json
+│   └── .checksums
+├── prompts/baseline/
+│   ├── 02_extract.md
+│   ├── 03_verify.md
+│   ├── 04_insights.md
+│   ├── 06_visual.md
+│   ├── 07_covers.md
+│   └── 09_qa.md
+├── validators/
+│   ├── schema.js                   # JSON Schema validation (n8n Cloud compatible)
+│   ├── citation.js                 # Validação de citação literal por página
+│   ├── math.js                     # delta_absolute, delta_relative, faixas
+│   └── *.test.js                   # Testes node:test
+├── n8n/workflows/
+│   ├── _TEMPLATE_STAGE.json
+│   ├── 00_ORCHESTRATOR.json
+│   ├── 01_INGEST.json
+│   ├── 02_EXTRACT.json
+│   ├── ...
+│   ├── 99_ERROR_HANDLER.json
+│   └── README.md
+├── scripts/
+│   ├── seed-baseline.ts            # Carrega config/baseline/* no banco
+│   ├── verify-baseline.ts          # Valida hashes contra repo
+│   ├── n8n-push.ts                 # Cria/atualiza workflows via API
+│   ├── n8n-pull.ts                 # Baixa e sanitiza
+│   └── sanitize-workflow.ts        # Remove credential IDs, pinData, URLs privadas
+├── fixtures/synthetic/
+│   ├── papers/                     # Papers fictícios
+│   └── gabaritos.json              # Respostas esperadas
+├── .env.example
+└── .gitignore
+```
+
+## Workflows n8n — Skeleton
+
+Todos seguem `_TEMPLATE_STAGE`:
+
+```
+1. Trigger (When Executed by Another Workflow — input: job_id)
+2. Stage Config (Set: STAGE, EXPECTED_STATUS, NEXT_STATUS, ERROR_STATUS)
+3. Load Context (90_DB_HELPERS.get_job() + get_config())
+4. Guard (verificar status == EXPECTED_STATUS, senão Stop and Error)
+5. Mark Running (grava execution_id via mark_running())
+6. WORK (bloco único que muda per stage)
+7. Validate Contract (validators/*)
+8. Persist (replace_rows idempotente)
+9. Log LLM Call (se usou LLM)
+10. Transition (set_status() para NEXT_STATUS)
+11. Return { job_id, stage, status, counts, warnings }
+```
+
+**Configurações obrigatórias em cada workflow**:
+- Error workflow: 99_ERROR_HANDLER (configurado por stage, não global)
+- Retry On Fail 3x em nós de LLM e HTTP
+- Salvar execuções com sucesso E com erro
+- Timezone: America/Sao_Paulo
+- Banco: sempre via nó Postgres (SQL), nunca Supabase Data API
+
+**00_ORCHESTRATOR**: roteador que lê status → Switch → executa etapa → repete até estado final ou espera.
+
+**99_ERROR_HANDLER**: Error Trigger → acha job por `last_execution_id` → registra em `job_events` → classifica erro (retryable ou fatal) → move para NEEDS_REVIEW se fatal.
+
+## Segurança
+
+- Segredos: `.env` (gitignored)
+- gitleaks como pre-commit hook e CI
+- CI (GitHub Actions):
+  - Testes dos validators
+  - `sanitize-workflow --check` em n8n/workflows
+  - gitleaks
+  - Migrations testam em Postgres limpo
+- Nenhum PDF real, output de LLM, linha do banco ou métrica no repo público
+
+## Fases de Construção
+
+0. **Scaffold** dos repos, docs, CLAUDE.md, gitleaks, .env.example
+1. **Banco** — migrations, RLS, roles, funções, seed-baseline, verify-baseline
+2. **Validators** — JS puro com testes
+3. **Contratos** — JSON Schema + prompts baseline
+4. **Infraestrutura n8n** — 90_DB_HELPERS, 99_ERROR_HANDLER, _TEMPLATE_STAGE
+5. **Etapas 01, 02** — ingest, extract
+6. **Etapas 03, 04, 05** — verify, insights, score
+7. **Etapas 06, 07** — visual, cover specs
+8. **Etapas 08, 09, 10** — render, QA, approval
+9. **Orquestrador** — 00_ORCHESTRATOR end-to-end
+
+---
+
+**Última atualização**: 2026-10-11
+**Versão**: 1.0
+**Autor**: Arquitetura do projeto editorial-pipeline
