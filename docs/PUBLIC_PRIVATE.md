@@ -65,11 +65,13 @@ Fonte de verdade para:
 ```json
 {
   "content": "...",
-  "source": "public" | "private",
+  "source": "public",
   "version": "v1",
   "hash": "sha256"
 }
 ```
+
+Illustrative JSON only: `source` may be `"public"` or `"private"`; the other strings are placeholders. This example does not verify a deployed function, schema, or executable contract.
 
 ### Ordem de resolução
 1. verifica se existe override privado
