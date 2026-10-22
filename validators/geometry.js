@@ -173,13 +173,18 @@ function baselineRange(canvas, fontSize, options = {}) {
   return { min: zone.top + CAP_RATIO * fontSize, max: zone.bottom - DESCENT_RATIO * fontSize };
 }
 
-// Baseline of the one-line CFM footer (decisions U18 and U23, 2026-10-22). On 9:16 it sits 40 px
-// above the 1580 px line (1540 on 1080x1920); on any other canvas it sits at the bottom, with the
-// descent ending on the 64 px margin. The footer is centred, so x is canvas.width / 2.
+// Baseline of the one-line CFM footer (decisions U18 and U23, 2026-10-22). On 9:16 it prefers
+// 40 px above the bottom of the safe zone (1540 on 1080x1920), clamped to baselineRange when the
+// line fits. On any other canvas the descent ends on the 64 px margin. The footer is centred.
 function cfmFooterBaseline(canvas, fontSize) {
   if (!isNumber(fontSize) || fontSize <= 0) throw new TypeError('fontSize must be a positive number');
   const zone = safeZone(canvas);
-  return is9x16(canvas) ? zone.bottom - CFM_FOOTER_GAP_9_16 : zone.bottom - DESCENT_RATIO * fontSize;
+  if (is9x16(canvas)) {
+    const baseline = zone.bottom - CFM_FOOTER_GAP_9_16;
+    const { min, max } = baselineRange(canvas, fontSize);
+    return min <= max ? Math.max(min, Math.min(max, baseline)) : baseline;
+  }
+  return zone.bottom - DESCENT_RATIO * fontSize;
 }
 
 function assertStyle(style) {

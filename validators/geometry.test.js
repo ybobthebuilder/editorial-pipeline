@@ -399,6 +399,22 @@ test('CFM footer baseline: 1540 on 1080x1920, above the 1580 line (decision of 2
   assert.ok(cfmFooterBaseline(STORY, 12) <= baselineRange(STORY, 12).max);
 });
 
+test('CFM footer baseline stays inside the valid range on 9:16 canvases when the line fits', () => {
+  const smallStory = { width: 360, height: 640 };
+  for (const [canvas, fontSize, expected] of [
+    [smallStory, 12, 269], // move below the top band
+    [smallStory, 40, 290], // the line fits exactly between the bands
+    [STORY, 200, 1530], // keep the descent above the bottom band
+  ]) {
+    const y = cfmFooterBaseline(canvas, fontSize);
+    assert.equal(y, expected);
+    const slot = { x: canvas.width / 2, y, anchor: 'middle', fontSize, family: 'sans', maxLines: 1 };
+    assert.equal(checkSlot(slot, ['CFM'], canvas).passed, true, `${canvas.height}, ${fontSize}`);
+  }
+  // No valid baseline exists for a line taller than the safe zone; keep the preferred position.
+  assert.equal(cfmFooterBaseline(smallStory, 44), 260);
+});
+
 test('CFM footer baseline on a post canvas: the descent ends on the 64 px bottom margin, whatever the height', () => {
   assert.equal(cfmFooterBaseline(POST, 12), 1283); // 1350 - 64 - 3
   assert.equal(cfmFooterBaseline({ width: 1080, height: 1080 }, 12), 1013);
