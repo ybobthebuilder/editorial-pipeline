@@ -70,7 +70,7 @@
 ## VL-4 — Baseline visual
 
 - **Objetivo:** `config/baseline/visual_library.json` (lista fechada de gramáticas, tamanhos, mapa de slots, tokens, zonas seguras, pares de cor permitidos) e `.checksums`.
-- **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04 sobre direitos e sobre público × privado.
+- **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca numa fase a confirmar (D-10).
 - **Aceite:** CP-VL4.1 a CP-VL4.4. Os SVGs entram no repo **neste marco**, e só depois de D-04.
 
 ## VL-5 — Núcleo de render

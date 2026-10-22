@@ -159,12 +159,13 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-01 | Onde ficam estes documentos | `docs/visual-layer/` |
 | D-02 | Local do baseline | **decidido** (usuário, 2026-10-22): `editorial.config_baseline`; a Fase 1 ainda depende de U11 |
 | D-03 | Saída do `08_RENDER` | SVG no MVP; PNG só depois de verificar uma engine compatível com n8n Cloud |
-| D-04 | Uso do pacote de marca no repo público | tratar o pacote como `config_overrides` privado até haver confirmação de direitos; baseline público com a mesma estrutura e tokens neutros |
+| D-04 | Uso do pacote de marca no repo público | **decidido** (Fonseca): os SVGs ficam fora do repo público e só no scratchpad. Entrada no repo só com autorização explícita do Fonseca, numa fase ainda a nomear (ver D-10). Direitos seguem U7 |
 | D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
 | D-08 | Margem: o chrome (marcador e rodapé em x=76) é isento dos 90 px? | tratar como isento e registrar a exceção no mapa de slots |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
+| D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **aberta**: o Fonseca confirma qual fase ou marco é a referência |
 
 ## 12. Estado atual (VERIFIED em 2026-10-22)
 

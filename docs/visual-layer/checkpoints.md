@@ -41,7 +41,7 @@
 - [ ] **CP-VL4.1** `visual_library.json` valida contra o schema e contém exatamente os 6 identificadores de `templates.json` como lista fechada. *Tipo:* auto.
 - [ ] **CP-VL4.2** `config/baseline/.checksums` gerado e conferido por script. *Tipo:* auto.
 - [ ] **CP-VL4.3** Todo par de cores declarado passa em `contrast.js` no limiar do tamanho de texto aplicável; exceções explícitas (ex.: `--accent` sobre `--bg` só em texto grande). *Tipo:* auto.
-- [ ] **CP-VL4.4** Decisão D-04 aplicada; varredura do CP-VL0.3 verde no estado final. *Tipo:* auto + humano.
+- [ ] **CP-VL4.4** Decisão D-04 aplicada; varredura do CP-VL0.3 verde no estado final. *Situação:* D-04 decidida pelo Fonseca (SVGs fora do repo público, só no scratchpad). A entrada no repo depende de autorização explícita numa fase a confirmar (D-10). *Tipo:* auto + humano.
 
 ## VL-5 — Núcleo de render
 
