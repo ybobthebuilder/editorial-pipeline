@@ -1,0 +1,29 @@
+{
+  "job_id": "00000000-0000-4000-8000-000000000003",
+  "stage": "07_COVERS",
+  "config_source": "public",
+  "config_version": "v1",
+  "model": "synthetic-model-v0",
+  "execution_id": "exec-0003",
+  "created_at": "2026-10-22T12:00:00Z",
+  "visual_spec_id": "vs-0001",
+  "template_id": "post-02-metrica",
+  "slots": [
+    {
+      "slot_id": "headline",
+      "kind": "claim",
+      "lines": [
+        "De 84% para 92%",
+        "em um ano"
+      ]
+    },
+    {
+      "slot_id": "counter",
+      "kind": "chrome",
+      "lines": [
+        "01 / 06"
+      ]
+    }
+  ],
+  "alt_text": "Capa escura com a variação de 84% para 92% em destaque."
+}
