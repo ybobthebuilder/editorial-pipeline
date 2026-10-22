@@ -9,12 +9,15 @@ RECEIVED → PDF_PARSED → EVIDENCE_EXTRACTED → EVIDENCE_VERIFIED → INSIGHT
 
 Erros: VERIFICATION_FAILED, QA_FAILED, RENDER_FAILED, NEEDS_REVIEW
 Qualquer estado → NEEDS_REVIEW
+VERIFICATION_FAILED → EVIDENCE_EXTRACTED, RENDER_FAILED → COVERS_SPECIFIED, QA_FAILED → COVERS_RENDERED (retry)
+NEEDS_REVIEW → AWAITING_APPROVAL (job que já chegou a QA_PASSED) ou ao estado de trabalho de origem
 ``` 
 
 ## 2. Regras da transição
 
 - O banco é a única fonte da máquina de estados
-- A transição deve passar pela função `guard_transition()`
+- Toda mudança de status é feita por `set_status(job_id, next_status)`, que chama a função `guard_transition(job_id, from, to)`. O workflow não chama o guard nem altera `jobs.status`
+- `AWAITING_APPROVAL → HUMAN_APPROVED` exige assinatura `approved` do `human_reviewer` gravada depois de o job entrar em `AWAITING_APPROVAL`
 - Os workflows nunca alteram status diretamente
 - Os workflow stage validam status esperado antes de processar
 - Erros fatais ativam `NEEDS_REVIEW`
@@ -101,6 +104,7 @@ Cada etapa deve respeitar:
 - LLM and HTTP nodes: retry 3x
 - Fases de I/O: retry apenas quando recoverable
 - Fases determinísticas: não reprocessar sem necessidade
+- `mark_running()` soma uma tentativa e devolve `attempt_count`. O limite de 3 é do orquestrador; o banco só registra
 
 ## 6. Fases do projeto
 
@@ -231,7 +235,7 @@ Validar evidências citadas e rejeitar valores ausentes ou inconsistentes.
 ## 9. Checklist mínimo antes de validar um workflow
 
 - [ ] Status esperado foi validado?
-- [ ] `guard_transition()` foi consultado?
+- [ ] A transição foi feita por `set_status()` (que aplica o `guard_transition()`)?
 - [ ] `job_id` foi passado corretamente?
 - [ ] Output foi persistido idempotente?
 - [ ] `job_events` foi preenchido?
