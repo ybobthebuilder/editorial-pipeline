@@ -13,7 +13,7 @@ Este documento define a divisão formal entre o código público e os dados/conf
 - contratos
 - validators
 - config baseline
-- prompts baseline
+- prompts (`skills/`, fonte única; decisão D-12)
 - workflows sanitizados
 - fixtures sintéticas
 
