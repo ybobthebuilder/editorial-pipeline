@@ -29,7 +29,7 @@ Da lista A1–A7 enviada em 2026-10-22:
 | --- | --- |
 | A1 `brief-researcher` | **Não escrito.** Recuperar PMID ou DOI por busca exige ferramenta de rede e confia no modelo para produzir identificadores. Em `CLAUDE.md`, as afirmações vêm do PDF no `02_EXTRACT`, o `03_VERIFY` as confere por código e identificador inventado é a alucinação que o §8 proíbe. Não há estágio atual para ele. |
 | A2 `science-reviewer` | **Não escrito.** O papel mais próximo é o `03_VERIFY` (`prompt.03_verify`), fora do escopo da camada visual e já coberto por validação de código (`citation.js`). |
-| A5 | Não aparece na mensagem. Qual é o papel? |
+| A5 | **Não escrito.** O papel nunca foi descrito na lista A1–A7 recebida; sem definição não há o que escrever. |
 | A6 `figma-builder` | **Não escrito.** O render é código (`08_RENDER`, sem LLM). Escrita no Figma em runtime está fora do escopo (`roadmap.md`) e o seat atual é View. |
 
 ## Conflitos com o `CLAUDE.md`: decididos em 2026-10-22 (Fonseca)
