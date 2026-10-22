@@ -2,6 +2,8 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { computeDeltas } = require('./math.js');
 
 test('worked example from CLAUDE.md section 3: 84 -> 92', () => {
@@ -54,4 +56,10 @@ test('non-number input is rejected, never coerced', () => {
 
 test('non-representable delta is rejected', () => {
   assert.throws(() => computeDeltas(-Number.MAX_VALUE, Number.MAX_VALUE), RangeError);
+});
+
+test('the module has no require() or import, so it runs in the n8n Cloud Code node', () => {
+  const source = readFileSync(join(__dirname, 'math.js'), 'utf8');
+  assert.equal(/\brequire\s*\(/.test(source), false);
+  assert.equal(/^\s*import\s/m.test(source), false);
 });
