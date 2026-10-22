@@ -1,0 +1,22 @@
+name: validators
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run validator tests and refuse an empty run
+        run: |
+          node --test 'validators/*.test.js' | tee test-output.txt
+          grep -qE '^# tests [1-9][0-9]*$' test-output.txt
