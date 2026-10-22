@@ -1,0 +1,47 @@
+{
+  "job_id": "00000000-0000-4000-8000-000000000004",
+  "stage": "07_COVERS",
+  "config_source": "public",
+  "config_version": "v1",
+  "model": "synthetic-model-v0",
+  "execution_id": "exec-0004",
+  "created_at": "2026-10-22T12:00:00Z",
+  "visual_spec_id": "vs-0002",
+  "template_id": "story-01-convite",
+  "evidence_ids": [
+    "ev-0003",
+    "ev-0004"
+  ],
+  "slots": [
+    {
+      "slot_id": "label_top",
+      "kind": "chrome",
+      "lines": [
+        "SEMINÁRIO"
+      ]
+    },
+    {
+      "slot_id": "headline",
+      "kind": "claim",
+      "lines": [
+        "Grupo A",
+        "relata menos dor"
+      ]
+    },
+    {
+      "slot_id": "subhead",
+      "kind": "claim",
+      "lines": [
+        "Dados de um estudo fictício"
+      ]
+    },
+    {
+      "slot_id": "cta_label",
+      "kind": "chrome",
+      "lines": [
+        "SAIBA MAIS"
+      ]
+    }
+  ],
+  "alt_text": "Convite em fundo escuro com o título em duas linhas."
+}

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cover_spec",
+  "description": "Output of 07_COVERS. Contract proposal: docs/visual-layer/contracts-proposal.md section 5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "visual_spec_id",
+    "template_id",
+    "evidence_ids",
+    "slots",
+    "alt_text"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "07_COVERS",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "visual_spec_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "must exist and belong to the same job_id; checked by code"
+    },
+    "template_id": {
+      "enum": [
+        "post-01-manifesto",
+        "post-02-metrica",
+        "carousel-01-capa",
+        "story-01-convite",
+        "reel-01-capa",
+        "reel-02-overlay"
+      ],
+      "description": "the 6 templates of templates.json; coherence with the grammar is checked by code"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "each id must exist in verification and be VERIFIED; checked by code"
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "description": "slot_id uniqueness and the slot_id/kind pairs of the slot map are checked by code",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slot_id",
+          "kind",
+          "lines"
+        ],
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "claim",
+              "chrome"
+            ],
+            "description": "set by the slot map; code overwrites any value from the model"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "width and line count are checked by geometry.js"
+          }
+        }
+      }
+    },
+    "alt_text": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

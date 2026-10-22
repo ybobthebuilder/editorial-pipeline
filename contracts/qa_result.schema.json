@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "qa_result",
+  "description": "Output of 09_QA. Contract proposal: docs/visual-layer/contracts-proposal.md section 6.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "cover_spec_id",
+    "gates",
+    "passed"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "09_QA",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "cover_spec_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "must exist and belong to the same job_id; checked by code"
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "description": "gate_id uniqueness, and waived being forbidden for QA-CFM, are checked by code",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "gate_id",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "gate_id": {
+            "enum": [
+              "QA-DIM",
+              "QA-OVF",
+              "QA-SAFE",
+              "QA-CTR",
+              "QA-TOK",
+              "QA-TYPE",
+              "QA-GRID",
+              "QA-NUM",
+              "QA-ENUM",
+              "QA-CFM"
+            ]
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "waived"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1,
+            "description": "the measurable reason, e.g. the computed contrast ratio"
+          }
+        }
+      }
+    },
+    "semantic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "reasons"
+      ],
+      "description": "present only when every gate passed; reasons empty on pass and non-empty on fail is checked by code",
+      "properties": {
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "afirmacao_sem_evidencia",
+              "exagero_de_forca",
+              "causalidade_indevida",
+              "alt_text_inconsistente",
+              "tom_promocional",
+              "entrada_insuficiente"
+            ]
+          }
+        }
+      }
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "computed by code: every gate passed and semantic.verdict is pass; never taken from the model"
+    }
+  }
+}
