@@ -46,7 +46,10 @@ before(() => {
       FROM generate_series(1, 3000) g;
     INSERT INTO editorial.signatures (job_id, reviewer_name, crm_uf, decision)
     SELECT id, 'Revisor sintético', 'SP', 'approved' FROM editorial.jobs;
-    ANALYZE editorial.jobs; ANALYZE editorial.signatures;`);
+    INSERT INTO editorial.image_approvals (job_id, ref, subject, justification, reviewer_name)
+    SELECT id, 'img://sintetico/0', 'none', 'Aprovação sintética de teste de invariantes.', 'Revisor sintético'
+      FROM editorial.jobs ORDER BY id LIMIT 1;
+    ANALYZE editorial.jobs; ANALYZE editorial.signatures; ANALYZE editorial.image_approvals;`);
 });
 
 after(() => {
@@ -59,7 +62,7 @@ test('every relation of the schema has RLS on; a view must run with the privileg
   const rows = lines(`SELECT c.relname || '|' || c.relkind::text || '|' || c.relrowsecurity::text || '|' || coalesce(c.reloptions::text, '')
     FROM pg_class c WHERE c.relnamespace = 'editorial'::regnamespace AND c.relkind IN ('r','p','v','m','f') ORDER BY 1;`);
   assert.deepEqual(rows.filter((r) => /^[^|]+\|[rp]\|/.test(r)).map((r) => r.split('|').slice(0, 3).join('|')), [
-    'config_baseline|r|true', 'jobs|r|true', 'signatures|r|true', 'state_transitions|r|true',
+    'config_baseline|r|true', 'image_approvals|r|true', 'jobs|r|true', 'signatures|r|true', 'state_transitions|r|true',
   ]);
   for (const row of rows) {
     const [name, kind, , options] = row.split('|');
@@ -71,10 +74,11 @@ test('every relation of the schema has RLS on; a view must run with the privileg
 test('RLS denies by default: a role with table grants and no policy sees no row', () => {
   ok(db, `CREATE ROLE rls_probe NOLOGIN;
     GRANT USAGE ON SCHEMA editorial TO rls_probe;
-    GRANT SELECT ON editorial.jobs, editorial.signatures, editorial.state_transitions, editorial.config_baseline TO rls_probe;`);
+    GRANT SELECT ON editorial.jobs, editorial.signatures, editorial.state_transitions, editorial.config_baseline, editorial.image_approvals TO rls_probe;`);
   assert.equal(ok(db, 'SELECT count(*) FROM editorial.jobs;'), '3000');
+  assert.equal(ok(db, 'SELECT count(*) FROM editorial.image_approvals;'), '1');
   assert.equal(ok(db, `SELECT (SELECT count(*) FROM editorial.jobs) + (SELECT count(*) FROM editorial.signatures)
-    + (SELECT count(*) FROM editorial.state_transitions);`, { role: 'rls_probe' }), '0');
+    + (SELECT count(*) FROM editorial.state_transitions) + (SELECT count(*) FROM editorial.image_approvals);`, { role: 'rls_probe' }), '0');
 });
 
 test('the policies are exactly this inventory; PUBLIC, anon and authenticated have none', () => {
@@ -84,6 +88,9 @@ test('the policies are exactly this inventory; PUBLIC, anon and authenticated ha
     FROM pg_policies WHERE schemaname = 'editorial' ORDER BY 1;`);
   const want = [
     'config_baseline|config_baseline_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
+    'image_approvals|image_approvals_insert_human|INSERT|PERMISSIVE|{human_reviewer}||(EXISTS ( SELECT 1 FROM editorial.jobs j WHERE (j.id = image_approvals.job_id)))',
+    'image_approvals|image_approvals_read_human|SELECT|PERMISSIVE|{human_reviewer}|true|',
+    'image_approvals|image_approvals_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
     'jobs|jobs_insert_owner|INSERT|PERMISSIVE|{editorial_owner}||((status = \'RECEIVED\'::text) AND (attempt_count = 0))',
     'jobs|jobs_read_human|SELECT|PERMISSIVE|{human_reviewer}|true|',
     'jobs|jobs_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
@@ -117,11 +124,13 @@ test('the privilege matrix on tables and columns is exactly this, and nothing re
   const want = [
     // n8n_pipeline has no line here: no privilege on any table or column. It reads and writes
     // only through functions.
-    // human_reviewer reads two tables and inserts a signature in five columns: no id, no signed_at.
-    'human_reviewer|jobs|SELECT|*', 'human_reviewer|signatures|SELECT|*',
+    // human_reviewer reads three tables and inserts a signature in five columns and an image approval
+    // in five: no id, no signed_at.
+    'human_reviewer|jobs|SELECT|*', 'human_reviewer|signatures|SELECT|*', 'human_reviewer|image_approvals|SELECT|*',
     ...col('human_reviewer', 'signatures', 'INSERT', ['job_id', 'reviewer_name', 'crm_uf', 'decision', 'notes']),
+    ...col('human_reviewer', 'image_approvals', 'INSERT', ['job_id', 'ref', 'subject', 'justification', 'reviewer_name']),
     // editorial_owner owns the definer functions: the least that they need, no DELETE, no signature write.
-    'editorial_owner|config_baseline|SELECT|*', 'editorial_owner|jobs|SELECT|*',
+    'editorial_owner|config_baseline|SELECT|*', 'editorial_owner|image_approvals|SELECT|*', 'editorial_owner|jobs|SELECT|*',
     'editorial_owner|signatures|SELECT|*', 'editorial_owner|state_transitions|SELECT|*',
     ...col('editorial_owner', 'jobs', 'INSERT', ['source_origin', 'input_context', 'config_source', 'config_version']),
     ...col('editorial_owner', 'jobs', 'UPDATE', ['status', 'previous_status', 'status_entered_at', 'updated_at',
@@ -167,7 +176,7 @@ test('every function is a SECURITY DEFINER of editorial_owner with a pinned sear
     FROM pg_proc p WHERE p.pronamespace = 'editorial'::regnamespace ORDER BY p.proname;`);
   const row = (name) => `${name}|true|editorial_owner|${PINNED}|editorial_owner,n8n_pipeline`;
   assert.deepEqual(got, [
-    'create_job', 'find_jobs_by_execution', 'get_config', 'get_job', 'get_job_status',
+    'create_job', 'find_jobs_by_execution', 'get_config', 'get_image_approvals', 'get_job', 'get_job_status',
     'guard_transition', 'mark_running', 'set_status',
   ].map(row));
 });
@@ -175,7 +184,7 @@ test('every function is a SECURITY DEFINER of editorial_owner with a pinned sear
 test('search_path of the definers starts with pg_catalog, ends with pg_temp and has no public', () => {
   const paths = lines(`SELECT substr(c, 13) FROM pg_proc p, unnest(p.proconfig) c
     WHERE p.pronamespace = 'editorial'::regnamespace AND p.prosecdef AND c LIKE 'search_path=%';`);
-  assert.equal(paths.length, 8);
+  assert.equal(paths.length, 9);
   for (const path of paths) {
     const parts = path.split(',').map((s) => s.trim());
     assert.equal(parts[0], 'pg_catalog', path);
@@ -198,7 +207,7 @@ test('temporary objects cannot hijack a SECURITY DEFINER function', () => {
 // ---- What the runtime roles cannot do -------------------------------------------------------
 
 test('n8n_pipeline reads no table at all: not a row, not a count, not a plan', () => {
-  for (const table of ['state_transitions', 'config_baseline', 'jobs', 'signatures']) {
+  for (const table of ['state_transitions', 'config_baseline', 'jobs', 'signatures', 'image_approvals']) {
     fails(db, `SELECT * FROM editorial.${table};`, new RegExp(`permission denied for table ${table}`), N8N);
   }
   fails(db, 'SELECT count(*) FROM editorial.jobs;', /permission denied for table jobs/, N8N);
@@ -222,17 +231,22 @@ test('the runtime roles cannot escalate; n8n_pipeline cannot alter the schema, r
   fails(db, 'TRUNCATE editorial.jobs;', /permission denied for table jobs/, N8N);
   fails(db, `INSERT INTO editorial.signatures (job_id, reviewer_name, crm_uf, decision)
     VALUES ('${id(1)}', 'forjada', 'SP', 'approved');`, /permission denied for table signatures/, N8N);
+  fails(db, `INSERT INTO editorial.image_approvals (job_id, ref, subject, justification, reviewer_name)
+    VALUES ('${id(1)}', 'img://forjada/0', 'none', 'Aprovação forjada pelo robô, sem humano.', 'forjada');`, /permission denied for table image_approvals/, N8N);
   fails(db, "UPDATE editorial.state_transitions SET requires_gate = false;", /permission denied for table state_transitions/, N8N);
   fails(db, "UPDATE editorial.config_baseline SET content = '{}';", /permission denied for table config_baseline/, N8N);
 });
 
-test('human_reviewer signs and reads; it cannot change a signature, run a function or touch the configuration', () => {
+test('human_reviewer signs and reads; it cannot change a signature or an approval, run a function or touch the configuration', () => {
   fails(db, `UPDATE editorial.signatures SET decision = 'approved';`, /permission denied for table signatures/, REVIEWER);
   fails(db, 'DELETE FROM editorial.signatures;', /permission denied for table signatures/, REVIEWER);
   fails(db, `INSERT INTO editorial.signatures (job_id, reviewer_name, crm_uf, decision, signed_at)
     VALUES ('${id(1)}', 'x', 'SP', 'approved', now());`, /permission denied for table signatures/, REVIEWER);
   fails(db, `INSERT INTO editorial.signatures (id, job_id, reviewer_name, crm_uf, decision)
     VALUES (gen_random_uuid(), '${id(1)}', 'x', 'SP', 'approved');`, /permission denied for table signatures/, REVIEWER);
+  fails(db, `UPDATE editorial.image_approvals SET subject = 'person_not_patient';`, /permission denied for table image_approvals/, REVIEWER);
+  fails(db, 'DELETE FROM editorial.image_approvals;', /permission denied for table image_approvals/, REVIEWER);
+  fails(db, `SELECT * FROM editorial.get_image_approvals('${id(1)}');`, /permission denied for function get_image_approvals/, REVIEWER);
   fails(db, `SELECT editorial.set_status('${id(1)}', 'PDF_PARSED');`, /permission denied for function set_status/, REVIEWER);
   fails(db, `SELECT editorial.guard_transition('${id(1)}', 'RECEIVED', 'PDF_PARSED');`, /permission denied for function guard_transition/, REVIEWER);
   fails(db, `SELECT editorial.create_job('x', '{}'::jsonb, 'public', 'v');`, /permission denied for function create_job/, REVIEWER);
@@ -260,7 +274,7 @@ test('every foreign key has a valid index that starts with its columns', () => {
         SELECT 1 FROM pg_index i
          WHERE i.indrelid = con.conrelid AND i.indisvalid AND i.indisready AND i.indpred IS NULL
            AND (string_to_array(i.indkey::text, ' ')::int2[])[1:cardinality(con.conkey)] = con.conkey);`), '0');
-  assert.equal(ok(db, `SELECT count(*) FROM pg_constraint WHERE contype = 'f' AND connamespace = 'editorial'::regnamespace;`), '1');
+  assert.equal(ok(db, `SELECT count(*) FROM pg_constraint WHERE contype = 'f' AND connamespace = 'editorial'::regnamespace;`), '2');
 });
 
 test('jobs has valid indexes on status and, partial, on last_execution_id; no index is left INVALID', () => {
@@ -288,4 +302,6 @@ test('the hot queries can use their index, even with sequential scans discourage
   assert.match(plan('editorial_owner', "SELECT id FROM editorial.jobs WHERE last_execution_id = 'exec-1234';"), /jobs_last_execution_id_idx/);
   // the gate in guard_transition
   assert.match(plan('editorial_owner', `SELECT 1 FROM editorial.signatures s WHERE s.job_id = '${id(1)}' AND s.decision = 'approved';`), /signatures_job_id_idx/);
+  // get_image_approvals, for the media validator: the unique key (job_id, ref) leads with job_id
+  assert.match(plan('editorial_owner', `SELECT a.id FROM editorial.image_approvals a WHERE a.job_id = '${id(1)}';`), /image_approvals_job_ref_key/);
 });

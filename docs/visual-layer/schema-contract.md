@@ -260,3 +260,28 @@ Decisões do Fonseca de 2026-10-22, implementadas em `claude/migration-003` (`cc
 - Não verificado: se o papel que roda a migration no Supabase pode fazer `ALTER FUNCTION … OWNER TO editorial_owner` (a mesma ressalva de §14).
 
 **Testes** (Postgres 16.15 limpo, `--test-concurrency=1`): migrations, rollbacks e invariantes 126 (14 da 007, 17 nas invariantes, 1 rollback novo); scripts 24; conjunto 150 de 150. Mutação: 105 mutantes dos pontos de segurança das migrations 001 a 007 e do rollback da 007; a suíte inteira detecta 105 de 105. As suítes por migration deixam passar 15 deles, que só o arquivo de invariantes detecta. Dois mutantes (`R05` e `F06`) são equivalentes no estado final, porque a 007 redefine o objeto que eles alteravam, e continuam detectados pelos testes do estado intermediário.
+
+## 16. Migration 008: aprovação humana de imagem como registro (2026-10-22)
+
+**Decisão do Fonseca.** A aprovação de uma foto própria (`owned_photo`) é um registro no banco que só `human_reviewer` grava, e o JSON da imagem referencia o id desse registro. Isso substitui o flag `human_approved: true` e a `justification` no payload da proposta (`image-assets-proposal.md`, §4 e Q3). A escolha entre tabela nova e `signatures` ficou comigo.
+
+| Item | Decisão | Implementação |
+| --- | --- | --- |
+| Tabela | `editorial.image_approvals`, e não `signatures` | `signatures` é a chave do gate `AWAITING_APPROVAL → HUMAN_APPROVED`: `guard_transition` aceita qualquer linha `approved` dela, e a política de INSERT só deixa assinar job em `AWAITING_APPROVAL`. Aprovar uma imagem ali liberaria o gate sem revisão da capa, e não daria para aprovar no upload. Um teste prova que a aprovação de imagem não libera o gate |
+| Colunas | `id`, `job_id` (FK), `ref`, `subject`, `justification`, `reviewer_name`, `signed_at` | `id` e `signed_at` vêm do banco: `human_reviewer` tem `INSERT` só em cinco colunas. Uma aprovação por `(job_id, ref)` |
+| `subject` | só `none` ou `person_not_patient` | `CHECK` no banco: o registro de uma aprovação de paciente, antes/depois ou exame não pode existir. É a segunda declaração do assunto, feita por um humano; o validador recusa a divergência |
+| Escrita | só `human_reviewer`, sem `UPDATE`, `DELETE` nem `TRUNCATE` | `n8n_pipeline` não tem privilégio na tabela |
+| Leitura do n8n | `get_image_approvals(job_id)` | `SECURITY DEFINER`, `STABLE`, `search_path` fixo, dona `editorial_owner`. Devolve `id`, `job_id`, `ref`, `subject`, `signed_at`: sem justificativa nem nome do revisor. Job inexistente é erro; job sem aprovação devolve zero linhas |
+
+**Escolhas minhas, a confirmar**
+- Sem revogação: uma aprovação dada por engano fica; o remédio é o produtor do payload não referenciá-la. Revogar exige decidir quem pode apagar.
+- A política de INSERT só exige que o job exista. Não sei em qual estágio o upload é aprovado (Q1 da proposta); uma aprovação não referenciada é inerte.
+- Justificativa com no mínimo 20 caracteres depois do `btrim` (Q5): só barra o vazio.
+- O formato de `ref` (`^img://[A-Za-z0-9._/-]+$`) é o do exemplo do relatório; o contrato v0.1.0 original não existe em arquivo (resposta do Fonseca), e a proposta passa a ser o v0.1.0.
+
+**Limites conhecidos**
+- Nada reconhece um paciente no pixel. O banco e o validador recusam o que é declarado; uma foto clínica declarada como `none` pelo produtor **e** pelo revisor passa.
+- Quem grava a aprovação é o papel `human_reviewer`, e o banco não distingue pessoa de workflow (como em `signatures`). A garantia depende de a credencial ficar no cofre separado.
+- A recusa de mídia clínica não é registrada como evento de auditoria (recomendação 3 da proposta, ainda aberta).
+
+**Testes** (Postgres 16.15 limpo, `--test-concurrency=1`): migrations, rollbacks e invariantes 142 (15 da 008, mais asserções novas nas invariantes), scripts 24, conjunto 166 de 166. Mutação: 53 mutantes de `008_image_approvals.sql` e do rollback; 52 detectados, 1 equivalente (`ORDER BY` removido de `get_image_approvals`: a ordem física de linhas que nunca são atualizadas já é a de `signed_at`). Os dois mutantes que sobreviveram à primeira rodada (âncora `^` de `ref`; mutante de sintaxe inválida) foram corrigidos no teste e no mutante.
