@@ -123,3 +123,6 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | CP-VL2.6 `numbers.js` | passou: 22 de 22; 78 de 78 com os outros validadores; 14 mutantes detectados | `7953395` | implementer (sem review) |
 | 2026-10-22 | unificação dos validadores (math, contrast, schema, CI) | merges limpos sobre o `main`; 56 de 56 antes de `numbers.js`, 78 de 78 depois. PR #13 aberta, sem veredito | `7953395` | — |
 | 2026-10-22 | CP-VL3.1 proposta de contratos | escrita (`contracts-proposal.md`); aguarda aprovação por digest; nenhum schema criado | digest no commit seguinte | — |
+| 2026-10-22 | rascunhos de `SKILL.md` (06, 07, 09) | PR #14 em rascunho; 13 de 13 testes de forma; sem veredito | `035d5bc` | — |
+| 2026-10-22 | PR #13 (validadores, `numbers.js`) mergeada pelo Fonseca; `main` em `58feba5` | CI de validadores ativo no `main` | `58feba5` | Fonseca (merge) |
+| 2026-10-22 | decisões do Fonseca: D-05 sim; `CLAUDE.md` §2 prevalece (D-11); `skills/` é a fonte do prompt (D-12); seguir as recomendações PROPOSED de U3 e U12 a U17 | aplicadas em `contracts-proposal.md` e `slot-map-v0.md` (CP-VL1.5 proposto, não aprovado); abertas U18 a U22 | `3bf9c92` | — |
