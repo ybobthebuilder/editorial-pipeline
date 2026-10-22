@@ -53,7 +53,7 @@
 
 ## VL-6 — Workflows n8n 06–09 (bloqueado pelas Fases 1 e 4)
 
-- [ ] **CP-VL6.1** U1 decidida (`editorial.config_baseline`). U11-a a g respondidas e implementadas em `claude/migration-001` (16 testes contra Postgres 16.15 limpo). Abertas: U11-h (tabela de jobs; bloqueia `set_status` e `mark_running`) e U11-i (saídas dos estados de erro). Permanece [ ] até as duas fecharem. *Tipo:* humano.
+- [ ] **CP-VL6.1** U1 decidida (`editorial.config_baseline`). U11-a a g respondidas e implementadas em `claude/migration-001` (16 testes contra Postgres 16.15 limpo). Abertas: U11-h (tabela de jobs; bloqueia `set_status` e `mark_running`), U11-i (saídas dos estados de erro), U11-j (registro de assinaturas do gate) e U11-k (gates do relatório). Permanece [ ] até fecharem. *Tipo:* humano.
 - [ ] **CP-VL6.2** Cartões de etapa 06–09 no formato de `STAGES.md` §7, revisados. *Tipo:* humano.
 - [ ] **CP-VL6.3** Workflows seguem o `_TEMPLATE_STAGE`, estão sanitizados (sem credential ID, `pinData` ou URL privada) e cada parâmetro de nó foi conferido em docs.n8n.io. *Verificar:* `sanitize-workflow --check` (Fase 4). *Tipo:* auto + humano.
 - [ ] **CP-VL6.4** Nenhum nó de agente; LLM só em Basic LLM Chain ou Information Extractor com Structured Output Parser; temperatura 0, exceto headline. *Tipo:* auto.
@@ -106,3 +106,4 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | CP-VL2.4 | passou: 26 de 26 testes, 11 de 11 mutantes detectados; restrição do Code node conferida pelo Fonseca | commit `759df316c9e30066c5de264deaae5a2c5dd65554` | implementer (sem review) |
 | 2026-10-22 | CP-VL6.1 (parcial) | passou: 16 de 16 testes da migração em Postgres 16.15 limpo; 9 mutantes de comportamento detectados e 1 equivalente | commit `3276ff2c0b41871348095d683d0d2aae9ffeb570` | implementer (sem review) |
 | 2026-10-22 | lacuna `require` | passou: teste de ausência de `require` e `import` em math.js e contrast.js; mutante com `require` detectado | commits `198c75e6dc627b68acaf6669b2da61506362d542` e `d6bf5de1bf751b5cec87a5d46a9019d6f7a34ccf` | implementer (sem review) |
+| 2026-10-22 | CP-VL6.1 (gate) | passou: 19 de 19 testes; `requires_gate` só em AWAITING_APPROVAL → HUMAN_APPROVED, recusado pelo guard (falha fechada); 3 mutantes detectados | commit `1a91b7b0a68f7b4122fdbfe290ee67570266b699` | implementer (sem review) |

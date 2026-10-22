@@ -122,3 +122,25 @@ Este bloco não altera as seções 1 a 9, que continuam como foram revisadas. El
 
 - Branch `claude/migration-001`, commit `3276ff2c0b41871348095d683d0d2aae9ffeb570`. Sem PR.
 - Teste: `PGHOST=… PGPORT=… PGUSER=postgres node --test tests/migrations/001_init_editorial_schema.test.js`. Se `PGHOST` não estiver definido, o teste falha com mensagem; não pula em silêncio.
+
+## 11. Alteração de 2026-10-22: requires_gate
+
+O Fonseca acrescentou `requires_gate boolean` a `state_transitions`. A seção 10 descrevia só `from_status`, `to_status` e `is_error_path`; esta seção registra a mudança.
+
+**Implementado** (`claude/migration-001`, commit `1a91b7b0a68f7b4122fdbfe290ee67570266b699`):
+- `requires_gate` é `NOT NULL` e vale `true` só em `AWAITING_APPROVAL → HUMAN_APPROVED`, o único gate humano em `CLAUDE.md` §5 e `STAGES.md` §10–11.
+- `guard_transition` recusa toda transição com `requires_gate = true`, com a mensagem "transição exige aprovação humana registrada". Sem registro de assinatura, isso é falha fechada: a transição fica impossível. Não é aprovação por omissão.
+- Testes: 19 de 19. Três mutantes detectados: guard ignorando o gate, coluna anulável e gate deslocado para a transição errada.
+
+**Não implementado, e por quê:**
+1. **Verificação de assinatura.** A regra "só passa com assinatura registrada" depende de uma tabela de registros de aprovação. Nenhuma fonte do repositório a define. Criá-la seria inventar a estrutura. O guard recusa em vez de checar.
+2. **`brief_approved`, `content_approved` e `design_approved` não são estados.** Não existem em `CLAUDE.md`. Aparecem no relatório NATURE.exe (design-time). Adicioná-los mudaria a máquina de estados de 17 para 20 estados.
+
+**Consequência de interface.** Verificar uma assinatura exige saber qual job está transitando. Hoje `guard_transition(from, to)` não recebe `job_id`. Quando U11-j fechar, a assinatura do guard muda, e o `set_status` (fora desta migration) acompanha.
+
+**`is_error_path`.** Está registrada e consistente com o destino (constraint `state_transitions_error_flag`). Nenhuma função a lê ainda. O rewind a partir de estados de erro depende de U11-i.
+
+| ID | Pergunta | Bloqueia | Quem responde |
+| --- | --- | --- | --- |
+| U11-j | Onde registrar assinaturas humanas: tabela, colunas, quem grava, e se vive em `editorial` ou `editorial_intel`. Decide também se `guard_transition` passa a receber `job_id` | verificação do gate, `set_status` | Fonseca |
+| U11-k | Os gates de brief, conteúdo e design do relatório entram na máquina do banco? Como estados novos (muda `CLAUDE.md`) ou reutilizando `HUMAN_APPROVED` | gates do relatório | Fonseca |

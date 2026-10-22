@@ -150,9 +150,11 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
 | U10 | **DECIDIDO** (Fonseca, 2026-10-22): formato PT-BR, vírgula decimal (`9,52`) | — | — |
-| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-g. Implementado em `claude/migration-001`; ver `schema-contract.md` §10 | Fase 1 (migration testada), VL-6 | — (abertos: U11-h e U11-i) |
+| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-g; `requires_gate` acrescentada em 2026-10-22. Implementado em `claude/migration-001`; ver `schema-contract.md` §10–11 | Fase 1 (migration testada), VL-6 | — (abertos: U11-h a U11-k) |
 | U11-h | Onde vive a tabela de jobs: `CLAUDE.md` diz `editorial_intel.jobs`; a decisão U11-g diz `editorial`. `set_status` e `mark_running` dependem disso, e o público não pode depender do privado | `set_status`, `mark_running`, VL-6 | Fonseca |
 | U11-i | Saídas dos estados de erro e rewind manual: só `NEEDS_REVIEW` tem saída. Sem caminho de retry para `VERIFICATION_FAILED`, `QA_FAILED` ou `RENDER_FAILED` | retry de etapa, VL-7 (U9) | Fonseca |
+| U11-j | Onde registrar assinaturas humanas do gate (tabela, colunas, quem grava, `editorial` ou `editorial_intel`); se `guard_transition` passa a receber `job_id` | verificação do gate, `set_status` | Fonseca |
+| U11-k | Os gates de brief, conteúdo e design do relatório entram na máquina do banco? Como estados novos (muda `CLAUDE.md`) ou reutilizando `HUMAN_APPROVED` | gates do relatório | Fonseca |
 
 ## 11. Decisões pendentes (Fonseca)
 
