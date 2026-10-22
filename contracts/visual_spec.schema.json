@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "visual_spec",
+  "description": "Output of 06_VISUAL. Contract proposal: docs/visual-layer/contracts-proposal.md section 4.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "insight_id",
+    "evidence_ids",
+    "grammar_id"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "06_VISUAL",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "insight_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "must exist and be ranked; checked by code. Id format is UNKNOWN"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "each id must exist in verification and be VERIFIED; checked by code"
+    },
+    "grammar_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "a grammar of visual_library, or not_reported; membership is checked by code against the config (U17)"
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "audit only; no stage reads it"
+    }
+  }
+}
