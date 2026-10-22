@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install the fonts whose widths geometry.js embeds
+        run: sudo apt-get install -y --no-install-recommends fonts-liberation
       - name: Run validator tests and refuse an empty run
         run: |
           node --test 'validators/*.test.js' | tee test-output.txt
