@@ -147,7 +147,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `config_baseline` — espelho do repo público
 - `jobs` — `id`, `status`, `created_at`, `updated_at`, proveniência (`source_origin`, `input_context`, `config_source`, `config_version`, `last_stage`, `last_execution_id`), `attempt_count`, `previous_status`, `status_entered_at` (decisões U11-h, U11-n, U11-o)
 - `signatures` — assinatura humana do gate, por job; `decision` é `approved` ou `rejected` (decisões U11-j, U11-m)
-- Funções: `create_job(source_origin, input_context, config_source, config_version)`, `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config()`
+- Funções: `create_job(source_origin, input_context, config_source, config_version)`, `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config(key)`, `get_job(job_id)`, `get_job_status(job_id)`, `find_jobs_by_execution(execution_id)`
 - Contratos e views públicas
 
 ### editorial_intel (schema, privado)
@@ -158,7 +158,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `experiments`, `analytics`, `config_overrides`
 - Views de qualidade
 
-**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `create_job`, `guard_transition`, `set_status`, `mark_running` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita direta em `signatures` nem em `jobs`. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow. **A senha de `human_reviewer` fica em um cofre separado e nunca entre as credenciais do n8n que roda o robô**; nenhum workflow não supervisionado a usa. Dono das funções `SECURITY DEFINER`: o papel `editorial_owner` (sem login, sem BYPASSRLS), que recebe só os privilégios que essas funções precisam e não grava em `signatures` nem apaga `jobs`. `get_config` é `SECURITY INVOKER`, porque só lê. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
+**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com o menor privilégio estrito: EXECUTE em `create_job`, `guard_transition`, `set_status`, `mark_running`, `get_config`, `get_job`, `get_job_status` e `find_jobs_by_execution`, e **nenhum privilégio sobre tabelas**. Ela lê só por funções que recebem uma chave e devolvem o que a chave aponta; não lista jobs, assinaturas nem configuração. **Isolamento entre clientes: um banco por cliente** (decisão de 2026-10-22). O schema `editorial` não tem coluna de tenant; o n8n escolhe a string de conexão do cliente ao disparar o job, e o direito ao esquecimento da LGPD é apagar o banco do cliente. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow. **A senha de `human_reviewer` fica em um cofre separado e nunca entre as credenciais do n8n que roda o robô**; nenhum workflow não supervisionado a usa. Dono das funções `SECURITY DEFINER`: o papel `editorial_owner` (sem login, sem BYPASSRLS), que recebe só os privilégios que essas funções precisam e não grava em `signatures` nem apaga `jobs`. Todas as funções acima são `SECURITY DEFINER`, com `search_path` fixo e dono `editorial_owner`, inclusive `get_config`: como `n8n_pipeline` não lê tabelas, uma função `INVOKER` não leria nada. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
 
 ## Estrutura do Repo Público
 
@@ -182,6 +182,7 @@ editorial-pipeline/
 │   ├── 004_set_status_mark_running.sql
 │   ├── 005_jobs_indexes.sql        # não transacional (CREATE INDEX CONCURRENTLY)
 │   ├── 006_editorial_owner_create_job.sql
+│   ├── 007_n8n_least_privilege.sql
 │   └── ...
 ├── supabase/rollbacks/             # um NNN_nome.down.sql por migration
 ├── contracts/
