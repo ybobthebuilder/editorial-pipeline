@@ -52,7 +52,7 @@ Workflows criativos (insights, visual, covers, QA) acessam **apenas evidências 
 ## 5. Máquina de Estados Vive no Banco
 
 - Tabela `state_transitions` define transições válidas.
-- Função `guard_transition(job_id, from, to)` rejeita saltos inválidos e transições com `requires_gate` sem assinatura aprovada para o job. É chamada explicitamente por `set_status()`, não por trigger (decisão U11-d). Só `set_status()` altera `editorial.jobs.status`; nenhum papel recebe UPDATE direto nessa coluna.
+- Função `guard_transition(job_id, from, to)` rejeita saltos inválidos e transições com `requires_gate` sem assinatura aprovada para o job. É `SECURITY DEFINER` com `search_path` fixo e é chamada explicitamente por `set_status()`, não por trigger (decisão U11-d). Só `set_status()` altera `editorial.jobs.status` e só `mark_running()` registra tentativas; nenhum papel recebe UPDATE direto em `jobs`. `attempt_count` registra as tentativas desde o último avanço; o limite de 3 é do orquestrador, não do banco.
 - Workflows **nunca** fazem UPDATE direto no status.
 - Workflows **sempre** chamam `mark_running()` e `set_status()`.
 
@@ -69,10 +69,11 @@ Qualquer estado → NEEDS_REVIEW (rewind manual), inclusive PUBLISHED
 VERIFICATION_FAILED → EVIDENCE_EXTRACTED
 RENDER_FAILED → COVERS_SPECIFIED
 QA_FAILED → COVERS_RENDERED
-Saída de NEEDS_REVIEW: não definida [pendente]
+NEEDS_REVIEW → AWAITING_APPROVAL (só se o job já chegou a QA_PASSED ou além)
+NEEDS_REVIEW → estado de trabalho de origem (a IA refaz; depois do gate a IA não refaz)
 ```
 
-**Gate humano**: `AWAITING_APPROVAL → HUMAN_APPROVED` é a única transição com `requires_gate`. Sem assinatura aprovada registrada para o job, o guard recusa a transição.
+**Gate humano**: `AWAITING_APPROVAL → HUMAN_APPROVED` é a única transição com `requires_gate`. Sem assinatura `approved` para o job, gravada depois de ele entrar em AWAITING_APPROVAL, o guard recusa a transição. Uma aprovação antiga não vale para uma nova revisão. Quem grava a assinatura é o papel `human_reviewer`, nunca `n8n_pipeline`.
 
 ## 6. Idempotência Obrigatória
 
@@ -141,9 +142,9 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 ### editorial (schema, auditável)
 - `state_transitions` — máquina de estados
 - `config_baseline` — espelho do repo público
-- `jobs` — `id`, `status`, `created_at`, `updated_at` (decisão U11-h)
-- `signatures` — assinatura humana do gate, por job (decisão U11-j)
-- Funções: `guard_transition(job_id, from, to)`, `mark_running()`, `set_status()`, `get_config()`
+- `jobs` — `id`, `status`, `created_at`, `updated_at`, proveniência (`source_origin`, `input_context`, `config_source`, `config_version`, `last_stage`, `last_execution_id`), `attempt_count`, `previous_status`, `status_entered_at` (decisões U11-h, U11-n, U11-o)
+- `signatures` — assinatura humana do gate, por job; `decision` é `approved` ou `rejected` (decisões U11-j, U11-m)
+- Funções: `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config()`
 - Contratos e views públicas
 
 ### editorial_intel (schema, privado)
@@ -154,7 +155,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `experiments`, `analytics`, `config_overrides`
 - Views de qualidade
 
-**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `guard_transition` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita em `signatures` (assinatura é humana) nem em `jobs.status`. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
+**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `guard_transition`, `set_status`, `mark_running` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita direta em `signatures` nem em `jobs`. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow: a credencial de `human_reviewer` não pode ficar em workflow que roda sem supervisão. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
 
 ## Estrutura do Repo Público
 

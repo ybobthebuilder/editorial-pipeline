@@ -48,7 +48,7 @@ Este documento define a divisão formal entre o código público e os dados/conf
 Fonte de verdade para:
 - `state_transitions`
 - `config_baseline`
-- `jobs` (decisão U11-h)
+- `jobs`, com proveniência e `attempt_count` (decisões U11-h, U11-n, U11-o)
 - `signatures`: assinaturas humanas do gate, por job (decisão U11-j)
 - funções de transição e acesso ao config
 - views e contratos públicos
@@ -91,9 +91,10 @@ A ordem com sobreposição privada (override primeiro; baseline se não houver o
 - REVOKE ALL para `anon` e `authenticated`
 - role `n8n_pipeline` com permissões mínimas
 - `n8n_pipeline` pode:
-  - EXECUTE em `guard_transition` e `get_config`
+  - EXECUTE em `guard_transition`, `set_status`, `mark_running` e `get_config`
   - SELECT em `state_transitions`, `config_baseline`, `jobs` e `signatures`
-- `n8n_pipeline` não grava em `signatures` (assinatura é humana) nem em `jobs.status` (só `set_status` altera status)
+- `n8n_pipeline` não grava direto em `signatures` nem em `jobs`: o status muda por `set_status`
+- `human_reviewer` é um papel separado, sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas de jobs em AWAITING_APPROVAL. A credencial dele não pode ficar em workflow não supervisionado
 - permissões sobre tabelas de `editorial_intel` não existem ainda; serão definidas na migração que criar essas tabelas
 - `n8n_pipeline` não deve ter acesso irrestrito a schemas privados
 
