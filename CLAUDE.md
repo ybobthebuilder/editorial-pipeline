@@ -52,7 +52,7 @@ Workflows criativos (insights, visual, covers, QA) acessam **apenas evidências 
 ## 5. Máquina de Estados Vive no Banco
 
 - Tabela `state_transitions` define transições válidas.
-- Função `guard_transition(job_id, from, to)` rejeita saltos inválidos e transições com `requires_gate` sem assinatura aprovada para o job. É `SECURITY DEFINER` com `search_path` fixo e é chamada explicitamente por `set_status()`, não por trigger (decisão U11-d). Só `set_status()` altera `editorial.jobs.status` e só `mark_running()` registra tentativas; nenhum papel recebe UPDATE direto em `jobs`. `attempt_count` registra as tentativas desde o último avanço; o limite de 3 é do orquestrador, não do banco.
+- Função `guard_transition(job_id, from, to)` rejeita saltos inválidos e transições com `requires_gate` sem assinatura aprovada para o job. É `SECURITY DEFINER` com `search_path` fixo e é chamada explicitamente por `set_status()`, não por trigger (decisão U11-d). Só `set_status()` altera `editorial.jobs.status` e só `mark_running()` registra tentativas; nenhum papel recebe escrita direta em `jobs`. Jobs nascem por `create_job()`. `attempt_count` registra as tentativas desde o último avanço; o limite de 3 é do orquestrador, não do banco.
 - Workflows **nunca** fazem UPDATE direto no status.
 - Workflows **sempre** chamam `mark_running()` e `set_status()`.
 
@@ -144,7 +144,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `config_baseline` — espelho do repo público
 - `jobs` — `id`, `status`, `created_at`, `updated_at`, proveniência (`source_origin`, `input_context`, `config_source`, `config_version`, `last_stage`, `last_execution_id`), `attempt_count`, `previous_status`, `status_entered_at` (decisões U11-h, U11-n, U11-o)
 - `signatures` — assinatura humana do gate, por job; `decision` é `approved` ou `rejected` (decisões U11-j, U11-m)
-- Funções: `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config()`
+- Funções: `create_job(source_origin, input_context, config_source, config_version)`, `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config()`
 - Contratos e views públicas
 
 ### editorial_intel (schema, privado)
@@ -155,7 +155,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `experiments`, `analytics`, `config_overrides`
 - Views de qualidade
 
-**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `guard_transition`, `set_status`, `mark_running` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita direta em `signatures` nem em `jobs`. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow: a credencial de `human_reviewer` não pode ficar em workflow que roda sem supervisão. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
+**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `create_job`, `guard_transition`, `set_status`, `mark_running` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita direta em `signatures` nem em `jobs`. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow. **A senha de `human_reviewer` fica em um cofre separado e nunca entre as credenciais do n8n que roda o robô**; nenhum workflow não supervisionado a usa. Dono das funções `SECURITY DEFINER`: o papel `editorial_owner` (sem login, sem BYPASSRLS), que recebe só os privilégios que essas funções precisam e não grava em `signatures` nem apaga `jobs`. `get_config` é `SECURITY INVOKER`, porque só lê. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
 
 ## Estrutura do Repo Público
 
@@ -175,7 +175,12 @@ editorial-pipeline/
 ├── supabase/migrations/
 │   ├── 001_init_editorial_schema.sql
 │   ├── 002_jobs_and_signatures.sql
+│   ├── 003_review_exit_provenance_attempts.sql
+│   ├── 004_set_status_mark_running.sql
+│   ├── 005_jobs_indexes.sql        # não transacional (CREATE INDEX CONCURRENTLY)
+│   ├── 006_editorial_owner_create_job.sql
 │   └── ...
+├── supabase/rollbacks/             # um NNN_nome.down.sql por migration
 ├── contracts/
 │   ├── job_ref.schema.json
 │   ├── evidence.schema.json
@@ -212,11 +217,16 @@ editorial-pipeline/
 │   ├── 99_ERROR_HANDLER.json
 │   └── README.md
 ├── scripts/
-│   ├── seed-baseline.ts            # Carrega config/baseline/* no banco
-│   ├── verify-baseline.ts          # Valida hashes contra repo
+│   ├── seed-baseline.js            # Carrega config/baseline/* no banco (sem dependências)
+│   ├── verify-baseline.js          # Confere arquivos, .checksums e banco
+│   ├── lib/baseline.js
 │   ├── n8n-push.ts                 # Cria/atualiza workflows via API
 │   ├── n8n-pull.ts                 # Baixa e sanitiza
 │   └── sanitize-workflow.ts        # Remove credential IDs, pinData, URLs privadas
+├── tests/
+│   ├── migrations/                 # Postgres limpo: migrations, rollbacks, papéis
+│   └── scripts/
+├── .github/workflows/migrations.yml  # Postgres efêmero: migrations, rollbacks, scripts
 ├── fixtures/synthetic/
 │   ├── papers/                     # Papers fictícios
 │   └── gabaritos.json              # Respostas esperadas
