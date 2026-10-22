@@ -140,7 +140,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 
 | ID | Falta | Bloqueia | Quem resolve |
 | --- | --- | --- | --- |
-| U1 | local do baseline (`editorial_baseline.config_baseline` × `editorial.config_baseline`) | Fase 1, VL-6, VL-7 | Fonseca, com evidência de schema |
+| U1 | **DECIDIDO** em 2026-10-22 pelo usuário: o baseline fica em `editorial.config_baseline`. Evidência de schema implantado segue UNKNOWN, e `CLAUDE.md` §9 ainda cita as duas formas | — (a Fase 1 segue exigindo U11) | Fonseca: confirmar a decisão e ajustar o `CLAUDE.md` |
 | U2 | campos de `visual_spec`, `cover_spec`, `qa_result` (os arquivos de contrato não existem) | VL-3 | Fonseca aprova proposta (VL-3) |
 | U3 | conteúdo e schema de `visual_library` | VL-4 | idem |
 | U4 | engine e formato do render no n8n Cloud (SVG puro × PNG); módulos permitidos no Code node | VL-5, VL-6 | verificação em docs.n8n.io + Fonseca |
@@ -150,13 +150,14 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
 | U10 | regra de locale para números (`9,52` × `9.52`) | `numbers.js` | Fonseca |
+| U11 | colunas e tipos de `state_transitions` e `config_baseline`; assinaturas de `guard_transition()`, `mark_running()`, `set_status()` e `get_config()`; como funções do schema `editorial` operam sobre `editorial_intel.jobs` sem violar "o público funciona sem o privado" | Fase 1 (migrations), VL-6, VL-7 | Fonseca, com evidência de schema |
 
 ## 11. Decisões pendentes (Fonseca)
 
 | ID | Decisão | Recomendação (PROPOSED) |
 | --- | --- | --- |
 | D-01 | Onde ficam estes documentos | `docs/visual-layer/` |
-| D-02 | Resolver U1 (local do baseline) | desbloqueia a Fase 1; sem isso, nenhum SQL |
+| D-02 | Local do baseline | **decidido** (usuário, 2026-10-22): `editorial.config_baseline`; a Fase 1 ainda depende de U11 |
 | D-03 | Saída do `08_RENDER` | SVG no MVP; PNG só depois de verificar uma engine compatível com n8n Cloud |
 | D-04 | Uso do pacote de marca no repo público | tratar o pacote como `config_overrides` privado até haver confirmação de direitos; baseline público com a mesma estrutura e tokens neutros |
 | D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
@@ -169,6 +170,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 
 - `main` do repo em `e821de1…`: só documentação de governança, **sem código**.
 - Branch `claude/validators-math` (`da1083e9dc2e4ccb765a1e7ba126743bc829ffb4`): `validators/math.js` e `math.test.js`, 11 testes passando, 5 mutantes detectados. Sem PR.
+- Decisão do usuário em 2026-10-22: o baseline fica em `editorial.config_baseline` (U1, D-02). É uma decisão informada, não uma evidência de schema implantado.
 - Nenhum arquivo de marca foi adicionado ao repo.
 - Os documentos antigos em `design-system/claude/nature-exe-roadmap` descrevem a orquestra de agentes e **estão superados por este conjunto**.
 

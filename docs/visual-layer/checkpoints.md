@@ -51,9 +51,9 @@
 - [ ] **CP-VL5.4** Os 6 templates renderizam fixtures sintéticas; comparação visual com as referências aprovada por humano. *Tipo:* humano.
 - [ ] **CP-VL5.5** D-03 decidida; se PNG, a engine foi verificada na documentação do n8n. *Fecha:* U4. *Tipo:* humano.
 
-## VL-6 — Workflows n8n 06–09 (bloqueado por U1)
+## VL-6 — Workflows n8n 06–09 (bloqueado pelas Fases 1 e 4)
 
-- [ ] **CP-VL6.1** U1 resolvida e funções do `CLAUDE.md` §5 existentes nas migrations. *Tipo:* humano.
+- [ ] **CP-VL6.1** U1 decidida (`editorial.config_baseline`), U11 resolvida e funções do `CLAUDE.md` §5 existentes nas migrations. *Tipo:* humano.
 - [ ] **CP-VL6.2** Cartões de etapa 06–09 no formato de `STAGES.md` §7, revisados. *Tipo:* humano.
 - [ ] **CP-VL6.3** Workflows seguem o `_TEMPLATE_STAGE`, estão sanitizados (sem credential ID, `pinData` ou URL privada) e cada parâmetro de nó foi conferido em docs.n8n.io. *Verificar:* `sanitize-workflow --check` (Fase 4). *Tipo:* auto + humano.
 - [ ] **CP-VL6.4** Nenhum nó de agente; LLM só em Basic LLM Chain ou Information Extractor com Structured Output Parser; temperatura 0, exceto headline. *Tipo:* auto.
@@ -93,7 +93,7 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 2. O `node:test` não traz parser XML; a verificação de XML bem formado no CI precisa de decisão sobre ferramenta (D-07).
 3. Não há ambiente de n8n Cloud para teste automatizado de workflows no repo hoje.
 4. Saídas de LLM são não determinísticas; só os invariantes são testáveis.
-5. VL-6 e VL-7 não podem ser testados antes da Fase 1 (U1) e da Fase 4.
+5. VL-6 e VL-7 não podem ser testados antes da Fase 1 (U11) e da Fase 4.
 
 ---
 

@@ -20,10 +20,10 @@
 | VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | bloqueado por U2 |
 | VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | bloqueado por U3, U7 |
 | VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado |
-| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **bloqueado por U1** |
+| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **bloqueado pelas Fases 1 e 4** (U1 decidido; U11 aberto) |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
-**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Bloqueio duro:** U1 impede qualquer SQL, e portanto VL-6 e VL-7.
+**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Bloqueio duro:** a Fase 1 ainda não existe e depende de U11 (colunas, tipos e assinaturas); sem isso não há SQL, e portanto VL-6 e VL-7 ficam parados. U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
 
 ---
 
@@ -82,7 +82,7 @@
 
 ## VL-6 — Workflows n8n 06–09 (bloqueado)
 
-- **Pré-requisitos externos:** Fase 1 (banco, `state_transitions`, `guard_transition()`, `mark_running()`, `set_status()`, `get_config()`) e Fase 4 (`90_DB_HELPERS`, `99_ERROR_HANDLER`, `_TEMPLATE_STAGE`). Dependem de U1.
+- **Pré-requisitos externos:** Fase 1 (banco, `state_transitions`, `guard_transition()`, `mark_running()`, `set_status()`, `get_config()`) e Fase 4 (`90_DB_HELPERS`, `99_ERROR_HANDLER`, `_TEMPLATE_STAGE`). U1 está decidido; falta U11.
 - **Entregas:** cartões de etapa 06–09 no formato de `STAGES.md` §7 (local proposto: `docs/stages/`, ausente da estrutura planejada) e `n8n/workflows/06_VISUAL.json` a `09_QA.json`, sanitizados, seguindo o `_TEMPLATE_STAGE` de 11 passos.
 - **Regras:** só Basic LLM Chain ou Information Extractor com Structured Output Parser; temperatura 0, exceto headline; retry 3x em LLM e HTTP; banco só por nó Postgres; **todo parâmetro de nó conferido em docs.n8n.io**.
 - **Aceite:** CP-VL6.1 a CP-VL6.5.
@@ -114,7 +114,7 @@ Estágios 01–05 e 10–12; Fase 1 e Fase 4 como entregas; publicação e métr
 
 | Risco | Efeito | Mitigação |
 | --- | --- | --- |
-| U1 sem resposta | VL-6 e VL-7 parados | trabalhar VL-1 a VL-5 e escrever os cartões de etapa como proposta |
+| U11 sem resposta | VL-6 e VL-7 parados | trabalhar VL-1 a VL-5 e escrever os cartões de etapa como proposta |
 | Direitos do pacote de marca (U7) | vazamento ou uso indevido | D-04 antes do VL-4; nada de marca no repo antes |
 | Render em n8n Cloud inviável (U4) | VL-5 e VL-6 redesenhados | verificar docs.n8n.io antes de codar; SVG puro como base |
 | Contratos inventados (U2) | retrabalho | proposta aprovada antes de qualquer schema |
