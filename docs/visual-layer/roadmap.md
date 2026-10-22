@@ -20,10 +20,10 @@
 | VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | bloqueado por U2 |
 | VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | bloqueado por U3, U7 |
 | VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado |
-| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **parcial**: migration de `state_transitions`, `config_baseline` e funções e `requires_gate` em `claude/migration-001` (19 testes, commit `1a91b7b`); `set_status` e `mark_running` bloqueados por U11-h |
+| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **parcial**: migrations `001` e `002` em `claude/migration-001` (19 testes, `1a91b7b`) e `claude/migration-002` (17 testes, `0329c4c`). `set_status` e `mark_running` ainda não existem; U11-h está respondido |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
-**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Bloqueio duro:** a Fase 1 ainda não existe e depende de U11 (colunas, tipos e assinaturas); sem isso não há SQL, e portanto VL-6 e VL-7 ficam parados. U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
+**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Bloqueios:** nenhum de U11 (U11-h a U11-k respondidos em 2026-10-22); abertas U11-l a U11-o. `set_status` e `mark_running` são o próximo passo de VL-6. U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
 
 ---
 
@@ -70,7 +70,7 @@
 ## VL-4 — Baseline visual
 
 - **Objetivo:** `config/baseline/visual_library.json` (lista fechada de gramáticas, tamanhos, mapa de slots, tokens, zonas seguras, pares de cor permitidos) e `.checksums`.
-- **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca numa fase a confirmar (D-10).
+- **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca no marco VL-4 (D-10, decidido em 2026-10-22).
 - **Aceite:** CP-VL4.1 a CP-VL4.4. Os SVGs entram no repo **neste marco**, e só depois de D-04.
 
 ## VL-5 — Núcleo de render

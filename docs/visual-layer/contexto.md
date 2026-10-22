@@ -150,11 +150,15 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
 | U10 | **DECIDIDO** (Fonseca, 2026-10-22): formato PT-BR, vírgula decimal (`9,52`) | — | — |
-| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-g; `requires_gate` acrescentada em 2026-10-22. Implementado em `claude/migration-001`; ver `schema-contract.md` §10–11 | Fase 1 (migration testada), VL-6 | — (abertos: U11-h a U11-k) |
-| U11-h | Onde vive a tabela de jobs: `CLAUDE.md` diz `editorial_intel.jobs`; a decisão U11-g diz `editorial`. `set_status` e `mark_running` dependem disso, e o público não pode depender do privado | `set_status`, `mark_running`, VL-6 | Fonseca |
-| U11-i | Saídas dos estados de erro e rewind manual: só `NEEDS_REVIEW` tem saída. Sem caminho de retry para `VERIFICATION_FAILED`, `QA_FAILED` ou `RENDER_FAILED` | retry de etapa, VL-7 (U9) | Fonseca |
-| U11-j | Onde registrar assinaturas humanas do gate (tabela, colunas, quem grava, `editorial` ou `editorial_intel`); se `guard_transition` passa a receber `job_id` | verificação do gate, `set_status` | Fonseca |
-| U11-k | Os gates de brief, conteúdo e design do relatório entram na máquina do banco? Como estados novos (muda `CLAUDE.md`) ou reutilizando `HUMAN_APPROVED` | gates do relatório | Fonseca |
+| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-k. Implementado em `claude/migration-001` (`1a91b7b`) e `claude/migration-002` (`0329c4c`). Ver `schema-contract.md` §10–12 | Fase 1, VL-6 | U11-l a U11-o (abertas) |
+| U11-h | **RESPONDIDO** (2026-10-22): `editorial.jobs` no schema `editorial` | `set_status`, `mark_running` (migração própria) | — |
+| U11-i | **RESPONDIDO** (2026-10-22): estados de erro voltam ao estado de trabalho de origem, além de NEEDS_REVIEW | retry de etapa | — |
+| U11-j | **RESPONDIDO** (2026-10-22): `editorial.signatures`; `guard_transition(job_id, from, to)` exige aprovação registrada | gate humano | — |
+| U11-k | **RESPONDIDO** (2026-10-22): nenhum estado novo; só AWAITING_APPROVAL e HUMAN_APPROVED | gates do relatório | — |
+| U11-l | Saída de `NEEDS_REVIEW`. Hoje não há saída: um job revisado por humano não tem caminho de volta | revisão humana, VL-7 | Fonseca |
+| U11-m | `signatures.decision` tem os valores `approved` e `rejected` (proposta, não confirmada); quem grava assinaturas (papel humano ainda não criado); só a UF do CRM é gravada, sem o número | gate, papel de gravação | Fonseca |
+| U11-n | Proveniência de `CLAUDE.md` §7 (`stage`, `execution_id`, `config_*`) em `jobs`. `CLAUDE.md` diz que linha sem proveniência não entra no banco; `jobs` foi pedido sem essas colunas | `jobs`, `set_status` | Fonseca |
+| U11-o | Limite de tentativas no retry: o banco permite ciclos ilimitados (`QA_FAILED` ↔ `COVERS_RENDERED`). Validade de assinatura reusada após rebobinamento: hoje inalcançável, mas precisa de regra antes de existir caminho de volta a `AWAITING_APPROVAL` | retry, gate | Fonseca |
 
 ## 11. Decisões pendentes (Fonseca)
 
@@ -167,9 +171,9 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
-| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca): margem padrão de 64 px para o offset do chrome. Interpretação a confirmar: os 90 px de `templates.json` seguem como zona segura de conteúdo |
+| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem oficial. Pendente: se os 90 px de `templates.json` seguem como zona segura de conteúdo, não foi confirmado |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
-| D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **aberta**: o Fonseca confirma qual fase ou marco é a referência |
+| D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **decidido** (Fonseca, 2026-10-22): só no VL-4 (Fase 3). Exige também a nota de direitos (U7, VL-1) antes da entrada |
 
 ## 12. Estado atual (VERIFIED em 2026-10-22)
 

@@ -144,3 +144,39 @@ O Fonseca acrescentou `requires_gate boolean` a `state_transitions`. A seção 1
 | --- | --- | --- | --- |
 | U11-j | Onde registrar assinaturas humanas: tabela, colunas, quem grava, e se vive em `editorial` ou `editorial_intel`. Decide também se `guard_transition` passa a receber `job_id` | verificação do gate, `set_status` | Fonseca |
 | U11-k | Os gates de brief, conteúdo e design do relatório entram na máquina do banco? Como estados novos (muda `CLAUDE.md`) ou reutilizando `HUMAN_APPROVED` | gates do relatório | Fonseca |
+
+
+## 12. Migration 002: jobs, assinaturas e rebobinamento (2026-10-22)
+
+Decisões do Fonseca, implementadas em `claude/migration-002` (`0329c4c`, sobre `001`). PR só para a governança (#5).
+
+| ID | Decisão | Implementação |
+| --- | --- | --- |
+| U11-h | `jobs` no schema `editorial` | `editorial.jobs`: `id uuid`, `status text` (padrão `RECEIVED`, CHECK nos 17 estados), `created_at`, `updated_at` (`timestamptz`, padrão `now()`). Sem trigger em `updated_at`: quem muda o status (`set_status`, futuro) grava |
+| U11-i | estados de erro voltam ao estado de trabalho de origem, além de `NEEDS_REVIEW` | `VERIFICATION_FAILED → EVIDENCE_EXTRACTED`, `RENDER_FAILED → COVERS_SPECIFIED`, `QA_FAILED → COVERS_RENDERED`. Nenhuma exige gate. Cada estado de erro tem uma única entrada em `001`, então a saída de retry é a aresta de origem |
+| U11-j | tabela de assinaturas; o guard recebe `job_id` | `editorial.signatures` com as colunas pedidas. `guard_transition(job_id uuid, p_from, p_to)` substitui a versão de dois argumentos |
+| U11-k | nenhum estado novo | Só `AWAITING_APPROVAL` e `HUMAN_APPROVED`. A máquina continua com 17 estados |
+| PUBLISHED → NEEDS_REVIEW | mantido | Já existe em `001`; `002` não muda |
+
+**Ordem de checagem do guard** (não escreve nada):
+1. transição inexistente: `transição inválida`
+2. job inexistente: `job inexistente`
+3. job que não está em `p_from`: `job … está em X, não em Y`. **Escolha minha, não pedida.** O guard recebe o job, então confere o estado dele
+4. aresta com `requires_gate` sem assinatura `approved` para este job: `transição exige aprovação humana registrada`
+
+**Assinaturas: o que é decisão e o que é proposta**
+- `crm_uf`: uma das 27 UFs (CHECK). PROPOSTA de forma fechada; a confirmar.
+- `decision`: `approved` ou `rejected`. PROPOSTA, não definida pelo Fonseca. O guard só aceita `approved`.
+- `reviewer_name`: não pode ser vazio.
+- Gravação: `n8n_pipeline` não tem INSERT, UPDATE nem DELETE em `signatures`. Quem grava é um papel humano, que ainda não existe.
+- Número do CRM: fora do contrato. Só a UF é gravada.
+
+**Perguntas abertas** (U11-l a U11-o em `contexto.md`):
+- Saída de `NEEDS_REVIEW`: não definida. O teste `NEEDS_REVIEW has no exit yet` fixa a lacuna para que ela não mude sem teste.
+- Valores de `decision`, papel gravador e número do CRM.
+- Proveniência de `CLAUDE.md` §7 em `jobs`. Conflito real: `CLAUDE.md` diz que linha sem proveniência não entra no banco.
+- Limite de tentativas no retry: o banco permite ciclos ilimitados. Validade de assinatura reusada após rebobinamento: hoje inalcançável, mas precisa de regra antes de existir caminho de volta a `AWAITING_APPROVAL`.
+
+**Governança.** PR #5 (`claude/governance-public-private`, candidato `c41a9eb88`, base `e821de1`) corrige `CLAUDE.md` e `docs/PUBLIC_PRIVATE.md`: trigger vira função, `get_config` lê só o público, `jobs` e `signatures` ficam em `editorial`, 17 estados, rebobinamento, migração 002. Não foi revisada (sem veredito). `docs/STAGES.md` §2 ainda menciona trigger; fica para um passo próprio.
+
+**Testes.** `001`: 19 de 19 (`1a91b7b`). `002`: 17 de 17 (`0329c4c`). As duas suítes juntas: 36 de 36, com `--test-concurrency=1` (ambas criam papéis globais). Oito mutantes da `002` detectados.
