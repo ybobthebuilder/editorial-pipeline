@@ -16,14 +16,14 @@
 | --- | --- | --- | --- | --- |
 | VL-0 | alinhamento: estes docs revisados e decisões D-01 a D-09 | — | — | em revisão |
 | VL-1 | design-time: auditoria do pacote de marca e do Figma (somente leitura) | — | VL-0 | não iniciado |
-| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `blocklist` ✔, `geometry` ✔ (parcial) | 2 | — | parcial: seis validadores mesclados (PRs #13, #16, #19). `geometry` mede largura, linhas e zona segura de 64 px, mas ainda não conhece slot nem template; isso depende do mapa de slots como config (VL-4) |
-| VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | contratos e fixtures mesclados (PR #20); prompts em `skills/` na v0.1 mesclados (PR #21). Faltam o rodapé do CFM (U18), a temperatura do copywriter e o bloqueio de mídia clínica (D-15, CP-VL3.5) |
-| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | **próximo item.** U3 decidido; faltam U7 (direitos do pacote de marca), U18 e o patch dos SVGs (D-06) |
+| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `blocklist` ✔, `geometry` ✔ (parcial) | 2 | — | parcial: seis validadores mesclados (PRs #13, #16, #19). `geometry` mede largura, linhas e zona segura (64 px e, nos 9:16, as faixas de 260 e 340 px, PR #26 aberta), mas ainda não conhece slot nem template; isso depende do mapa de slots como config (VL-4) |
+| VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | contratos e fixtures mesclados (PR #20); prompts em `skills/` na v0.1 mesclados (PR #21). Faltam a config do rodapé do CFM (formato definido em U18; origem de Nome, UF e Número UNKNOWN), a temperatura do copywriter e o bloqueio de mídia clínica (D-15, CP-VL3.5) |
+| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | **próximo item.** U3, U18 e U23 respondidos. Faltam U7 (direitos do pacote de marca), a decisão sobre o chrome nas faixas dos 9:16, a origem de Nome, UF e Número do rodapé, o contrato do próprio `visual_library.json` (nenhum está definido) e o patch dos SVGs (D-06) |
 | VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado; depende do VL-4 |
 | VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **Fase 1 fechada** (migrations 001 a 006, scripts de baseline e CI no `main`, CI verde no GitHub com 106 testes). Faltam a Fase 4 (infra n8n) e VL-5 |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
-**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** A proposta de contratos foi aprovada e os schemas estão mesclados (PR #20); o bloqueio agora é o VL-4 (U7, U18 e o patch dos SVGs). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
+**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** A proposta de contratos foi aprovada e os schemas estão mesclados (PR #20); o bloqueio agora é o VL-4 (U7, o chrome nas faixas dos 9:16, o contrato do `visual_library.json` e o patch dos SVGs). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
 
 ---
 
@@ -65,15 +65,16 @@
 - **Objetivo:** contratos JSON Schema dos três artefatos desta camada.
 - **Passo 1 (bloqueante):** **proposta de contratos** em documento (campos, enums fechados, campos de proveniência obrigatórios, referências `evidence_ids`), revisada por digest e aprovada. Sem isso, nenhum schema é escrito (U2). **Feito:** aprovada pelo Fonseca em 2026-10-22 (PR #15).
 - **Passo 2:** `contracts/visual_spec.schema.json`, `cover_spec.schema.json`, `qa_result.schema.json` + fixtures sintéticas (2 válidas e 2 inválidas por contrato) em `fixtures/synthetic/`. **Feito:** PR #20 (24 testes, 290 mutantes detectados); as fixtures ficaram em `fixtures/synthetic/contracts/`.
-- **Passo 3:** os prompts vivem em `skills/<nome>/SKILL.md` (D-12), com `skills/.checksums`, e a lista de termos em `config/baseline/cfm_blocklist.json`. **Feito (v0.1):** PRs #14, #17 e #21, mescladas. A PR #23 (sem o `100%` isolado, D-13) está aberta. Nenhum teste roda contra um modelo; a temperatura do copywriter segue UNKNOWN.
-- **Passo 4 (PROPOSED):** impor por código e teste o bloqueio de mídia clínica da v1 (D-15). O local é UNKNOWN (U24).
+- **Passo 3:** os prompts vivem em `skills/<nome>/SKILL.md` (D-12), com `skills/.checksums`, e a lista de termos em `config/baseline/cfm_blocklist.json`. **Feito (v0.1):** PRs #14, #17, #21, #22 e #23 (sem o `100%` isolado, D-13), mescladas. A PR #25 (`100% eficaz` na lista) está aberta. Nenhum teste roda contra um modelo; a temperatura do copywriter segue UNKNOWN.
+- **Passo 4 (PROPOSED):** impor por código e teste o bloqueio de mídia clínica da v1 (D-15), nas duas camadas decididas em U24 (schema de `image_assets` e validador de negócio). **Bloqueado por fonte:** o contrato `image_assets` v0.1.0 e o campo que identifica a foto clínica não estão neste repositório.
 - **Aceite:** CP-VL3.1 a CP-VL3.5.
 
 ## VL-4 — Baseline visual
 
 - **Objetivo:** `config/baseline/visual_library.json` (lista fechada de gramáticas, tamanhos, mapa de slots, tokens, zonas seguras, pares de cor permitidos) e `.checksums`.
 - **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca no marco VL-4 (D-10, decidido em 2026-10-22).
-- **Zonas seguras:** `templates.json` declara zonas que a resposta a U19 apontou como erradas (erro na declaração, não nos SVGs). O `visual_library` carrega as corrigidas: margem de 64 px, com a dúvida das faixas de 9:16 em U23.
+- **Zonas seguras:** `templates.json` declara zonas que a resposta a U19 apontou como erradas (erro na declaração, não nos SVGs). O `visual_library` carrega as corrigidas: margem de 64 px e, nos 9:16, as faixas de 260 px (topo) e 340 px (base), por U23. A faixa de 380 a 1600 do `reel-02-overlay` segue UNKNOWN.
+- **O que ainda falta para o VL-4 (2026-10-22):** (1) a nota de direitos (U7) e a autorização explícita para os SVGs entrarem no repo (D-04, D-10); (2) a decisão sobre o chrome nas faixas dos 9:16: `label_top` (nos três formatos) e `cta_label` do `story-01-convite` reprovariam, e o rodapé do CFM, pela U18, ficaria justamente na faixa de 340 px; (3) o contrato do `visual_library.json` (nenhum está definido; escrevo como proposta antes do arquivo); (4) `templates.json` e `tokens.css` originais, que não estão acessíveis nesta sessão. As cópias dos SVGs ficam fora do repo (D-04).
 - **Aceite:** CP-VL4.1 a CP-VL4.4. Os SVGs entram no repo **neste marco**, e só depois de D-04.
 
 ## VL-5 — Núcleo de render
@@ -124,7 +125,9 @@ Estágios 01–05 e 10–12; Fase 1 e Fase 4 como entregas; publicação e métr
 | Texto estoura slot sem medir fonte real | QA falha só no render | orçamento de caracteres por linha e testes de limite; medição real só com a fonte decidida |
 | Cota do Figma (seat View) | auditoria incompleta | orçamento fixo no VL-1; tratar o restante como UNKNOWN |
 | Mídia clínica entra sem bloqueio (D-15 sem código) | foto de paciente em peça publicada | CP-VL3.5; até lá, nada no repositório impõe o bloqueio |
-| A lista de termos só pega a forma exata | variações passam (`curar`, `100% eficaz`) | decisão de ampliar a lista; o prompt pede ao modelo que evite; o juiz semântico do `09_QA` cobre o resto |
+| A lista de termos só pega a forma exata | variações passam (`curar`, `100% eficazes`) | decisão de ampliar a lista; o prompt pede ao modelo que evite; o juiz semântico do `09_QA` cobre o resto |
+| Rodapé do CFM dentro da faixa de 340 px do Reels (U18 e U23) | a identificação do médico pode ficar sob a interface na reprodução | decisão do Fonseca; o `QA-SAFE` trata esse slot como exceção explícita ou o rodapé sobe |
+| Chrome nas faixas dos 9:16 (`label_top`, `cta_label`) | reprovaria no `QA-SAFE` se o chrome entrar no gate; nenhum template 9:16 passaria como está | decidir entre isentar o chrome e mover o elemento (D-06) |
 
 ## Definition of done desta camada
 

@@ -121,7 +121,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `hook_rules` — regras de hook para o orquestrador
 - `archetypes` — arquétipos de paper
 - `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa` — vêm de `skills/*/SKILL.md`, não de arquivos em `prompts/`. Hoje só 06, 07 e 09 têm skill
-- `cfm_blocklist`, `cfm_footer` — termos proibidos e texto do rodapé das regras do CFM, que se aplicam ao sistema. O conteúdo e a fonte da regra ainda estão por definir
+- `cfm_blocklist`, `cfm_footer` — termos proibidos e texto do rodapé das regras do CFM, que se aplicam ao sistema. `cfm_blocklist` tem conteúdo definido pelo Fonseca em 2026-10-22, em `config/baseline/cfm_blocklist.json`; a fonte normativa da regra do CFM ainda não foi verificada. `cfm_footer` tem o formato definido pelo Fonseca (`[Nome] – MÉDICO – CRM/[UF] [Número]`), mas a chave ainda não existe em `config/baseline/` e a origem de Nome, UF e Número está por definir
 
 ## Dois Repositórios, Dois Schemas
 
