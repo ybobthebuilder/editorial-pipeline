@@ -112,10 +112,12 @@ test('the module has no require() or import, so it runs in the n8n Cloud Code no
 
 // The tests above exercise the mechanics with example terms. The ones below use the real v0.1 list
 // that Fonseca supplied on 2026-10-22 (U22), read from the config file, never copied into code.
+// Amended the same day: the isolated "100%" left the list. numbers.js handles the arithmetic and the
+// list handles the legal wording, so a verified 100% is publishable and only promises are blocked.
 const { readFileSync: readFile } = require('node:fs');
 const { join: joinPath } = require('node:path');
 
-const V01 = ['cura', 'garantido', '100%', 'milagroso', 'revolucionário', 'melhor do Brasil', 'resultado certo', 'definitivo', 'sem riscos', 'imediato'];
+const V01 = ['cura', 'garantido', 'milagroso', 'revolucionário', 'melhor do Brasil', 'resultado certo', 'definitivo', 'sem riscos', 'imediato'];
 const REAL = JSON.parse(readFile(joinPath(__dirname, '..', 'config', 'baseline', 'cfm_blocklist.json'), 'utf8'));
 const hits = (text) => findBlockedTerms([{ id: 'x', text }], REAL).matches.map((m) => m.term);
 
@@ -138,11 +140,18 @@ test('every term of the v0.1 list is found on its own, in any case and without a
   assert.deepEqual(hits('REVOLUCIONARIO'), ['revolucionário']);
 });
 
-test('"100%" is found as a whole figure and not inside another number or word', () => {
-  assert.deepEqual(hits('Eficácia de 100%.'), ['100%']);
-  assert.deepEqual(hits('(100%)'), ['100%']);
-  assert.deepEqual(hits('100% garantido'), ['100%', 'garantido']);
-  for (const text of ['1100%', 'a100%', '100%a', '100,0%', '99,9%', '100']) assert.deepEqual(hits(text), [], text);
+test('"100%" alone is not forbidden; the promise forms are stopped by the word that promises', () => {
+  for (const text of ['Efic\u00e1cia de 100%.', '(100%)', '100%', 'Resposta em 100%']) assert.deepEqual(hits(text), [], text);
+  assert.deepEqual(hits('100% garantido'), ['garantido']);
+  assert.deepEqual(hits('100% garantido e imediato'), ['garantido', 'imediato']);
+});
+
+test('mechanics: a term that ends in "%" is found as a whole figure and not inside another number or word', () => {
+  // Example list, not the real one: this keeps the boundary rules covered for terms that end in a symbol.
+  const found = (text) => findBlockedTerms([{ id: 'x', text }], ['100%']).matches.map((m) => m.term);
+  assert.deepEqual(found('(100%)'), ['100%']);
+  assert.deepEqual(found('Efic\u00e1cia de 100%.'), ['100%']);
+  for (const text of ['1100%', 'a100%', '100%a', '100,0%', '99,9%', '100']) assert.deepEqual(found(text), [], text);
 });
 
 test('"melhor do Brasil" is a phrase: case, spacing and a closing full stop do not hide it, a longer word does', () => {
@@ -167,20 +176,22 @@ test('several terms in one text are all reported, each with its position in the 
 
 test('known gaps, by design (whole forms only): these slip through and must be added to the list to be caught', () => {
   // Pinned so that any change in what slips through is a decision, not an accident.
-  const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucionária', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100 %', '100 %'];
+  // "100% eficaz" is a promise that Fonseca named on 2026-10-22, but it is not a term of the list.
+  const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucion\u00e1ria', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100% eficaz', '100% seguro'];
   for (const text of slips) assert.deepEqual(hits(text), [], text);
   assert.equal(findBlockedTerms([{ id: 'x', text: slips.join(' ') }], REAL).passed, true);
 });
 
-test('precedence today: a verified 100% passes QA-NUM and still fails QA-CFM, because the gates are independent', () => {
-  // A number that numbers.js allows (it came from a VERIFIED evidence) is not exempt from the list.
-  // No code lets one gate override the other, and QA-CFM cannot be waived (contracts-proposal.md,
-  // section 6). Changing this is a policy decision for Fonseca: remove "100%" from the list, or
-  // define an exemption for verified values. Until then this test pins what the code does.
-  const items = [{ id: 'headline', text: 'Resposta em 100%' }];
-  assert.equal(checkNumbersAllowed(items, [{ value: 100, unit: '%' }]).passed, true);
-  assert.equal(findBlockedTerms(items, REAL).passed, false);
-  assert.deepEqual(hits(items[0].text), ['100%']);
-  // The numeric gate alone does not decide: with 100% not allowed, QA-NUM fails too.
-  assert.equal(checkNumbersAllowed(items, [{ value: 92, unit: '%' }]).passed, false);
+test('a verified 100% is publishable: it passes QA-NUM and QA-CFM, and "100% garantido" is still stopped by "garantido"', () => {
+  // Decision of Fonseca, 2026-10-22: numbers.js handles the arithmetic, the list handles the legal
+  // wording. The gates stay independent and QA-CFM cannot be waived (contracts-proposal.md, section 6).
+  const plain = [{ id: 'headline', text: 'Resposta em 100%' }];
+  assert.equal(checkNumbersAllowed(plain, [{ value: 100, unit: '%' }]).passed, true);
+  assert.equal(findBlockedTerms(plain, REAL).passed, true);
+  const promise = [{ id: 'headline', text: '100% garantido' }];
+  assert.equal(checkNumbersAllowed(promise, [{ value: 100, unit: '%' }]).passed, true);
+  assert.equal(findBlockedTerms(promise, REAL).passed, false);
+  assert.deepEqual(hits(promise[0].text), ['garantido']);
+  // The numeric gate still decides on its own: with 100% not allowed, QA-NUM fails.
+  assert.equal(checkNumbersAllowed(plain, [{ value: 92, unit: '%' }]).passed, false);
 });
