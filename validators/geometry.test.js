@@ -4,7 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { existsSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
-const { DEFAULT_MARGIN, PLATFORM_BANDS_9_16, UNITS_PER_EM, platformBands, safeZone, measureText, availableWidth, checkSlot, charBudget } = require('./geometry.js');
+const { DEFAULT_MARGIN, PLATFORM_BANDS_9_16, UNITS_PER_EM, platformBands, safeZone, baselineRange, cfmFooterBaseline, measureText, availableWidth, checkSlot, charBudget } = require('./geometry.js');
 const { readMetrics, CODE_POINTS } = require('../scripts/extract-font-metrics.js');
 
 const POST = { width: 1080, height: 1350 };
@@ -356,4 +356,67 @@ test('the code points left out of the table are refused', () => {
   for (const code of [0xaf, 0xb1, 0xb5, 0xb7, 0xf7, 0x2212]) {
     assert.deepEqual(measureText(String.fromCodePoint(code), style).unsupported, [String.fromCodePoint(code)], `U+${code.toString(16)}`);
   }
+});
+
+test('baselineRange: the baselines that keep one line inside the zone, 9:16 and post (chrome is not exempt)', () => {
+  // 9:16: top = 260 + 0.75 size, bottom = 1580 - 0.25 size.
+  assert.deepEqual(baselineRange(STORY, 23), { min: 277.25, max: 1574.25 });
+  assert.deepEqual(baselineRange(STORY, 28), { min: 281, max: 1573 });
+  // Post 1080x1350: the 64 px margin on both sides of the height.
+  assert.deepEqual(baselineRange(POST, 23), { min: 81.25, max: 1280.25 });
+  assert.deepEqual(baselineRange(STORY, 100, { bands: { top: 0, bottom: 0 } }), { min: 139, max: 1831 });
+  assert.deepEqual(baselineRange(STORY, 100, { margin: 300 }), { min: 375, max: 1555 });
+  assert.throws(() => baselineRange(STORY, 0), TypeError);
+  assert.throws(() => baselineRange(STORY, '23'), TypeError);
+  assert.throws(() => baselineRange(null, 23), TypeError);
+});
+
+test('baselineRange agrees with checkSlot at both edges, on 9:16 and on a post', () => {
+  for (const canvas of [STORY, POST]) {
+    const { min, max } = baselineRange(canvas, 23);
+    const slot = { x: 118, y: min, fontSize: 23, family: 'mono', weight: 600, letterSpacing: 2, maxLines: 1 };
+    assert.equal(checkSlot(slot, ['PESQUISA'], canvas).passed, true, `min ${canvas.height}`);
+    assert.equal(checkSlot({ ...slot, y: max }, ['PESQUISA'], canvas).passed, true, `max ${canvas.height}`);
+    assert.deepEqual(reasons(checkSlot({ ...slot, y: min - 0.5 }, ['PESQUISA'], canvas)), [[0, 'fora_da_zona_segura_vertical']]);
+    assert.deepEqual(reasons(checkSlot({ ...slot, y: max + 0.5 }, ['PESQUISA'], canvas)), [[0, 'fora_da_zona_segura_vertical']]);
+  }
+});
+
+test('the old chrome baselines fail on 9:16 and pass on a post: label_top at 125 and story-01 cta_label at 1657', () => {
+  assert.ok(125 < baselineRange(STORY, 23).min);
+  assert.ok(125 >= baselineRange(POST, 23).min);
+  assert.ok(1657 > baselineRange(STORY, 28).max);
+});
+
+test('CFM footer baseline: 1540 on 1080x1920, above the 1580 line (decision of 2026-10-22)', () => {
+  assert.equal(cfmFooterBaseline(STORY, 12), 1540);
+  const footer = { x: 540, y: cfmFooterBaseline(STORY, 12), anchor: 'middle', fontSize: 12, family: 'sans', weight: 400, maxLines: 1 };
+  const result = checkSlot(footer, ['Nome Sobrenome \u2013 M\u00c9DICO \u2013 CRM/SP 123456'], STORY);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.passed, true);
+  // The footer's own box (cap 9 above, descent 3 below) ends at 1543, well above the 1580 line.
+  assert.ok(1540 + 0.25 * 12 < safeZone(STORY).bottom);
+  assert.ok(cfmFooterBaseline(STORY, 12) <= baselineRange(STORY, 12).max);
+});
+
+test('CFM footer baseline on a post canvas: the descent ends on the 64 px bottom margin, whatever the height', () => {
+  assert.equal(cfmFooterBaseline(POST, 12), 1283); // 1350 - 64 - 3
+  assert.equal(cfmFooterBaseline({ width: 1080, height: 1080 }, 12), 1013);
+  // 1080x1440 is not among the six templates; the rule is the same, by the canvas and not by a list.
+  assert.equal(cfmFooterBaseline({ width: 1080, height: 1440 }, 12), 1373);
+  assert.equal(cfmFooterBaseline(POST, 20), 1281); // the descent scales with the size
+  for (const canvas of [POST, { width: 1080, height: 1080 }, { width: 1080, height: 1440 }]) {
+    const slot = { x: canvas.width / 2, y: cfmFooterBaseline(canvas, 12), anchor: 'middle', fontSize: 12, family: 'sans', weight: 400, maxLines: 1 };
+    assert.equal(checkSlot(slot, ['Nome \u2013 M\u00c9DICO \u2013 CRM/SP 1'], canvas).passed, true, String(canvas.height));
+    assert.deepEqual(reasons(checkSlot({ ...slot, y: slot.y + 0.5 }, ['Nome'], canvas)), [[0, 'fora_da_zona_segura_vertical']], String(canvas.height));
+  }
+});
+
+test('CFM footer baseline refuses a malformed size or canvas', () => {
+  assert.throws(() => cfmFooterBaseline(STORY, 0), TypeError);
+  assert.throws(() => cfmFooterBaseline(STORY, -12), TypeError);
+  assert.throws(() => cfmFooterBaseline(STORY, '12'), TypeError);
+  assert.throws(() => cfmFooterBaseline(STORY, Number.NaN), TypeError);
+  assert.throws(() => cfmFooterBaseline(null, 12), TypeError);
+  assert.throws(() => cfmFooterBaseline({ width: 1080 }, 12), TypeError);
 });

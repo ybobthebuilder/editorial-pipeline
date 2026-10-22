@@ -74,7 +74,7 @@
 - **Objetivo:** `config/baseline/visual_library.json` (lista fechada de gramáticas, tamanhos, mapa de slots, tokens, zonas seguras, pares de cor permitidos) e `.checksums`.
 - **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca no marco VL-4 (D-10, decidido em 2026-10-22).
 - **Zonas seguras:** `templates.json` declara zonas que a resposta a U19 apontou como erradas (erro na declaração, não nos SVGs). O `visual_library` carrega as corrigidas: margem de 64 px e, nos 9:16, as faixas de 260 px (topo) e 340 px (base), por U23. A faixa de 380 a 1600 do `reel-02-overlay` segue UNKNOWN.
-- **O que ainda falta para o VL-4 (2026-10-22):** (1) a nota de direitos (U7) e a autorização explícita para os SVGs entrarem no repo (D-04, D-10); (2) a decisão sobre o chrome nas faixas dos 9:16: `label_top` (nos três formatos) e `cta_label` do `story-01-convite` reprovariam, e o rodapé do CFM, pela U18, ficaria justamente na faixa de 340 px; (3) o contrato do `visual_library.json` (nenhum está definido; escrevo como proposta antes do arquivo); (4) `templates.json` e `tokens.css` originais, que não estão acessíveis nesta sessão. As cópias dos SVGs ficam fora do repo (D-04).
+- **O que ainda falta para o VL-4 (atualizado em 2026-10-22, depois das respostas do Fonseca):** (1) ~~nota de direitos e autorização dos SVGs~~: autorizados em `assets/brand/` como `owned_brand_asset`; (2) ~~chrome nas faixas dos 9:16~~: sem isenção, `label_top` e `cta_label` mudam de lugar e o rodapé do CFM fica acima da linha de 1580 px (`geometry.js`); falta o patch dos SVGs; (3) o contrato do `visual_library.json` (proposta mesclada, falta o schema e o arquivo); (4) `templates.json` e `tokens.css` originais, que não estão acessíveis nesta sessão (as cópias dos SVGs e os valores de `contexto.md` §7 são a fonte).
 - **Aceite:** CP-VL4.1 a CP-VL4.4. Os SVGs entram no repo **neste marco**, e só depois de D-04.
 
 ## VL-5 — Núcleo de render
@@ -126,7 +126,7 @@ Estágios 01–05 e 10–12; Fase 1 e Fase 4 como entregas; publicação e métr
 | Cota do Figma (seat View) | auditoria incompleta | orçamento fixo no VL-1; tratar o restante como UNKNOWN |
 | Mídia clínica entra sem bloqueio (D-15 sem código) | foto de paciente em peça publicada | CP-VL3.5; até lá, nada no repositório impõe o bloqueio |
 | A lista de termos só pega a forma exata | variações passam (`curar`, `100% eficazes`) | decisão de ampliar a lista; o prompt pede ao modelo que evite; o juiz semântico do `09_QA` cobre o resto |
-| Rodapé do CFM dentro da faixa de 340 px do Reels (U18 e U23) | a identificação do médico pode ficar sob a interface na reprodução | decisão do Fonseca; o `QA-SAFE` trata esse slot como exceção explícita ou o rodapé sobe |
+| ~~Rodapé do CFM dentro da faixa de 340 px do Reels (U18 e U23)~~ | resolvido em 2026-10-22: o rodapé sobe para acima da linha de 1580 px nos 9:16 e o chrome não é isento | `geometry.cfmFooterBaseline`; patch dos SVGs no VL-4 |
 | Chrome nas faixas dos 9:16 (`label_top`, `cta_label`) | reprovaria no `QA-SAFE` se o chrome entrar no gate; nenhum template 9:16 passaria como está | decidir entre isentar o chrome e mover o elemento (D-06) |
 
 ## Definition of done desta camada

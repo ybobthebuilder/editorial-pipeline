@@ -11,6 +11,12 @@
 // 9:16 when width x 16 equals height x 9 (1080x1920); no other field says so (UNKNOWN: whether the
 // "format" field of the request, U21, can disagree with the canvas size).
 //
+// Chrome (decision of 2026-10-22): nothing is exempt from the zone. label_top, cta_label and the
+// CFM footer follow the same limits as any text; baselineRange gives the baselines that fit, and
+// cfmFooterBaseline the footer's: 1540 on 1080x1920, the 64 px margin at the bottom elsewhere.
+// The limits are inclusive (a glyph box that ends exactly on 260 or 1580 passes); the decision text
+// says "y > 260" and "y < 1580" and a strict reading would move each edge by one pixel.
+//
 // Fonts (decision U20, 2026-10-22): Arial for text, Courier New for numbers and codes, as
 // design-time fallbacks until Figma in Phase 5. The container has neither file, so the tables
 // below are advance widths read from Liberation Sans Regular/Bold and Liberation Mono, which are
@@ -39,6 +45,9 @@ const UNITS_PER_EM = 2048;
 const MONO_ADVANCE = 1229;
 const DEFAULT_MARGIN = 64;
 const PLATFORM_BANDS_9_16 = Object.freeze({ top: 260, bottom: 340 });
+// CFM footer on 9:16 (decision of 2026-10-22): above the 1580 px line, "e.g. y = 1540", which is
+// 40 px above it on 1080x1920. The 40 is derived from that example and is not stated as a rule.
+const CFM_FOOTER_GAP_9_16 = 40;
 const NO_BANDS = Object.freeze({ top: 0, bottom: 0 });
 const BOLD_FROM_WEIGHT = 600;
 // PROPOSED, deliberately rounded up. The Liberation cap height (0.688 em) is not Arial's
@@ -116,11 +125,15 @@ function assertCanvas(canvas) {
   }
 }
 
+function is9x16(canvas) {
+  assertCanvas(canvas);
+  return canvas.width * 16 === canvas.height * 9;
+}
+
 // Platform interface bands of the canvas: 260 px at the top and 340 px at the bottom on 9:16,
 // none on any other canvas.
 function platformBands(canvas) {
-  assertCanvas(canvas);
-  return canvas.width * 16 === canvas.height * 9 ? PLATFORM_BANDS_9_16 : NO_BANDS;
+  return is9x16(canvas) ? PLATFORM_BANDS_9_16 : NO_BANDS;
 }
 
 function assertBands(bands) {
@@ -148,6 +161,25 @@ function safeZone(canvas, margin = DEFAULT_MARGIN, bands = platformBands(canvas)
     width: canvas.width - 2 * margin,
     height: canvas.height - top - bottom,
   };
+}
+
+// Where a text baseline may sit so that one line of the given size stays inside the safe zone,
+// by the same conservative cap and descent ratios checkSlot uses: { min, max } for the first
+// baseline (min > max means the zone is too short for the line). Chrome gets no exemption: it
+// is placed with the same limits as any other text (decision of 2026-10-22, "nada é isento").
+function baselineRange(canvas, fontSize, options = {}) {
+  if (!isNumber(fontSize) || fontSize <= 0) throw new TypeError('fontSize must be a positive number');
+  const zone = safeZone(canvas, options.margin === undefined ? DEFAULT_MARGIN : options.margin, options.bands);
+  return { min: zone.top + CAP_RATIO * fontSize, max: zone.bottom - DESCENT_RATIO * fontSize };
+}
+
+// Baseline of the one-line CFM footer (decisions U18 and U23, 2026-10-22). On 9:16 it sits 40 px
+// above the 1580 px line (1540 on 1080x1920); on any other canvas it sits at the bottom, with the
+// descent ending on the 64 px margin. The footer is centred, so x is canvas.width / 2.
+function cfmFooterBaseline(canvas, fontSize) {
+  if (!isNumber(fontSize) || fontSize <= 0) throw new TypeError('fontSize must be a positive number');
+  const zone = safeZone(canvas);
+  return is9x16(canvas) ? zone.bottom - CFM_FOOTER_GAP_9_16 : zone.bottom - DESCENT_RATIO * fontSize;
 }
 
 function assertStyle(style) {
@@ -295,6 +327,8 @@ module.exports = {
   UNITS_PER_EM,
   platformBands,
   safeZone,
+  baselineRange,
+  cfmFooterBaseline,
   measureText,
   availableWidth,
   checkSlot,
