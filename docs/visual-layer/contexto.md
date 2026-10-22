@@ -159,6 +159,14 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U11-m | **RESPONDIDO** (2026-10-22): `approved` e `rejected` confirmados; gravação pelo papel `human_reviewer`. Pendente: não deixar a credencial em workflow sem supervisão | gate | — |
 | U11-n | **RESPONDIDO** (2026-10-22): `jobs` ganha a proveniência de `CLAUDE.md` §7 | `jobs`, `set_status` | — |
 | U11-o | **RESPONDIDO** (2026-10-22): `jobs.attempt_count`; o limite de 3 é do código. Reuso de assinatura resolvido por `status_entered_at` (escolha minha) | retry, gate | — |
+| U12 a U17 | **RESPONDIDO** (Fonseca, 2026-10-22): seguir as recomendações PROPOSED (mapa de slots v0, `alt_text` obrigatório, `rationale` com até 280 caracteres, ids uuid, motivos do juiz semântico, `grammar_id` conferido por código). Ver `contracts-proposal.md` §7 | — | — |
+| U18 | **ABERTA**: texto do `cfm_footer` e onde ele fica em cada template (os formatos 9:16 não têm rodapé) | `cover_spec` com rodapé, patch dos SVGs, chave `cfm_footer` | Fonseca |
+| U19 | **RESPONDIDO** (Fonseca, 2026-10-22): foi um erro na declaração do template, não nos arquivos. A margem é de 64 px (D-08) e a zona segura é o espaço restante. `geometry.js` aplica os 64 px nos quatro lados (PR #19). Consequência: as zonas de `templates.json` estão erradas e o `visual_library` (VL-4) carrega as corrigidas. **Premissa minha, a confirmar (U23):** as faixas de interface da plataforma dos formatos 9:16 não foram aplicadas | `QA-SAFE`, VL-4 | — |
+| U20 | **RESPONDIDO** (Fonseca, 2026-10-22): em design-time, Arial como fonte de texto e Courier New (monoespaçada) para números e códigos; atualizar no Figma na Fase 5. Sem os arquivos reais no ambiente, as larguras vêm de Liberation Sans e Mono (compatíveis por projeto do fabricante, não verificado aqui); contra as larguras Helvetica/AFM, 185 de 190 pontos de código Latin-1 comparáveis são iguais. Arial e Courier New reais **nunca foram medidos** | `geometry.js` | — |
+| U21 | **ABERTA**: de onde vem o formato pedido (1:1, 4:5, 9:16) no job; hipótese `input_context.format`. A resposta recebida em 2026-10-22, "Lista de validadores: aprovada como está na proposta", refere-se à tabela de `contracts-proposal.md` §8; foi registrada como aprovação dessa lista, por interpretação minha, a confirmar | gramática `capa` | Fonseca |
+| U22 | **RESPONDIDO** (Fonseca, 2026-10-22): a fonte é a planilha privada dele. Lista v0.1 de 10 termos em `config/baseline/cfm_blocklist.json` (PR #21, mesclada). A PR #23, aberta, a reduz a 9 pela remoção do `100%` isolado (D-13). A fonte normativa da regra do CFM segue **UNKNOWN**: o assistente não a verificou | `QA-CFM`, prompt do `copywriter-cfm` | — |
+| U23 | **ABERTA**: as faixas de interface da plataforma nos formatos 9:16 (260 px em cima e 340 px embaixo; 380 a 1600 no `reel-02-overlay`) continuam valendo além da margem de 64 px? | `QA-SAFE` em 9:16 | Fonseca |
+| U24 | **ABERTA**: onde e por qual código o bloqueio de mídia clínica (D-15) é imposto; o que "por padrão" permite (exceção com aprovação humana?); `owned_photo`, que o relatório lista como proveniência, fica fora? | CP-VL3.5 | Fonseca |
 
 ## 11. Decisões pendentes (Fonseca)
 
@@ -171,26 +179,25 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-05 | Regras regulatórias (CFM) se aplicam? | **decidido** (Fonseca, 2026-10-22): sim, conformidade é objetivo do sistema. Gate `QA-CFM`, configs `cfm_blocklist` e `cfm_footer` (conteúdo: U22 e U18) |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
-| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem externa (chrome). Os 90 px de `templates.json` passam a ser a zona segura de conteúdo |
+| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem externa (chrome). **Ajustado por U19 (mesmo dia):** a zona segura de conteúdo é o espaço restante (tela menos 64 px em cada lado), e não mais 90 px. Aplicado em `geometry.js` (PR #19) |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
 | D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **decidido** (Fonseca, 2026-10-22): só no VL-4 (Fase 3). Exige também a nota de direitos (U7, VL-1) antes da entrada |
 | D-11 | Agentes A1–A7 como subagentes com ferramentas × `CLAUDE.md` §2 | **decidido** (Fonseca, 2026-10-22): o `CLAUDE.md` prevalece. Não há subagentes autônomos em runtime; os `SKILL.md` são prompts de sistema de nós de LLM do n8n, sem ferramentas. Só se rascunha o que o escopo determinístico permite (06, 07, 09) |
 | D-12 | Fonte do prompt: `skills/` × `prompts/baseline/` | **decidido** (Fonseca, 2026-10-22): `skills/` é a fonte única da verdade; o `seed-baseline` leva o texto para a config. O formato do `content` é proposta nossa (ver a PR dos prompts) |
+| D-13 | A palavra isolada `100%` sai de `cfm_blocklist`; ficam só promessas | **decidido** (Fonseca, 2026-10-22): `numbers.js` cuida da matemática e a lista cuida da semântica legal. Um `100%` verificado é publicável; `100% garantido` continua barrado por `garantido`. Implementado na PR #23 (aguarda revisão). **Lacuna:** `100% eficaz`, citado como exemplo de promessa, não é termo da lista e passa; acrescentá-lo é decisão do Fonseca |
+| D-14 | A lista de termos proibidos pode ficar no repositório público? | **decidido** (Fonseca, 2026-10-22): sim, é intencional. Segundo o Fonseca, a lista é regra pública do CFM e da LGPD (afirmação dele, não verificada pelo assistente). O que fica privado no `editorial-intel` é a metodologia da pesquisa e os casos reais |
+| D-15 | Mídia clínica na v1 | **decidido** (Fonseca, 2026-10-22): o bloqueio deve ser imposto. O sistema não aceita upload de imagens de pacientes (fotos clínicas, antes/depois, exames) por padrão; só ilustrações geradas (com selo) ou imagens de banco com crédito. **Não implementado**: nada no repositório impõe o bloqueio ainda (CP-VL3.5; local e exceções em U24) |
 
-## 12. Estado atual (VERIFIED em 2026-10-22)
+## 12. Estado atual (VERIFIED em 2026-10-22, `main` em `53c46b332e9a490cada6fdccdb78059ba0e2dfad`)
 
-- `main` do repo em `e821de1…`: só documentação de governança, **sem código**.
-- Branch `claude/validators-math` (`da1083e9dc2e4ccb765a1e7ba126743bc829ffb4`): `validators/math.js` e `math.test.js`, 11 testes passando, 5 mutantes detectados. Sem PR.
-- Branch `claude/validators-contrast` (`dcb572140146af36505d5a1350c9bcfcbec6c664`): `validators/contrast.js` e `contrast.test.js`, 17 testes passando, 10 de 11 mutantes detectados (o 11º é equivalente). Sem PR.
-- Branch `claude/validators-schema` (`759df316c9e30066c5de264deaae5a2c5dd65554`): `validators/schema.js` e `schema.test.js`, 26 testes passando, 11 de 11 mutantes detectados. Sem PR.
-- Módulos do Code node do n8n Cloud (VERIFIED pelo Fonseca, a partir do trecho oficial colado na sessão; o assistente não conseguiu acessar a documentação): só nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
-- Branch `claude/validators-schema` (`759df316c9e30066c5de264deaae5a2c5dd65554`): `validators/schema.js` e `schema.test.js`, 26 testes passando, 11 de 11 mutantes detectados. Sem PR.
-- Módulos do Code node do n8n Cloud (VERIFIED pelo Fonseca, trecho oficial colado na sessão; não verificado pelo assistente, cujo acesso à documentação foi bloqueado): só nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
-- Branch `claude/docs-visual-layer`: estes três documentos, como proposta.
-- Decisão do usuário em 2026-10-22: o baseline fica em `editorial.config_baseline` (U1, D-02). É uma decisão informada, não uma evidência de schema implantado.
-- Branch `claude/migration-001` (`3276ff2c0b41871348095d683d0d2aae9ffeb570`): `supabase/migrations/001_init_editorial_schema.sql` e 16 testes contra Postgres 16.15 limpo. Sem PR.
-- Branch `claude/ci-validators` (`90619f6ace61f4e17a736ecb637f2ddc2d4f56c6`): workflow de validadores, preparado e não ativo. Sem PR.
-- Nenhum arquivo de marca foi adicionado ao repo.
+- **Fase 1 fechada:** migrations 001 a 006, rollbacks, `seed-baseline` e `verify-baseline` (com `--skills`), e os CI `migrations` e `validators` no GitHub.
+- **Validadores** em `validators/`: `math`, `contrast`, `schema`, `numbers`, `blocklist` e `geometry`. No `main`, `node --test 'validators/*.test.js'` dá 154 de 154 e `node --test 'tests/skills/*.test.js'` dá 16 de 16.
+- **Contratos** em `contracts/`: `visual_spec`, `cover_spec`, `qa_result` (PR #20), com fixtures sintéticas. As regras que o schema não expressa (existência de ids, evidência `VERIFIED`, `slot_id` e `gate_id` únicos, `waived` proibido em `QA-CFM`, `passed` coerente com os gates) **ainda não têm validador de código**.
+- **Prompts:** `skills/{art-director,copywriter-cfm,qa-validator}/SKILL.md` na v0.1, com `skills/.checksums`. Nenhum teste roda contra um modelo de linguagem.
+- **Config:** `config/baseline/cfm_blocklist.json` com 10 termos no `main`; a PR #23 o reduz a 9 (D-13).
+- **PRs abertas:** #22 (linha A5 do `skills/README.md`; aprovada pelo Fonseca, mas o merge não aparecia no GitHub na consulta de 2026-10-22), #23 (remoção do `100%`) e a PR destes documentos.
+- **Marca e direitos:** nenhum arquivo de marca no repo. O `slot-map-v0.md` contém geometria derivada dos SVGs (rótulo VERIFIED) e pede revisão de direitos; a nota de direitos (U7, CP-VL1.6) segue pendente.
+- **Code node do n8n Cloud** (VERIFIED pelo Fonseca, trecho oficial colado na sessão; não verificado pelo assistente): só módulos nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
 - Os documentos antigos em `design-system/claude/nature-exe-roadmap` descrevem a orquestra de agentes e **estão superados por este conjunto**.
 
 ## 13. Retomada
