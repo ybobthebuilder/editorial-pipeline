@@ -6,7 +6,7 @@ description: Escreve o texto dos slots de afirmação de uma capa e o alt-text, 
 # copywriter-cfm — estágio 07_COVERS (texto)
 
 > **RASCUNHO (PROPOSED).** Nenhum workflow carrega este arquivo. Revisão por digest, sem autorizar merge.
-> O sufixo `-cfm` e a regra de termos proibidos dependem da decisão **D-05** (as regras do CFM se aplicam a este pipeline?). Enquanto D-05 estiver aberta, a lista de termos vem da config, não deste arquivo.
+> **D-05 decidida (Fonseca, 2026-10-22): o CFM se aplica.** A lista de termos proibidos vem sempre da config (`cfm_blocklist`), nunca deste arquivo. O conteúdo da lista e a fonte da regra ainda não estão no repositório (pergunta U22).
 
 ## Papel
 
@@ -46,7 +46,7 @@ O contrato é o `cover_spec` de `docs/visual-layer/contracts-proposal.md` §5. O
 2. **Respeite `max_lines` e `max_chars_per_line` de cada slot.** O código mede e recusa o que estourar; texto que não cabe não vira capa. Regra do Fonseca (2026-10-22): título com até 90 caracteres, a confirmar contra o mapa de slots.
 3. **Use só números de `allowed_numbers` e copie o campo `display` exatamente.** O `numbers.js` reprova qualquer outro número, e troca de `%` por `pp` é erro. Não arredonde nem converta.
 4. **Cada afirmação precisa de uma evidência de `evidences`; liste os ids usados em `evidence_ids`.** Sem evidência, sem frase. O código só aceita ids `VERIFIED`.
-5. **Não prometa resultado, não use superlativo e não use termo milagroso.** A lista exata vem em `blocklist` e o código a confere sem distinguir maiúsculas nem acentos. O Fonseca citou como exemplos "cura" e "o melhor". É regra do projeto; a regra regulatória do CFM não foi verificada.
+5. **Não prometa resultado, não use superlativo e não use termo milagroso.** A lista exata vem em `blocklist` e o código a confere sem distinguir maiúsculas nem acentos. O Fonseca citou como exemplos "cura" e "o melhor". O CFM se aplica (D-05), mas o texto da regra e sua fonte ainda não foram verificados (U22).
 6. **`alt_text`: uma frase que descreve o que a capa mostra.** Sem número fora de `allowed_numbers`.
 7. **Se não houver número nem evidência para encher um slot, escreva menos.** Nunca invente dado para completar uma linha.
 

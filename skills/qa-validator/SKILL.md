@@ -6,7 +6,7 @@ description: Julga a fidelidade semântica de uma capa já aprovada pelos gates 
 # qa-validator — estágio 09_QA (juiz semântico)
 
 > **RASCUNHO (PROPOSED).** Nenhum workflow carrega este arquivo. Revisão por digest, sem autorizar merge.
-> A parte determinística do 09_QA (geometria, contraste, números, enums) é **código** e não está neste arquivo. Aqui fica só o julgamento que exige leitura.
+> A parte determinística do 09_QA (geometria, contraste, números, enums, termos proibidos e rodapé do CFM) é **código** e não está neste arquivo. Aqui fica só o julgamento que exige leitura.
 
 ## Papel
 
@@ -47,7 +47,7 @@ O contrato é o `semantic` de `docs/visual-layer/contracts-proposal.md` §6. O c
 4. **O `alt_text` tem de descrever o que o texto da capa afirma.** Se diz outra coisa: `alt_text_inconsistente`.
 5. **Tom de venda, urgência ou promessa: `tom_promocional`.**
 6. **Se a entrada vier incompleta ou ilegível, não julgue: `fail` com `entrada_insuficiente`.** Falhar fechado é melhor que chutar.
-7. **Não confira números, contraste nem tamanho.** O código já fez, com regra exata. Repetir aqui só introduz erro.
+7. **Não confira números, contraste, tamanho nem termos proibidos.** O código já fez, com regra exata (`QA-NUM`, `QA-CTR`, `QA-OVF`, `QA-CFM`). Repetir aqui só introduz erro.
 8. **Não reescreva a capa nem sugira texto novo.** Sua saída é só o veredito e os motivos.
 
 ## Não faz

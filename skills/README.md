@@ -30,11 +30,11 @@ Da lista A1–A7 enviada em 2026-10-22:
 | A5 | Não aparece na mensagem. Qual é o papel? |
 | A6 `figma-builder` | **Não rascunhado.** O render é código (`08_RENDER`, sem LLM). Escrita no Figma em runtime está fora do escopo (`roadmap.md`) e o seat atual é View. |
 
-## Conflitos com o `CLAUDE.md` que precisam de decisão
+## Conflitos com o `CLAUDE.md`: decididos em 2026-10-22 (Fonseca)
 
-1. **Subagentes com ferramentas × "Nenhum AI Agent" (`CLAUDE.md` §2).** A descrição de A1–A7 como subagentes com `tools` (WebFetch, PubMed, Figma) é incompatível com o runtime atual: só Basic LLM Chain e Information Extractor, sem modo agente. Os rascunhos seguem o §2. Se a intenção é mudar o §2, isso é uma decisão de governança (PR no `CLAUDE.md`), não um detalhe de arquivo.
-2. **Duas fontes para o mesmo prompt.** O `CLAUDE.md` prevê `prompts/baseline/*.md` e as chaves `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa` na config. Aqui há `skills/*/SKILL.md`. Proponho que `skills/` seja a fonte e que `seed-baseline` leve o texto para `config_baseline`, porque o n8n Cloud não lê arquivos do repositório. Hoje o `seed-baseline` só carrega JSON, e o formato do `content` de um prompt (por exemplo `{"text": "..."}`) é **UNKNOWN**.
-3. **D-05 (CFM).** Os nomes `copywriter-cfm` e a regra de termos proibidos pressupõem que as regras do CFM se aplicam. Isso não foi decidido. A lista de termos entra pela config (`blocklist`), nunca embutida no prompt, e a afirmação regulatória em si não foi verificada.
-4. **Quem escolhe o template.** Aqui o LLM só escolhe a gramática; o template sai dela por mapeamento na config. Na descrição de A4 o agente também escolhia componentes e tokens de cor. Mantive cores e template fora do modelo para que os pares de cor fiquem sob `contrast.js`.
+1. **Subagentes com ferramentas × "Nenhum AI Agent" (`CLAUDE.md` §2): o `CLAUDE.md` prevalece (D-11).** Não há subagentes autônomos em runtime. Os `SKILL.md` são prompts de sistema de nós de LLM do n8n, sem ferramentas; o n8n faz o roteamento e a execução. Só se rascunha o que o escopo determinístico permite.
+2. **Duas fontes para o mesmo prompt: `skills/` é a fonte única da verdade (D-12).** O `seed-baseline` leva o texto para `config_baseline` nas chaves `prompt.06_visual`, `prompt.07_covers` e `prompt.09_qa` (o n8n Cloud não lê arquivos do repositório). Hoje o `seed-baseline` só carrega JSON; estender para prompts, com o formato do `content`, é o passo seguinte e será uma PR própria. O `prompts/baseline/` do `CLAUDE.md` fica sem uso e precisa de ajuste de governança.
+3. **D-05 (CFM): o CFM se aplica.** A lista de termos entra pela config (`cfm_blocklist`), nunca embutida no prompt. O conteúdo da lista e a fonte da regra seguem **UNKNOWN** (U22): nenhuma afirmação regulatória foi verificada.
+4. **Quem escolhe o template (seguido por decisão de seguir as recomendações PROPOSED).** Aqui o LLM só escolhe a gramática; o template sai dela por mapeamento na config. Na descrição de A4 o agente também escolhia componentes e tokens de cor. Mantive cores e template fora do modelo para que os pares de cor fiquem sob `contrast.js`.
 
 Os contratos que estes arquivos citam estão em `docs/visual-layer/contracts-proposal.md` (ainda proposta; nenhum schema foi criado).
