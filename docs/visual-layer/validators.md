@@ -107,3 +107,9 @@ jobs:
 ## 6. Próximo passo
 
 Decisões de D-08, U10 e U11-a a g estão registradas. Pendentes: U11-h e U11-i (`schema-contract.md`, §10). A migration de `state_transitions`, `config_baseline`, `guard_transition` e `get_config` está em `claude/migration-001`, sem PR. Ficam de fora `set_status` e `mark_running` (U11-h). Para revisão: este documento, a migration e o workflow.
+
+## 7. Atualização de 2026-10-22: unificação e `numbers.js`
+
+- Os quatro branches foram unificados sobre o `main` na PR #13 (`claude/validators-unify`, `7953395`), junto com o workflow `validators.yml`, que passa a valer no `main`. 78 de 78 testes.
+- `numbers.js` (`extractNumbers`, `checkNumbersAllowed`): formato PT-BR (U10), unidade `%`, `pp` ou nenhuma, valor exato, `9.52` é erro de formato. 22 testes, 14 de 14 mutantes. Os números permitidos são montados pelo código a partir de evidências `VERIFIED` e de `computeDeltas`, nunca a partir de texto do LLM. Os limites conhecidos estão no cabeçalho do arquivo.
+- Continua bloqueado: `geometry.js` (U2 e mapa de slots).

@@ -16,14 +16,14 @@
 | --- | --- | --- | --- | --- |
 | VL-0 | alinhamento: estes docs revisados e decisões D-01 a D-09 | — | — | em revisão |
 | VL-1 | design-time: auditoria do pacote de marca e do Figma (somente leitura) | — | VL-0 | não iniciado |
-| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` (bloqueado por U10), `geometry` | 2 | — | parcial (`math`, `contrast` e `schema` em branches, sem PR) |
+| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `geometry` | 2 | — | parcial: quatro validadores prontos, unificados na PR #13 (78 testes); `geometry` bloqueado por U2 e pelo mapa de slots |
 | VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | bloqueado por U2 |
 | VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | bloqueado por U3, U7 |
 | VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado |
-| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **parcial**: migrations 001 a 006, `create_job`, scripts de baseline e CI escritos e testados (106 testes). Mergeadas: 001, 002 (#6). Abertas: #9 (003, 004), #10 (005), #11 (006, scripts, CI). A Fase 1 fecha quando forem mergeadas e o CI rodar no GitHub |
+| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **Fase 1 fechada** (migrations 001 a 006, scripts de baseline e CI no `main`, CI verde no GitHub com 106 testes). Faltam a Fase 4 (infra n8n) e VL-5 |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
-**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Bloqueios:** nenhum de U11 (a-o respondidos em 2026-10-22). Falta apenas a revisão e o merge das PRs do banco. U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
+**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** O bloqueio agora é VL-3 (contratos): a proposta está em `contracts-proposal.md`, aguardando aprovação por digest (CP-VL3.1). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
 
 ---
 

@@ -119,3 +119,7 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | seed-baseline e verify-baseline | passou: 12 de 12; 10 de 11 mutantes detectados (o 11º é equivalente) | `6b4ba6c` | implementer (sem review) |
 | 2026-10-22 | CI de migrations | YAML conferido; passo exato simulado: 106 de 106; execução vazia falha. Não rodou no GitHub Actions | `26f2023` | implementer (sem review) |
 | 2026-10-22 | PRs abertas: #11 (006, scripts, CI), #12 (STAGES.md e CLAUDE.md) | sem veredito; aguardam revisão do Fonseca | `26f2023`, `e9050bf` | — |
+| 2026-10-22 | PRs #9, #10, #11, #12 mergeadas pelo Fonseca; `main` em `5ea6f4f` | CI `migrations` rodou no GitHub: 4 execuções com sucesso; no `main`, `# tests 106`, `# pass 106`, `# fail 0`, 0 `not ok` (log do job 119763003883). **Fase 1 fechada** | `5ea6f4f` | Fonseca (merge) |
+| 2026-10-22 | CP-VL2.6 `numbers.js` | passou: 22 de 22; 78 de 78 com os outros validadores; 14 mutantes detectados | `7953395` | implementer (sem review) |
+| 2026-10-22 | unificação dos validadores (math, contrast, schema, CI) | merges limpos sobre o `main`; 56 de 56 antes de `numbers.js`, 78 de 78 depois. PR #13 aberta, sem veredito | `7953395` | — |
+| 2026-10-22 | CP-VL3.1 proposta de contratos | escrita (`contracts-proposal.md`); aguarda aprovação por digest; nenhum schema criado | digest no commit seguinte | — |
