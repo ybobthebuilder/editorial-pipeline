@@ -2,8 +2,9 @@
 --
 -- Schema público `editorial` (CLAUDE.md, "Dois Repositórios, Dois Schemas").
 -- Respostas de U11 (docs/visual-layer/schema-contract.md, §10):
---   U11-a/b  state_transitions tem from_status, to_status e is_error_path.
---            Estados de erro têm entrada e saída explícitas.
+--   U11-a/b  state_transitions tem from_status, to_status, is_error_path e requires_gate.
+--            requires_gate foi acrescentada por decisão de 2026-10-22. Estados de erro têm
+--            entrada e saída explícitas.
 --   U11-c    get_config NÃO lê o schema privado. O público funciona sozinho.
 --   U11-d    set_status chama guard_transition de forma explícita.
 --            set_status não está nesta migration (ver abaixo).
@@ -36,6 +37,7 @@ CREATE TABLE editorial.state_transitions (
   from_status   text    NOT NULL,
   to_status     text    NOT NULL,
   is_error_path boolean NOT NULL,
+  requires_gate boolean NOT NULL,
   PRIMARY KEY (from_status, to_status),
   CONSTRAINT state_transitions_no_self_loop
     CHECK (from_status <> to_status),
@@ -56,41 +58,41 @@ CREATE TABLE editorial.state_transitions (
     CHECK (is_error_path = (to_status IN ('VERIFICATION_FAILED', 'QA_FAILED', 'RENDER_FAILED', 'NEEDS_REVIEW')))
 );
 
-INSERT INTO editorial.state_transitions (from_status, to_status, is_error_path) VALUES
+INSERT INTO editorial.state_transitions (from_status, to_status, is_error_path, requires_gate) VALUES
   -- Caminho feliz (CLAUDE.md §5): 12 transições entre 13 estados.
-  ('RECEIVED',            'PDF_PARSED',           false),
-  ('PDF_PARSED',          'EVIDENCE_EXTRACTED',   false),
-  ('EVIDENCE_EXTRACTED',  'EVIDENCE_VERIFIED',    false),
-  ('EVIDENCE_VERIFIED',   'INSIGHTS_GENERATED',   false),
-  ('INSIGHTS_GENERATED',  'INSIGHTS_RANKED',      false),
-  ('INSIGHTS_RANKED',     'VISUAL_PLANNED',       false),
-  ('VISUAL_PLANNED',      'COVERS_SPECIFIED',     false),
-  ('COVERS_SPECIFIED',    'COVERS_RENDERED',      false),
-  ('COVERS_RENDERED',     'QA_PASSED',            false),
-  ('QA_PASSED',           'AWAITING_APPROVAL',    false),
-  ('AWAITING_APPROVAL',   'HUMAN_APPROVED',       false),
-  ('HUMAN_APPROVED',      'PUBLISHED',            false),
+  ('RECEIVED',            'PDF_PARSED',           false, false),
+  ('PDF_PARSED',          'EVIDENCE_EXTRACTED',   false, false),
+  ('EVIDENCE_EXTRACTED',  'EVIDENCE_VERIFIED',    false, false),
+  ('EVIDENCE_VERIFIED',   'INSIGHTS_GENERATED',   false, false),
+  ('INSIGHTS_GENERATED',  'INSIGHTS_RANKED',      false, false),
+  ('INSIGHTS_RANKED',     'VISUAL_PLANNED',       false, false),
+  ('VISUAL_PLANNED',      'COVERS_SPECIFIED',     false, false),
+  ('COVERS_SPECIFIED',    'COVERS_RENDERED',      false, false),
+  ('COVERS_RENDERED',     'QA_PASSED',            false, false),
+  ('QA_PASSED',           'AWAITING_APPROVAL',    false, false),
+  ('AWAITING_APPROVAL',   'HUMAN_APPROVED',       false, true),
+  ('HUMAN_APPROVED',      'PUBLISHED',            false, false),
   -- Falhas de etapa (docs/STAGES.md §6): a etapa parte do estado de entrada e grava o erro.
-  ('EVIDENCE_EXTRACTED',  'VERIFICATION_FAILED',  true),   -- 03_VERIFY
-  ('COVERS_SPECIFIED',    'RENDER_FAILED',        true),   -- 08_RENDER
-  ('COVERS_RENDERED',     'QA_FAILED',            true),   -- 09_QA
+  ('EVIDENCE_EXTRACTED',  'VERIFICATION_FAILED',  true, false),   -- 03_VERIFY
+  ('COVERS_SPECIFIED',    'RENDER_FAILED',        true, false),   -- 08_RENDER
+  ('COVERS_RENDERED',     'QA_FAILED',            true, false),   -- 09_QA
   -- Qualquer estado -> NEEDS_REVIEW (CLAUDE.md §5), inclusive PUBLISHED e os estados de erro.
-  ('RECEIVED',            'NEEDS_REVIEW',         true),
-  ('PDF_PARSED',          'NEEDS_REVIEW',         true),
-  ('EVIDENCE_EXTRACTED',  'NEEDS_REVIEW',         true),
-  ('EVIDENCE_VERIFIED',   'NEEDS_REVIEW',         true),
-  ('INSIGHTS_GENERATED',  'NEEDS_REVIEW',         true),
-  ('INSIGHTS_RANKED',     'NEEDS_REVIEW',         true),
-  ('VISUAL_PLANNED',      'NEEDS_REVIEW',         true),
-  ('COVERS_SPECIFIED',    'NEEDS_REVIEW',         true),
-  ('COVERS_RENDERED',     'NEEDS_REVIEW',         true),
-  ('QA_PASSED',           'NEEDS_REVIEW',         true),
-  ('AWAITING_APPROVAL',   'NEEDS_REVIEW',         true),
-  ('HUMAN_APPROVED',      'NEEDS_REVIEW',         true),
-  ('PUBLISHED',           'NEEDS_REVIEW',         true),
-  ('VERIFICATION_FAILED', 'NEEDS_REVIEW',         true),
-  ('QA_FAILED',           'NEEDS_REVIEW',         true),
-  ('RENDER_FAILED',       'NEEDS_REVIEW',         true);
+  ('RECEIVED',            'NEEDS_REVIEW',         true, false),
+  ('PDF_PARSED',          'NEEDS_REVIEW',         true, false),
+  ('EVIDENCE_EXTRACTED',  'NEEDS_REVIEW',         true, false),
+  ('EVIDENCE_VERIFIED',   'NEEDS_REVIEW',         true, false),
+  ('INSIGHTS_GENERATED',  'NEEDS_REVIEW',         true, false),
+  ('INSIGHTS_RANKED',     'NEEDS_REVIEW',         true, false),
+  ('VISUAL_PLANNED',      'NEEDS_REVIEW',         true, false),
+  ('COVERS_SPECIFIED',    'NEEDS_REVIEW',         true, false),
+  ('COVERS_RENDERED',     'NEEDS_REVIEW',         true, false),
+  ('QA_PASSED',           'NEEDS_REVIEW',         true, false),
+  ('AWAITING_APPROVAL',   'NEEDS_REVIEW',         true, false),
+  ('HUMAN_APPROVED',      'NEEDS_REVIEW',         true, false),
+  ('PUBLISHED',           'NEEDS_REVIEW',         true, false),
+  ('VERIFICATION_FAILED', 'NEEDS_REVIEW',         true, false),
+  ('QA_FAILED',           'NEEDS_REVIEW',         true, false),
+  ('RENDER_FAILED',       'NEEDS_REVIEW',         true, false);
 
 -- Configuração pública em camadas (CLAUDE.md §9). Sem seed: o seed-baseline carrega
 -- config/baseline/*.json. `hash` e `version` são guardados como recebidos; o formato
@@ -103,7 +105,9 @@ CREATE TABLE editorial.config_baseline (
 );
 
 -- U11-d: função, não trigger. Chamada explicitamente por set_status (fora desta migration).
--- Levanta erro se a transição não existe. Não lê nenhuma tabela de jobs.
+-- Levanta erro se a transição não existe, ou se ela exige aprovação humana (requires_gate).
+-- Não lê nenhuma tabela de jobs. Enquanto não existir registro de assinatura (U11-j), toda
+-- transição com requires_gate é recusada: falha fechada, não aprovação por omissão.
 CREATE FUNCTION editorial.guard_transition(p_from text, p_to text)
 RETURNS void
 LANGUAGE plpgsql
@@ -111,14 +115,20 @@ STABLE
 SECURITY INVOKER
 SET search_path = pg_catalog, editorial, pg_temp
 AS $$
+DECLARE
+  v_requires_gate boolean;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-      FROM editorial.state_transitions t
-     WHERE t.from_status = p_from
-       AND t.to_status = p_to
-  ) THEN
+  SELECT t.requires_gate
+    INTO v_requires_gate
+    FROM editorial.state_transitions t
+   WHERE t.from_status = p_from
+     AND t.to_status = p_to;
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'transição inválida: % -> %', p_from, p_to
+      USING ERRCODE = 'check_violation';
+  END IF;
+  IF v_requires_gate THEN
+    RAISE EXCEPTION 'transição exige aprovação humana registrada: % -> %', p_from, p_to
       USING ERRCODE = 'check_violation';
   END IF;
 END;

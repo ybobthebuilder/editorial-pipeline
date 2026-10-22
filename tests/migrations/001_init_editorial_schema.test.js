@@ -96,14 +96,14 @@ test('state_transitions holds 31 rows: 12 happy path, 3 stage failures, 16 to NE
   assert.equal(out, '31|12|16');
 });
 
-test('every happy-path arrow of CLAUDE.md section 5 is accepted by guard_transition', () => {
+test('every happy-path arrow except the human gate is accepted by guard_transition', () => {
   const arrows = [
     ['RECEIVED', 'PDF_PARSED'], ['PDF_PARSED', 'EVIDENCE_EXTRACTED'],
     ['EVIDENCE_EXTRACTED', 'EVIDENCE_VERIFIED'], ['EVIDENCE_VERIFIED', 'INSIGHTS_GENERATED'],
     ['INSIGHTS_GENERATED', 'INSIGHTS_RANKED'], ['INSIGHTS_RANKED', 'VISUAL_PLANNED'],
     ['VISUAL_PLANNED', 'COVERS_SPECIFIED'], ['COVERS_SPECIFIED', 'COVERS_RENDERED'],
     ['COVERS_RENDERED', 'QA_PASSED'], ['QA_PASSED', 'AWAITING_APPROVAL'],
-    ['AWAITING_APPROVAL', 'HUMAN_APPROVED'], ['HUMAN_APPROVED', 'PUBLISHED'],
+    ['HUMAN_APPROVED', 'PUBLISHED'],
   ];
   const script = arrows.map(([a, b]) => `SELECT editorial.guard_transition('${a}', '${b}');`).join('\n');
   ok(DB, script);
@@ -124,6 +124,22 @@ test('stage failures are entered only from the stage input state', () => {
   fails(DB, `SELECT editorial.guard_transition('COVERS_RENDERED', 'RENDER_FAILED');`, /transição inválida/);
 });
 
+test('the human gate is refused until an approval record exists (fail closed, U11-j)', () => {
+  fails(DB, `SELECT editorial.guard_transition('AWAITING_APPROVAL', 'HUMAN_APPROVED');`,
+    /exige aprovação humana registrada/);
+});
+
+test('exactly one transition requires a human gate: AWAITING_APPROVAL -> HUMAN_APPROVED', () => {
+  const out = ok(DB, `SELECT count(*), min(from_status || ' -> ' || to_status)
+    FROM editorial.state_transitions WHERE requires_gate;`);
+  assert.equal(out, '1|AWAITING_APPROVAL -> HUMAN_APPROVED');
+});
+
+test('requires_gate is NOT NULL', () => {
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'VISUAL_PLANNED', false, NULL);`,
+    /null value in column "requires_gate"/);
+});
+
 test('every non-error state can go to NEEDS_REVIEW, including PUBLISHED', () => {
   const sources = [
     'RECEIVED', 'PDF_PARSED', 'EVIDENCE_EXTRACTED', 'EVIDENCE_VERIFIED', 'INSIGHTS_GENERATED',
@@ -142,22 +158,22 @@ test('error states have no exits except NEEDS_REVIEW (retry and rewind are undef
 });
 
 test('unknown or lowercase status names are refused by the CHECK constraints', () => {
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('FOO', 'PDF_PARSED', false);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('FOO', 'PDF_PARSED', false, false);`,
     /state_transitions_from_known/);
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'pdf_parsed', false);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'pdf_parsed', false, false);`,
     /state_transitions_to_known/);
 });
 
 // Pairs below are chosen so that no primary-key conflict can hide the CHECK being tested.
 test('is_error_path must match whether the destination is an error state', () => {
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'INSIGHTS_RANKED', true);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'INSIGHTS_RANKED', true, false);`,
     /state_transitions_error_flag/);
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'QA_FAILED', false);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'QA_FAILED', false, false);`,
     /state_transitions_error_flag/);
 });
 
 test('a status cannot transition to itself at the constraint level', () => {
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'RECEIVED', false);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'RECEIVED', false, false);`,
     /state_transitions_no_self_loop/);
 });
 
@@ -171,7 +187,7 @@ test('get_config returns the stored row with source public, and refuses a missin
 
 test('n8n_pipeline reads the public tables and cannot change them', () => {
   ok(DB, `SELECT count(*) FROM editorial.state_transitions;`, { role: 'n8n_pipeline' });
-  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'PDF_PARSED', false);`,
+  fails(DB, `INSERT INTO editorial.state_transitions VALUES ('RECEIVED', 'PDF_PARSED', false, false);`,
     /permission denied/, { role: 'n8n_pipeline' });
   fails(DB, `UPDATE editorial.config_baseline SET version = 'x';`, /permission denied/, { role: 'n8n_pipeline' });
   fails(DB, `DELETE FROM editorial.state_transitions;`, /permission denied/, { role: 'n8n_pipeline' });
