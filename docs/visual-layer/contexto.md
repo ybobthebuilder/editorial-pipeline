@@ -145,7 +145,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U3 | conteúdo e schema de `visual_library` | VL-4 | idem |
 | U4 | engine e formato do render no n8n Cloud (SVG puro × PNG). Módulos permitidos: **resolvido** pela lista conferida pelo Fonseca (ver nota em §10) | VL-5, VL-6 | Fonseca, para a engine de render |
 | U5 | schema de `verification_thresholds` e limiares de QA | validação de faixa, VL-4 | Fonseca |
-| U6 | aplicabilidade de regras regulatórias (CFM) ao domínio | módulo opcional do 09_QA | Fonseca |
+| U6 | aplicabilidade de regras regulatórias (CFM) ao domínio | **respondido** (Fonseca, 2026-10-22): sim (D-05). A fonte e o conteúdo da regra seguem UNKNOWN (U22) |
 | U7 | direitos de uso do pacote "Lambda-inspired" no repo público | VL-4 | Fonseca |
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
@@ -168,12 +168,14 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-02 | Local do baseline | **decidido** (usuário, 2026-10-22): `editorial.config_baseline`; a Fase 1 ainda depende de U11 |
 | D-03 | Saída do `08_RENDER` | SVG no MVP; PNG só depois de verificar uma engine compatível com n8n Cloud |
 | D-04 | Uso do pacote de marca no repo público | **decidido** (Fonseca): os SVGs ficam fora do repo público e só no scratchpad. Entrada no repo só com autorização explícita do Fonseca, numa fase ainda a nomear (ver D-10). Direitos seguem U7 |
-| D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
+| D-05 | Regras regulatórias (CFM) se aplicam? | **decidido** (Fonseca, 2026-10-22): sim, conformidade é objetivo do sistema. Gate `QA-CFM`, configs `cfm_blocklist` e `cfm_footer` (conteúdo: U22 e U18) |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
 | D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem externa (chrome). Os 90 px de `templates.json` passam a ser a zona segura de conteúdo |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
 | D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **decidido** (Fonseca, 2026-10-22): só no VL-4 (Fase 3). Exige também a nota de direitos (U7, VL-1) antes da entrada |
+| D-11 | Agentes A1–A7 como subagentes com ferramentas × `CLAUDE.md` §2 | **decidido** (Fonseca, 2026-10-22): o `CLAUDE.md` prevalece. Não há subagentes autônomos em runtime; os `SKILL.md` são prompts de sistema de nós de LLM do n8n, sem ferramentas. Só se rascunha o que o escopo determinístico permite (06, 07, 09) |
+| D-12 | Fonte do prompt: `skills/` × `prompts/baseline/` | **decidido** (Fonseca, 2026-10-22): `skills/` é a fonte única da verdade; o `seed-baseline` leva o texto para a config. O formato do `content` é proposta nossa (ver a PR dos prompts) |
 
 ## 12. Estado atual (VERIFIED em 2026-10-22)
 

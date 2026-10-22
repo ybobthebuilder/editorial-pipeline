@@ -2,7 +2,8 @@
 
 > Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo em `contracts/`**: os schemas só são escritos depois da aprovação (U2, CP-VL3.1).
 > Rótulos: **VERIFIED** (visto em arquivo do repo), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte; vira pergunta na §7).
-> Companheiros: `contexto.md`, `roadmap.md`, `checkpoints.md`, `validators.md`, e `skills/` (rascunhos dos manuais dos estágios).
+> Companheiros: `contexto.md`, `roadmap.md`, `checkpoints.md`, `validators.md`, `slot-map-v0.md` (mapa de slots e gramáticas) e `skills/` (rascunhos dos manuais dos estágios).
+> **Atualizada em 2026-10-22** com as decisões do Fonseca (D-05 sim; seguir as recomendações PROPOSED de U3 e U12 a U17). Ver §7.
 
 ## 1. O que esta proposta fecha
 
@@ -59,6 +60,7 @@ Se `grammar_id` vale `not_reported`, o código não grava o `visual_spec` e leva
 `slots[]`:
 - `slot_id`: string. Os ids existentes **dependem do mapa de slots v0 (CP-VL1.5, ainda não feito)**: hoje nenhum `<text>` dos SVGs tem `id`. **UNKNOWN**.
 - `kind`: enum `claim` ou `chrome`. `claim` é texto que afirma algo e passa por `numbers.js`; `chrome` é elemento fixo de layout (contador `01 / 06`, rodapé) e não passa. Quem define o `kind` de cada slot é o **mapa de slots**, não o LLM; o código sobrescreve qualquer `kind` vindo do modelo.
+- Rodapé do CFM (D-05 = sim): slot `chrome` com texto fixo vindo da config (`cfm_footer`); o LLM não o escreve. Onde ele fica em cada template é a pergunta U18.
 - `lines`: array de string, `minItems 1`. Orçamento por slot (linhas e caracteres) vem do mapa e é conferido por `geometry.js` (**bloqueado por este contrato e pelo mapa**).
 
 **Números.** O conjunto de números permitidos é **montado pelo código** a partir das evidências `VERIFIED` de `evidence_ids` e de `computeDeltas`, e entregue a `checkNumbersAllowed` (`numbers.js`). Nunca sai de campo escrito pelo LLM, senão a checagem se justificaria sozinha.
@@ -98,8 +100,8 @@ Exemplo sintético (valores do exemplo de `CLAUDE.md` §3, sem conteúdo real):
 | `passed` | boolean | **calculado por código**: todos os gates `passed` e `semantic.verdict` igual a `pass` | código |
 
 `gates[]`:
-- `gate_id`: enum. Do relatório (referência de design-time, `contexto.md` §3): `QA-DIM`, `QA-OVF`, `QA-SAFE`, `QA-CTR`, `QA-TOK`, `QA-TYPE`, `QA-GRID`. Proponho acrescentar `QA-NUM` (números, `numbers.js`) e `QA-ENUM` (enums e `evidence_ids`). A definição exata de cada um é **UNKNOWN**: o relatório descreve nós Figma; aqui o alvo é SVG e slots.
-- `status`: enum `passed`, `failed`, `waived`. Regra entre campos, em código: `waived` exige `detail` e não vale para gates regulatórios (se D-05 for sim).
+- `gate_id`: enum. Do relatório (referência de design-time, `contexto.md` §3): `QA-DIM`, `QA-OVF`, `QA-SAFE`, `QA-CTR`, `QA-TOK`, `QA-TYPE`, `QA-GRID`. Proponho acrescentar `QA-NUM` (números, `numbers.js`), `QA-ENUM` (enums e `evidence_ids`) e, com D-05 = sim, `QA-CFM` (termos proibidos e presença do rodapé, `validators/blocklist.js`). A definição exata de cada um é **UNKNOWN**: o relatório descreve nós Figma; aqui o alvo é SVG e slots.
+- `status`: enum `passed`, `failed`, `waived`. Regra entre campos, em código: `waived` exige `detail` e **nunca vale para `QA-CFM`**: conformidade regulatória não se dispensa.
 - `detail`: string curta, o motivo mensurável (ex.: razão de contraste calculada).
 
 `semantic` (o único uso de LLM em 09_QA):
@@ -108,18 +110,30 @@ Exemplo sintético (valores do exemplo de `CLAUDE.md` §3, sem conteúdo real):
 
 A ordem é fixa e feita pelo código: gates determinísticos primeiro; o juiz semântico só roda se todos passaram. Falha em qualquer um leva a `QA_FAILED`, e o retry é do orquestrador (`attempt_count`, limite 3), nunca um laço entre LLMs.
 
-## 7. Perguntas ao Fonseca (nenhuma é respondida por esta proposta)
+## 7. Decisões do Fonseca (2026-10-22) e perguntas que continuam abertas
+
+Decididas, seguindo as recomendações PROPOSED desta proposta:
+
+| ID | Decisão |
+| --- | --- |
+| D-05 | **O CFM se aplica.** Conformidade é objetivo do sistema. Efeitos: gate `QA-CFM` (`waived` proibido), slot de rodapé `chrome`, configs `cfm_blocklist` e `cfm_footer` |
+| U3 | `grammar_id` é distinto de `template_id`; lista mínima de 5 gramáticas e o mapeamento para templates em `slot-map-v0.md` §5 |
+| U12 | Mapa de slots v0 em `slot-map-v0.md`. O orçamento é por largura em pixels, medido por `geometry.js`, não por contagem de caracteres |
+| U13 | `alt_text` é obrigatório |
+| U14 | `rationale` fica, opcional, com no máximo 280 caracteres |
+| U15 | Os ids são uuid em texto, como `editorial.jobs.id` |
+| U16 | A lista de motivos do juiz semântico é a da §6 |
+| U17 | O schema confere o tipo; um validador compara `grammar_id` com a config. Uma só fonte da verdade |
+
+Abertas (novas ou que decorrem das decisões acima):
 
 | ID | Pergunta | Bloqueia |
 | --- | --- | --- |
-| U3 | Quais são as gramáticas de `visual_library`, e `grammar` é a mesma coisa que `template`? Aqui as trato como coisas distintas: a gramática escolhe, a config mapeia para o template | `grammar_id`, VL-4 |
-| U12 | Mapa de slots v0 (ids, orçamento por linha, `kind`): fazer agora, a partir dos 6 SVGs? | `slots`, `geometry.js` |
-| D-05 | As regras do CFM se aplicam a este pipeline? Hoje são `UNKNOWN`. Se sim: chave `cfm_blocklist` na config, gate `QA-CFM`, e o rodapé é um slot `chrome` | gates, copy |
-| U13 | `alt_text` obrigatório (como acima) ou opcional? | `cover_spec` |
-| U14 | `rationale` do `visual_spec` fica (auditoria) ou sai (menos texto livre do modelo)? | `visual_spec` |
-| U15 | Formato dos ids (`insight_id`, `evidence_ids`, `visual_spec_id`): uuid ou outro? As tabelas ainda não existem | todos |
-| U16 | Lista de `reasons` do juiz semântico: aceita a lista acima? | `qa_result` |
-| U17 | O enum de `grammar_id` entra no schema (e o schema é regenerado a cada mudança de `visual_library`) ou o schema só confere o tipo e um validador compara com a config? Recomendo o segundo: uma só fonte da verdade | CP-VL3.3 |
+| U18 | Texto do `cfm_footer` e onde ele fica em cada template: reaproveitar `footer_left`? Os formatos 9:16 não têm rodapé | `cover_spec`, patch dos SVGs |
+| U19 | A geometria dos templates e a zona segura declarada não batem (`slot-map-v0.md` §3). O erro está nos templates ou na declaração? O chrome é isento? | `QA-SAFE`, patch dos SVGs (D-06) |
+| U20 | Qual fonte de render, e de onde vêm as métricas de largura | `geometry.js` |
+| U21 | De onde vem o formato pedido (1:1, 4:5, 9:16) no job? Hipótese: `input_context.format` | gramática `capa` |
+| U22 | Conteúdo de `cfm_blocklist` e a fonte da regra. "cura" e "o melhor" foram citados como exemplos; a lista oficial **não está no repositório e eu não a verifiquei** | `QA-CFM`, prompt do `copywriter-cfm` |
 
 ## 8. Como cada regra é verificada (CP-VL3.2 e CP-VL3.3)
 
