@@ -2,6 +2,8 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { contrastRatio, relativeLuminance } = require('./contrast.js');
 
 function assertClose(actual, expected, tolerance, message) {
@@ -78,4 +80,10 @@ test('non-string input is rejected with TypeError', () => {
     assert.throws(() => contrastRatio(bad, '#000000'), TypeError);
     assert.throws(() => relativeLuminance(bad), TypeError);
   }
+});
+
+test('the module has no require() or import, so it runs in the n8n Cloud Code node', () => {
+  const source = readFileSync(join(__dirname, 'contrast.js'), 'utf8');
+  assert.equal(/\brequire\s*\(/.test(source), false);
+  assert.equal(/^\s*import\s/m.test(source), false);
 });
