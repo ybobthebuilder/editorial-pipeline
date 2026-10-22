@@ -20,7 +20,7 @@ const ROOT = join(__dirname, '..', '..');
 const MIGRATIONS = join(ROOT, 'supabase', 'migrations');
 const ROLLBACKS = join(ROOT, 'supabase', 'rollbacks');
 const SUPABASE_ROLES = ['anon', 'authenticated'];
-const PROJECT_ROLES = ['n8n_pipeline', 'human_reviewer'];
+const PROJECT_ROLES = ['n8n_pipeline', 'human_reviewer', 'editorial_owner'];
 const CLEAN_ROLES = [...PROJECT_ROLES, ...SUPABASE_ROLES];
 
 // Job ids are fixed per test case so that every assertion names the job it is about.
@@ -124,7 +124,8 @@ function snapshot(db) {
     SELECT 'idx|' || i.indexrelid::regclass::text || '|' || i.indisvalid || '|' || pg_get_indexdef(i.indexrelid)
       FROM pg_index i JOIN pg_class c ON c.oid = i.indrelid WHERE c.relnamespace = ${ns}
     UNION ALL
-    SELECT 'fn|' || p.oid::regprocedure::text || '|' || p.prosecdef || '|' || coalesce(p.proconfig::text, '')
+    SELECT 'fn|' || p.oid::regprocedure::text || '|' || pg_get_userbyid(p.proowner) || '|' || p.prosecdef
+           || '|' || coalesce(p.proconfig::text, '')
            || '|' || coalesce(p.proacl::text, '') || '|' || pg_get_functiondef(p.oid)
       FROM pg_proc p WHERE p.pronamespace = ${ns}
     UNION ALL

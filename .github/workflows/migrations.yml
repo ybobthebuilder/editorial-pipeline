@@ -1,0 +1,46 @@
+name: migrations
+
+# Applies every migration to an ephemeral Postgres, rolls each one back and forth, and runs
+# the script tests. The Postgres service container is created for the run and discarded after.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run migration, rollback and script tests, and refuse an empty run
+        # The suites create cluster-wide roles, so they must not run at the same time.
+        # node exits 0 when a glob matches nothing, hence the two greps.
+        run: |
+          node --test --test-concurrency=1 'tests/migrations/*.test.js' 'tests/scripts/*.test.js' | tee test-output.txt
+          grep -qE '^# tests [1-9][0-9]*$' test-output.txt
+          grep -qE '^# fail 0$' test-output.txt
