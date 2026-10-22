@@ -104,7 +104,7 @@ Exemplo sintético (valores do exemplo de `CLAUDE.md` §3, sem conteúdo real):
 
 `semantic` (o único uso de LLM em 09_QA):
 - `verdict`: enum `pass` ou `fail`.
-- `reasons`: array de enum. Lista **PROPOSED**: `afirmacao_sem_evidencia`, `exagero_de_forca`, `causalidade_indevida`, `alt_text_inconsistente`, `tom_promocional`. Vazio quando `pass`.
+- `reasons`: array de enum. Lista **PROPOSED**: `afirmacao_sem_evidencia`, `exagero_de_forca`, `causalidade_indevida`, `alt_text_inconsistente`, `tom_promocional`, `entrada_insuficiente` (o juiz recebeu dados incompletos e não julga; falha fechada em vez de chute). Vazio quando `pass`; nunca vazio quando `fail`.
 
 A ordem é fixa e feita pelo código: gates determinísticos primeiro; o juiz semântico só roda se todos passaram. Falha em qualquer um leva a `QA_FAILED`, e o retry é do orquestrador (`attempt_count`, limite 3), nunca um laço entre LLMs.
 
