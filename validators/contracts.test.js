@@ -1,6 +1,6 @@
 'use strict';
 
-// Tests of contracts/{visual_spec,cover_spec,qa_result}.schema.json with validators/schema.js
+// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets}.schema.json with validators/schema.js
 // (checkpoints CP-VL3.2 and CP-VL3.3). The fixtures are synthetic; see fixtures/synthetic/contracts.
 
 const { test } = require('node:test');
@@ -10,10 +10,10 @@ const { join } = require('node:path');
 const { validate } = require('./schema.js');
 
 const ROOT = join(__dirname, '..');
-const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result'];
+const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
-const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: [], qa_result: ['semantic'] };
+const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST' };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: [], qa_result: ['semantic'], image_assets: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -42,7 +42,7 @@ test('required lists every property except the documented optional ones', () => 
   }
 });
 
-test('the provenance block is identical in the three schemas, except for the stage constant', () => {
+test('the provenance block is identical in the four schemas, except for the stage constant', () => {
   const block = (name) => {
     const properties = clone(schemaOf(name).properties);
     const out = {};
@@ -52,6 +52,7 @@ test('the provenance block is identical in the three schemas, except for the sta
   };
   assert.deepEqual(block('cover_spec'), block('visual_spec'));
   assert.deepEqual(block('qa_result'), block('visual_spec'));
+  assert.deepEqual(block('image_assets'), block('visual_spec'));
   for (const name of CONTRACTS) assert.equal(schemaOf(name).properties.stage.const, STAGE[name], name);
 });
 
@@ -86,6 +87,10 @@ test('each invalid fixture fails for its stated cause and for no other', () => {
       'invalid-01-gate_id-out-of-enum': ['$.gates[0].gate_id: value is not one of the allowed enum members'],
       'invalid-02-missing-config_version': ['$.config_version: missing required property'],
     },
+    image_assets: {
+      'invalid-01-owned_photo-in-images': ['$.images[0].provenance: value is not one of the allowed enum members'],
+      'invalid-02-exception-without-approval_id': ['$.exceptions[0].approval_id: missing required property'],
+    },
   };
   for (const name of CONTRACTS) {
     for (const [file, errors] of Object.entries(expected[name])) {
@@ -105,7 +110,7 @@ test('CP-VL3.3: each of the seven provenance fields is required in every contrac
 });
 
 test('CP-VL3.3: every other required field is required too', () => {
-  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'] };
+  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'] };
   for (const name of CONTRACTS) {
     for (const key of extra[name]) {
       const data = validOf(name);
@@ -300,6 +305,7 @@ test('the smallest valid documents are accepted: one-character strings, one slot
     visual_spec: { ...provenance, stage: '06_VISUAL', insight_id: 'i', evidence_ids: ['e'], grammar_id: 'g' },
     cover_spec: { ...provenance, stage: '07_COVERS', visual_spec_id: 'v', template_id: 'post-01-manifesto', evidence_ids: ['e'], slots: [{ slot_id: 's', kind: 'chrome', lines: ['l'] }], alt_text: 'a' },
     qa_result: { ...provenance, stage: '09_QA', cover_spec_id: 'c', gates: [{ gate_id: 'QA-DIM', status: 'passed', detail: 'd' }], passed: true },
+    image_assets: { ...provenance, stage: '01_INGEST', images: [], exceptions: [] },
   };
   for (const name of CONTRACTS) assert.deepEqual(errorsOf(name, minimal[name]), [], name);
 });
