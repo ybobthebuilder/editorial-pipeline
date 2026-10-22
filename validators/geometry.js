@@ -4,9 +4,12 @@
 // writes: the model is told a conservative character budget per line, and this file refuses any
 // text whose measured width leaves the safe zone. Pure JS, no dependencies (n8n Cloud compatible).
 //
-// Safe zone (decision U19, 2026-10-22): D-08 fixes a 64 px outer margin on every side; the safe
-// zone is what remains, so a 1080x1350 canvas has 952x1222 usable. The 260/340 px platform bands
-// that templates.json declares for 9:16 are NOT enforced here; that is still an open question.
+// Safe zone (decisions U19 and U23, 2026-10-22): D-08 fixes a 64 px outer margin on every side, so
+// a 1080x1350 canvas has 952x1222 usable. On a 9:16 canvas the platform interface (Reels) also
+// covers 260 px at the top and 340 px at the bottom; both rules apply together, so the margin on
+// each side is the larger of the two: 64 left and right, 260 on top, 340 at the bottom. A canvas is
+// 9:16 when width x 16 equals height x 9 (1080x1920); no other field says so (UNKNOWN: whether the
+// "format" field of the request, U21, can disagree with the canvas size).
 //
 // Fonts (decision U20, 2026-10-22): Arial for text, Courier New for numbers and codes, as
 // design-time fallbacks until Figma in Phase 5. The container has neither file, so the tables
@@ -35,6 +38,8 @@
 const UNITS_PER_EM = 2048;
 const MONO_ADVANCE = 1229;
 const DEFAULT_MARGIN = 64;
+const PLATFORM_BANDS_9_16 = Object.freeze({ top: 260, bottom: 340 });
+const NO_BANDS = Object.freeze({ top: 0, bottom: 0 });
 const BOLD_FROM_WEIGHT = 600;
 // PROPOSED, deliberately rounded up. The Liberation cap height (0.688 em) is not Arial's
 // (about 0.716 em), so vertical bounds use these conservative ratios instead of font data.
@@ -111,19 +116,37 @@ function assertCanvas(canvas) {
   }
 }
 
-// The rectangle where text may sit: the canvas minus the margin on every side.
-function safeZone(canvas, margin = DEFAULT_MARGIN) {
+// Platform interface bands of the canvas: 260 px at the top and 340 px at the bottom on 9:16,
+// none on any other canvas.
+function platformBands(canvas) {
+  assertCanvas(canvas);
+  return canvas.width * 16 === canvas.height * 9 ? PLATFORM_BANDS_9_16 : NO_BANDS;
+}
+
+function assertBands(bands) {
+  if (bands === null || typeof bands !== 'object' || !isNumber(bands.top) || !isNumber(bands.bottom) || bands.top < 0 || bands.bottom < 0) {
+    throw new TypeError('bands must be { top, bottom } with non-negative numbers');
+  }
+}
+
+// The rectangle where text may sit: the canvas minus the margin on every side, and minus the
+// platform bands where the canvas has them. Pass bands = { top: 0, bottom: 0 } to leave them out.
+function safeZone(canvas, margin = DEFAULT_MARGIN, bands = platformBands(canvas)) {
   assertCanvas(canvas);
   if (!isNumber(margin) || margin < 0 || 2 * margin >= Math.min(canvas.width, canvas.height)) {
     throw new RangeError('margin must be a number from 0 up to less than half of the smaller canvas side');
   }
+  assertBands(bands);
+  const top = Math.max(margin, bands.top);
+  const bottom = Math.max(margin, bands.bottom);
+  if (top + bottom >= canvas.height) throw new RangeError('margin and bands leave no vertical room');
   return {
     left: margin,
-    top: margin,
+    top,
     right: canvas.width - margin,
-    bottom: canvas.height - margin,
+    bottom: canvas.height - bottom,
     width: canvas.width - 2 * margin,
-    height: canvas.height - 2 * margin,
+    height: canvas.height - top - bottom,
   };
 }
 
@@ -202,6 +225,7 @@ function baselineOf(slot, i) {
 
 // Horizontal room for a line: from the anchor to the zone edge (both edges for "middle").
 function availableWidth(slot, canvas, margin = DEFAULT_MARGIN) {
+  // The bands are vertical only, so they never change the width.
   const zone = safeZone(canvas, margin);
   const anchor = slot.anchor === undefined ? 'start' : slot.anchor;
   if (anchor === 'start') return zone.right - slot.x;
@@ -218,12 +242,13 @@ function anchorInside(slot, zone) {
 //   errors: { line, reason, ... }   line is the index, or null for the slot as a whole
 //   reasons: linhas_excedidas, ancora_fora_da_zona_segura, caractere_sem_metrica,
 //            largura_excedida (with width and maxWidth), fora_da_zona_segura_vertical
+// options: { margin, bands }; bands defaults to the platform bands of the canvas (see platformBands).
 // slot: { x, y, anchor, fontSize, family, weight, letterSpacing, lineHeight, maxLines }
 //   y is the first baseline, or one baseline per line; fontSize may also be one per line.
 function checkSlot(slot, lines, canvas, options = {}) {
   assertSlot(slot);
   if (!Array.isArray(lines) || lines.some((l) => typeof l !== 'string')) throw new TypeError('lines must be an array of strings');
-  const zone = safeZone(canvas, options.margin === undefined ? DEFAULT_MARGIN : options.margin);
+  const zone = safeZone(canvas, options.margin === undefined ? DEFAULT_MARGIN : options.margin, options.bands);
   const errors = [];
   const widths = [];
   if (lines.length > slot.maxLines) errors.push({ line: null, reason: 'linhas_excedidas', lines: lines.length, maxLines: slot.maxLines });
@@ -266,7 +291,9 @@ function charBudget(slot, canvas, options = {}) {
 
 module.exports = {
   DEFAULT_MARGIN,
+  PLATFORM_BANDS_9_16,
   UNITS_PER_EM,
+  platformBands,
   safeZone,
   measureText,
   availableWidth,

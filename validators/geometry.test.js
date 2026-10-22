@@ -4,7 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { existsSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
-const { DEFAULT_MARGIN, UNITS_PER_EM, safeZone, measureText, availableWidth, checkSlot, charBudget } = require('./geometry.js');
+const { DEFAULT_MARGIN, PLATFORM_BANDS_9_16, UNITS_PER_EM, platformBands, safeZone, measureText, availableWidth, checkSlot, charBudget } = require('./geometry.js');
 const { readMetrics, CODE_POINTS } = require('../scripts/extract-font-metrics.js');
 
 const POST = { width: 1080, height: 1350 };
@@ -16,11 +16,40 @@ const FOOTER = { x: 76, y: 1261, fontSize: 19, family: 'mono', weight: 600, lett
 const REEL_HEADLINE = { x: 82, y: [1000, 1165, 1308], fontSize: [164, 126, 108], family: 'sans', weight: 600, letterSpacing: -2, maxLines: 3 };
 const reasons = (result) => result.errors.map((e) => [e.line, e.reason]);
 
-test('the safe zone is the canvas minus the 64 px margin on every side (U19, D-08)', () => {
+test('the safe zone is the canvas minus the 64 px margin on every side, plus the 9:16 bands (U19, D-08, U23)', () => {
   assert.equal(DEFAULT_MARGIN, 64);
   assert.deepEqual(safeZone(POST), { left: 64, top: 64, right: 1016, bottom: 1286, width: 952, height: 1222 });
-  assert.deepEqual(safeZone(STORY), { left: 64, top: 64, right: 1016, bottom: 1856, width: 952, height: 1792 });
+  assert.deepEqual(safeZone({ width: 1080, height: 1080 }), { left: 64, top: 64, right: 1016, bottom: 1016, width: 952, height: 952 });
+  // 9:16: 64 px at the sides, 260 px on top and 340 px at the bottom (both rules together).
+  assert.deepEqual(safeZone(STORY), { left: 64, top: 260, right: 1016, bottom: 1580, width: 952, height: 1320 });
   assert.equal(safeZone(POST, 90).width, 900);
+});
+
+test('platform bands exist only on a 9:16 canvas, decided by the ratio and not by the pixel size (U23)', () => {
+  assert.deepEqual(PLATFORM_BANDS_9_16, { top: 260, bottom: 340 });
+  assert.deepEqual(platformBands(STORY), { top: 260, bottom: 340 });
+  assert.deepEqual(platformBands({ width: 540, height: 960 }), { top: 260, bottom: 340 });
+  for (const canvas of [POST, { width: 1080, height: 1080 }, { width: 1080, height: 1919 }, { width: 1081, height: 1920 }, { width: 1920, height: 1080 }]) {
+    assert.deepEqual(platformBands(canvas), { top: 0, bottom: 0 }, JSON.stringify(canvas));
+  }
+  assert.throws(() => platformBands(null), TypeError);
+  assert.throws(() => platformBands({ width: 1080 }), TypeError);
+});
+
+test('margin and bands combine by the larger of the two on each side, never by adding them', () => {
+  assert.deepEqual(safeZone(STORY, 64, { top: 0, bottom: 0 }), { left: 64, top: 64, right: 1016, bottom: 1856, width: 952, height: 1792 });
+  assert.deepEqual(safeZone(STORY, 64, { top: 30, bottom: 500 }), { left: 64, top: 64, right: 1016, bottom: 1420, width: 952, height: 1356 });
+  // A margin larger than a band wins on that side: 300 on top, the 340 band at the bottom.
+  assert.deepEqual(safeZone(STORY, 300), { left: 300, top: 300, right: 780, bottom: 1580, width: 480, height: 1280 });
+  assert.deepEqual(safeZone(STORY, 400), { left: 400, top: 400, right: 680, bottom: 1520, width: 280, height: 1120 });
+});
+
+test('safeZone refuses malformed bands and bands that leave no vertical room', () => {
+  for (const bad of [null, 5, 'x', {}, { top: 1 }, { bottom: 1 }, { top: -1, bottom: 0 }, { top: 0, bottom: -1 }, { top: Number.NaN, bottom: 0 }, { top: '260', bottom: 340 }]) {
+    assert.throws(() => safeZone(STORY, 64, bad), TypeError, JSON.stringify(bad));
+  }
+  assert.throws(() => safeZone(STORY, 64, { top: 960, bottom: 960 }), RangeError);
+  assert.doesNotThrow(() => safeZone(STORY, 64, { top: 960, bottom: 959 }));
 });
 
 test('safeZone refuses a bad canvas or a margin that leaves no room', () => {
@@ -206,6 +235,36 @@ test('per-line sizes and baselines (reel-01 headline) are measured line by line'
   assert.ok(Math.abs(nine.widths[1] - 927) < 1);
   const lastOnly = checkSlot(REEL_HEADLINE, ['ok', 'ok', 'MMMMMMMMMMM'], STORY);
   assert.deepEqual(reasons(lastOnly), [[2, 'largura_excedida']]);
+});
+
+test('9:16: text inside the 260 px top band or the 340 px bottom band fails; the same slot passes on a post canvas (U23)', () => {
+  const label = { x: 118, y: 125, fontSize: 23, family: 'mono', weight: 600, letterSpacing: 2, maxLines: 1 };
+  const inTop = checkSlot(label, ['PESQUISA'], STORY);
+  assert.deepEqual(reasons(inTop), [[0, 'fora_da_zona_segura_vertical']]);
+  assert.equal(inTop.errors[0].zoneTop, 260);
+  assert.equal(inTop.errors[0].zoneBottom, 1580);
+  assert.equal(checkSlot(label, ['PESQUISA'], POST).passed, true);
+  // reel-02 headline: two lines at 133 px, pitch 130, first baseline 1510.
+  const reel2 = { x: 83, y: 1510, fontSize: 133, family: 'sans', weight: 600, letterSpacing: -2, lineHeight: 130, maxLines: 2 };
+  // Line 0 ends at 1543 and fits; line 1 ends at 1673 and crosses the 1580 edge.
+  assert.deepEqual(reasons(checkSlot(reel2, ['Linha um', 'Linha dois'], STORY)), [[1, 'fora_da_zona_segura_vertical']]);
+  assert.equal(checkSlot(reel2, ['Linha um', 'Linha dois'], STORY, { bands: { top: 0, bottom: 0 } }).passed, true);
+});
+
+test('9:16: the band edges are exact: baseline + 0.25 size = 1580 and baseline - 0.75 size = 260 pass, a hair beyond fails', () => {
+  const slot = { x: 100, y: 1555, fontSize: 100, family: 'sans', weight: 400, maxLines: 1 };
+  assert.equal(checkSlot(slot, ['ok'], STORY).passed, true); // bottom 1555 + 25 = 1580
+  assert.deepEqual(reasons(checkSlot({ ...slot, y: 1555.5 }, ['ok'], STORY)), [[0, 'fora_da_zona_segura_vertical']]);
+  assert.equal(checkSlot({ ...slot, y: 335 }, ['ok'], STORY).passed, true); // top 335 - 75 = 260
+  assert.deepEqual(reasons(checkSlot({ ...slot, y: 334.5 }, ['ok'], STORY)), [[0, 'fora_da_zona_segura_vertical']]);
+});
+
+test('the 64 px sides still apply on 9:16 together with the bands, and the bands never change the width', () => {
+  const slot = { x: 50, y: 800, fontSize: 40, family: 'sans', weight: 400, maxLines: 1 };
+  assert.deepEqual(reasons(checkSlot(slot, ['ok'], STORY)), [[null, 'ancora_fora_da_zona_segura']]);
+  assert.equal(availableWidth({ x: 82, anchor: 'start' }, STORY), 934);
+  assert.equal(availableWidth({ x: 82, anchor: 'start' }, STORY, 64), availableWidth({ x: 82, anchor: 'start' }, { width: 1080, height: 1350 }, 64));
+  assert.deepEqual(charBudget(REEL_HEADLINE, STORY), charBudget(REEL_HEADLINE, STORY, { margin: 64 }));
 });
 
 test('a malformed slot or lines is a TypeError, not a quiet pass', () => {
