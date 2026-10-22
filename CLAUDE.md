@@ -18,6 +18,8 @@ Workflows usam:
 
 **Proibido**: modo agente, chamadas recursivas de LLM, lógica condicional dentro do modelo.
 
+**Prompts**: o prompt de sistema de cada nó de LLM vive em `skills/<nome>/SKILL.md`, a fonte única da verdade. Cada arquivo é o prompt de **um** nó do n8n, sem ferramentas, sem memória e sem laço; o n8n faz o roteamento e a execução. O `seed-baseline --skills` leva o texto para `config_baseline`, e o workflow o lê com `get_config('prompt.NN_nome')`.
+
 ### Supervised development agents
 
 The prohibition above remains fully applicable to runtime workflows. Development assistance is a separate, supervised activity with exactly four fixed roles: master (bot: mestre; specification and coordination), researcher (bot: explorer; read-only source verification), implementer (bot: implementer; the only writer of approved changes), and reviewer (bot: reviewer; read-only review against evidence).
@@ -118,7 +120,8 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `verification_thresholds` — limites de confiança
 - `hook_rules` — regras de hook para o orquestrador
 - `archetypes` — arquétipos de paper
-- `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa`
+- `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa` — vêm de `skills/*/SKILL.md`, não de arquivos em `prompts/`. Hoje só 06, 07 e 09 têm skill
+- `cfm_blocklist`, `cfm_footer` — termos proibidos e texto do rodapé das regras do CFM, que se aplicam ao sistema. O conteúdo e a fonte da regra ainda estão por definir
 
 ## Dois Repositórios, Dois Schemas
 
@@ -196,17 +199,19 @@ editorial-pipeline/
 │   ├── hook_rules.json
 │   ├── archetypes.json
 │   └── .checksums
-├── prompts/baseline/
-│   ├── 02_extract.md
-│   ├── 03_verify.md
-│   ├── 04_insights.md
-│   ├── 06_visual.md
-│   ├── 07_covers.md
-│   └── 09_qa.md
+├── skills/                         # Fonte única dos prompts: um SKILL.md por nó de LLM
+│   ├── README.md
+│   ├── art-director/SKILL.md       # prompt.06_visual
+│   ├── copywriter-cfm/SKILL.md     # prompt.07_covers
+│   ├── qa-validator/SKILL.md       # prompt.09_qa
+│   └── .checksums                  # sha256sum dos SKILL.md
 ├── validators/
 │   ├── schema.js                   # JSON Schema validation (n8n Cloud compatible)
 │   ├── citation.js                 # Validação de citação literal por página
 │   ├── math.js                     # delta_absolute, delta_relative, faixas
+│   ├── contrast.js                 # Razão de contraste WCAG
+│   ├── numbers.js                  # Números da capa (PT-BR) contra valores verificados
+│   ├── blocklist.js                # Termos proibidos (gate QA-CFM)
 │   └── *.test.js                   # Testes node:test
 ├── n8n/workflows/
 │   ├── _TEMPLATE_STAGE.json
@@ -279,7 +284,7 @@ Todos seguem `_TEMPLATE_STAGE`:
 0. **Scaffold** dos repos, docs, CLAUDE.md, gitleaks, .env.example
 1. **Banco** — migrations, RLS, roles, funções, seed-baseline, verify-baseline
 2. **Validators** — JS puro com testes
-3. **Contratos** — JSON Schema + prompts baseline
+3. **Contratos** — JSON Schema + prompts (`skills/`)
 4. **Infraestrutura n8n** — 90_DB_HELPERS, 99_ERROR_HANDLER, _TEMPLATE_STAGE
 5. **Etapas 01, 02** — ingest, extract
 6. **Etapas 03, 04, 05** — verify, insights, score
