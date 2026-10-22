@@ -16,14 +16,14 @@
 | --- | --- | --- | --- | --- |
 | VL-0 | alinhamento: estes docs revisados e decisões D-01 a D-09 | — | — | em revisão |
 | VL-1 | design-time: auditoria do pacote de marca e do Figma (somente leitura) | — | VL-0 | não iniciado |
-| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `geometry` | 2 | — | parcial: quatro validadores prontos, unificados na PR #13 (78 testes); `geometry` bloqueado por U2 e pelo mapa de slots |
-| VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | bloqueado por U2 |
-| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | bloqueado por U3, U7 |
-| VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado |
+| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `blocklist` ✔, `geometry` ✔ (parcial) | 2 | — | parcial: seis validadores mesclados (PRs #13, #16, #19). `geometry` mede largura, linhas e zona segura de 64 px, mas ainda não conhece slot nem template; isso depende do mapa de slots como config (VL-4) |
+| VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | contratos e fixtures mesclados (PR #20); prompts em `skills/` na v0.1 mesclados (PR #21). Faltam o rodapé do CFM (U18), a temperatura do copywriter e o bloqueio de mídia clínica (D-15, CP-VL3.5) |
+| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | **próximo item.** U3 decidido; faltam U7 (direitos do pacote de marca), U18 e o patch dos SVGs (D-06) |
+| VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado; depende do VL-4 |
 | VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **Fase 1 fechada** (migrations 001 a 006, scripts de baseline e CI no `main`, CI verde no GitHub com 106 testes). Faltam a Fase 4 (infra n8n) e VL-5 |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
-**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** O bloqueio agora é VL-3 (contratos): a proposta está em `contracts-proposal.md`, aguardando aprovação por digest (CP-VL3.1). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
+**Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** A proposta de contratos foi aprovada e os schemas estão mesclados (PR #20); o bloqueio agora é o VL-4 (U7, U18 e o patch dos SVGs). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
 
 ---
 
@@ -53,24 +53,27 @@
 - **Ordem:**
   1. `math.js` ✔ — `computeDeltas`; no branch `claude/validators-math`, 11 testes, 5 mutantes detectados.
   2. `contrast.js` ✔ — razão de contraste WCAG entre cores hex (`#RGB` e `#RRGGBB`), sem arredondar; fórmula conferida na fonte oficial `w3c/wcag`; branch `claude/validators-contrast`, 17 testes, 10 de 11 mutantes detectados. A comparação com limiares (4,5:1 e 3:1) fica para quem consome (VL-4 e `geometry.js`).
-  3. `numbers.js` — extrai tokens numéricos e verifica que cada número exibido na capa aparece nas evidências `VERIFIED` citadas; bloqueado em parte por U10 (locale).
+  3. `numbers.js` ✔ — extrai tokens numéricos e verifica que cada número exibido na capa aparece nas evidências `VERIFIED` citadas; formato PT-BR decidido (U10); 22 testes, 14 mutantes detectados (PR #13).
   4. `schema.js` ✔ — validador de JSON Schema em subconjunto documentado, sem módulos importados (o Code node do n8n Cloud só aceita módulos nativos, conforme trecho conferido pelo Fonseca); falha fechado para palavra-chave desconhecida e `$ref`; branch `claude/validators-schema`, 26 testes e 11 de 11 mutantes detectados. O subconjunto poderá ser ampliado em VL-3 se o contrato exigir.
-  5. `geometry.js` — dado um template e um `cover_spec`: slots conhecidos, linhas e caracteres dentro do orçamento, dimensões do canvas, conteúdo dentro da zona segura.
+  5. `geometry.js` ✔ (parcial) — PR #19: mede a largura do texto com tabela de avanços (Arial e Courier New, U20), recusa linhas em excesso, texto fora da zona segura (tela menos 64 px, U19) e caractere sem largura; 31 testes, 35 mutantes detectados. Falta o que depende do mapa de slots como config: slot desconhecido e dimensão do canvas.
+  6. `blocklist.js` ✔ — gate `QA-CFM`: acha termo proibido por palavra ou expressão inteira, sem distinguir maiúsculas nem acentos (PR #16). A lista é dado de config (`cfm_blocklist`), não literal no código.
 - **Fora desta fase:** validação de faixa de `math` (depende de U5) e `citation.js` (é do `03_VERIFY`).
 - **Aceite:** CP-VL2.1 a CP-VL2.7.
 
 ## VL-3 — Contratos e prompts baseline (Fase 3)
 
 - **Objetivo:** contratos JSON Schema dos três artefatos desta camada.
-- **Passo 1 (bloqueante):** **proposta de contratos** em documento (campos, enums fechados, campos de proveniência obrigatórios, referências `evidence_ids`), revisada por digest e aprovada. Sem isso, nenhum schema é escrito (U2).
-- **Passo 2:** `contracts/visual_spec.schema.json`, `cover_spec.schema.json`, `qa_result.schema.json` + fixtures sintéticas (2 válidas e 2 inválidas por contrato) em `fixtures/synthetic/`.
-- **Passo 3:** `prompts/baseline/06_visual.md`, `07_covers.md`, `09_qa.md`, versionados com hash.
-- **Aceite:** CP-VL3.1 a CP-VL3.4.
+- **Passo 1 (bloqueante):** **proposta de contratos** em documento (campos, enums fechados, campos de proveniência obrigatórios, referências `evidence_ids`), revisada por digest e aprovada. Sem isso, nenhum schema é escrito (U2). **Feito:** aprovada pelo Fonseca em 2026-10-22 (PR #15).
+- **Passo 2:** `contracts/visual_spec.schema.json`, `cover_spec.schema.json`, `qa_result.schema.json` + fixtures sintéticas (2 válidas e 2 inválidas por contrato) em `fixtures/synthetic/`. **Feito:** PR #20 (24 testes, 290 mutantes detectados); as fixtures ficaram em `fixtures/synthetic/contracts/`.
+- **Passo 3:** os prompts vivem em `skills/<nome>/SKILL.md` (D-12), com `skills/.checksums`, e a lista de termos em `config/baseline/cfm_blocklist.json`. **Feito (v0.1):** PRs #14, #17 e #21, mescladas. A PR #23 (sem o `100%` isolado, D-13) está aberta. Nenhum teste roda contra um modelo; a temperatura do copywriter segue UNKNOWN.
+- **Passo 4 (PROPOSED):** impor por código e teste o bloqueio de mídia clínica da v1 (D-15). O local é UNKNOWN (U24).
+- **Aceite:** CP-VL3.1 a CP-VL3.5.
 
 ## VL-4 — Baseline visual
 
 - **Objetivo:** `config/baseline/visual_library.json` (lista fechada de gramáticas, tamanhos, mapa de slots, tokens, zonas seguras, pares de cor permitidos) e `.checksums`.
 - **Pré-condições:** mapa de slots do VL-1, schema do VL-3 e decisão D-04. D-04 está decidida: os SVGs ficam fora do repo público, só no scratchpad, até autorização explícita do Fonseca no marco VL-4 (D-10, decidido em 2026-10-22).
+- **Zonas seguras:** `templates.json` declara zonas que a resposta a U19 apontou como erradas (erro na declaração, não nos SVGs). O `visual_library` carrega as corrigidas: margem de 64 px, com a dúvida das faixas de 9:16 em U23.
 - **Aceite:** CP-VL4.1 a CP-VL4.4. Os SVGs entram no repo **neste marco**, e só depois de D-04.
 
 ## VL-5 — Núcleo de render
@@ -120,6 +123,8 @@ Estágios 01–05 e 10–12; Fase 1 e Fase 4 como entregas; publicação e métr
 | Contratos inventados (U2) | retrabalho | proposta aprovada antes de qualquer schema |
 | Texto estoura slot sem medir fonte real | QA falha só no render | orçamento de caracteres por linha e testes de limite; medição real só com a fonte decidida |
 | Cota do Figma (seat View) | auditoria incompleta | orçamento fixo no VL-1; tratar o restante como UNKNOWN |
+| Mídia clínica entra sem bloqueio (D-15 sem código) | foto de paciente em peça publicada | CP-VL3.5; até lá, nada no repositório impõe o bloqueio |
+| A lista de termos só pega a forma exata | variações passam (`curar`, `100% eficaz`) | decisão de ampliar a lista; o prompt pede ao modelo que evite; o juiz semântico do `09_QA` cobre o resto |
 
 ## Definition of done desta camada
 
