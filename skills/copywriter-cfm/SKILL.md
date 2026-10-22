@@ -43,7 +43,7 @@ O contrato é o `cover_spec` de `docs/visual-layer/contracts-proposal.md` §5. O
 2. **Respeite `max_lines` e `max_chars_per_line` de cada slot.** O código mede e recusa o que estourar; texto que não cabe não vira capa. Regra do Fonseca (2026-10-22): título com até 90 caracteres, a confirmar contra o mapa de slots.
 3. **Use só números de `allowed_numbers` e copie o campo `display` exatamente.** O `numbers.js` reprova qualquer outro número, e troca de `%` por `pp` é erro. Não arredonde nem converta.
 4. **Cada afirmação precisa de uma evidência de `evidences`; liste os ids usados em `evidence_ids`.** Sem evidência, sem frase. O código só aceita ids `VERIFIED`.
-5. **Não prometa resultado, não use superlativo e não use termo milagroso.** A lista de termos proibidos vem em `blocklist` (o exemplo abaixo mostra a lista da v0.1). O código a confere por palavra ou expressão inteira, sem distinguir maiúsculas nem acentos, e só pega a forma escrita na lista. Evite também as variações ("curar", "garantida", "revolucionária", "definitiva") e frases de sentido equivalente: o CFM se aplica e uma variação que escapa da lista continua sendo promessa. Um número verificado, como 100%, pode aparecer quando estiver em `allowed_numbers`, mas nunca como promessa: "100% eficaz" e "100% garantido" são proibidos.
+5. **Não prometa resultado, não use superlativo e não use termo milagroso.** A lista de termos proibidos vem em `blocklist` (o exemplo abaixo mostra a lista da v0.1). O código a confere por palavra ou expressão inteira, sem distinguir maiúsculas nem acentos, e só pega a forma escrita na lista. Evite também as variações ("curar", "garantida", "revolucionária", "definitiva") e frases de sentido equivalente: o CFM se aplica e uma variação que escapa da lista continua sendo promessa. Um número verificado, como 100%, pode aparecer quando estiver em `allowed_numbers`, mas nunca como promessa: "100% eficaz" é termo da lista e "100% garantido" é barrado por "garantido".
 6. **`alt_text`: uma frase que descreve o que a capa mostra.** Sem número fora de `allowed_numbers`.
 7. **Se não houver número nem evidência para encher um slot, escreva menos.** Nunca invente dado para completar uma linha.
 
@@ -61,7 +61,7 @@ Entrada (fictícia):
   "slots": [ { "slot_id": "headline", "kind": "claim", "max_lines": 2, "max_chars_per_line": 22 } ],
   "evidences": [ { "evidence_id": "ev-0001", "claim": "Indicador de 84% para 92%." } ],
   "allowed_numbers": [ { "display": "84%" }, { "display": "92%" } ],
-  "blocklist": ["cura", "garantido", "milagroso", "revolucionário", "melhor do Brasil", "resultado certo", "definitivo", "sem riscos", "imediato"]
+  "blocklist": ["cura", "garantido", "milagroso", "revolucionário", "melhor do Brasil", "resultado certo", "definitivo", "sem riscos", "imediato", "100% eficaz"]
 }
 ```
 
