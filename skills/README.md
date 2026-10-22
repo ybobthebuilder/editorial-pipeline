@@ -1,6 +1,6 @@
 # skills/ — manuais dos estágios com LLM (v0.1)
 
-> **Versão v0.1.** O `seed-baseline --skills` leva o corpo de cada arquivo para `config_baseline`, e `skills/.checksums` lista os hashes. **Nenhum teste de comportamento existe**: nada aqui foi executado contra um modelo; os testes só conferem forma, checksums e a lista de termos. Escopo: estágios 06, 07 e 09 da camada visual.
+> **Versão v0.1.** O `seed-baseline --skills` leva o corpo de cada arquivo para `config_baseline`, e `skills/.checksums` lista os hashes. **Nenhum teste roda contra um modelo de linguagem**, então o comportamento dos prompts não foi medido. Os testes que existem são determinísticos: forma, checksums e coerência dos `SKILL.md` (`tests/skills`) e o conferidor de termos, com a lista real (`validators/blocklist.test.js`). Escopo: estágios 06, 07 e 09 da camada visual.
 >
 > O status mora neste README, não nos `SKILL.md`: o corpo de cada arquivo é o prompt que o modelo recebe.
 

@@ -68,11 +68,14 @@ const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
 test('skills/.checksums lists every SKILL.md with the sha256 of its bytes, and nothing else', () => {
   const lines = readFileSync(join(ROOT, '.checksums'), 'utf8').trim().split('\n');
-  const listed = Object.fromEntries(lines.map((l) => {
+  const entries = lines.map((l) => {
     const m = /^([0-9a-f]{64}) {2}(\S+)$/.exec(l);
     assert.ok(m, `linha inválida em .checksums: ${l}`);
     return [m[2], m[1]];
-  }));
+  });
+  // Object.fromEntries would let a later duplicate silently replace an earlier line.
+  assert.equal(new Set(entries.map(([path]) => path)).size, entries.length, '.checksums lista o mesmo arquivo duas vezes');
+  const listed = Object.fromEntries(entries);
   assert.deepEqual(Object.keys(listed).sort(), dirs.map((d) => `${d}/SKILL.md`));
   for (const name of dirs) {
     const digest = createHash('sha256').update(readFileSync(join(ROOT, name, 'SKILL.md'))).digest('hex');

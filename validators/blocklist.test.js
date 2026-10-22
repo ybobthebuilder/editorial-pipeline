@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { findBlockedTerms } = require('./blocklist.js');
+const { checkNumbersAllowed } = require('./numbers.js');
 
 // The terms below are placeholders for the mechanism. The real list is the config's (U22).
 const TERMS = ['cura', 'o melhor', 'promoção'];
@@ -169,4 +170,17 @@ test('known gaps, by design (whole forms only): these slip through and must be a
   const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucionária', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100 %', '100 %'];
   for (const text of slips) assert.deepEqual(hits(text), [], text);
   assert.equal(findBlockedTerms([{ id: 'x', text: slips.join(' ') }], REAL).passed, true);
+});
+
+test('precedence today: a verified 100% passes QA-NUM and still fails QA-CFM, because the gates are independent', () => {
+  // A number that numbers.js allows (it came from a VERIFIED evidence) is not exempt from the list.
+  // No code lets one gate override the other, and QA-CFM cannot be waived (contracts-proposal.md,
+  // section 6). Changing this is a policy decision for Fonseca: remove "100%" from the list, or
+  // define an exemption for verified values. Until then this test pins what the code does.
+  const items = [{ id: 'headline', text: 'Resposta em 100%' }];
+  assert.equal(checkNumbersAllowed(items, [{ value: 100, unit: '%' }]).passed, true);
+  assert.equal(findBlockedTerms(items, REAL).passed, false);
+  assert.deepEqual(hits(items[0].text), ['100%']);
+  // The numeric gate alone does not decide: with 100% not allowed, QA-NUM fails too.
+  assert.equal(checkNumbersAllowed(items, [{ value: 92, unit: '%' }]).passed, false);
 });
