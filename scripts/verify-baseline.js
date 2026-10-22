@@ -8,8 +8,10 @@
 // --skills also checks the prompts (decision D-12). With --skills and no --dir, only the prompts are
 // checked, and rows that are not prompts are left alone.
 //
-// Read-only: it works with the n8n_pipeline role. --offline true checks only the files against
-// .checksums and does not touch the database. Exit codes: 0 consistent, 1 mismatch, 2 bad usage.
+// Read-only: it needs a role that can SELECT config_baseline, which is the deploy role. n8n_pipeline
+// cannot (migration 007): it reads the configuration only through editorial.get_config. --offline true
+// checks only the files against .checksums and does not touch the database. Exit codes: 0 consistent,
+// 1 mismatch, 2 bad usage.
 
 const { loadVerified, loadVerifiedSkills, readDatabaseRows, compareWithDatabase, parseArgs } = require('./lib/baseline');
 

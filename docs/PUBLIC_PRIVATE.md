@@ -91,9 +91,9 @@ A ordem com sobreposição privada (override primeiro; baseline se não houver o
 - REVOKE ALL para `anon` e `authenticated`
 - role `n8n_pipeline` com permissões mínimas
 - `n8n_pipeline` pode:
-  - EXECUTE em `guard_transition`, `set_status`, `mark_running` e `get_config`
-  - SELECT em `state_transitions`, `config_baseline`, `jobs` e `signatures`
-- `n8n_pipeline` não grava direto em `signatures` nem em `jobs`: o status muda por `set_status`
+  - EXECUTE em `create_job`, `guard_transition`, `set_status`, `mark_running`, `get_config`, `get_job`, `get_job_status` e `find_jobs_by_execution`, todas `SECURITY DEFINER`
+- `n8n_pipeline` não tem privilégio sobre nenhuma tabela: lê por funções que recebem uma chave e devolvem o que ela aponta, e não grava direto em `signatures` nem em `jobs` (o status muda por `set_status`)
+- um banco por cliente: o schema `editorial` não tem coluna de tenant, e o n8n escolhe a string de conexão do cliente ao disparar o job
 - `human_reviewer` é um papel separado, sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas de jobs em AWAITING_APPROVAL. A credencial dele não pode ficar em workflow não supervisionado
 - permissões sobre tabelas de `editorial_intel` não existem ainda; serão definidas na migração que criar essas tabelas
 - `n8n_pipeline` não deve ter acesso irrestrito a schemas privados

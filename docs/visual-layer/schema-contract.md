@@ -237,3 +237,26 @@ Decisões do Fonseca de 2026-10-22, implementadas em `claude/migration-003` (`cc
 **Testes.** 106 de 106 (migrations e rollbacks 94, scripts 12). Mutantes: 9 da 006 e 1 do rollback, 10 de 11 dos scripts (o 11º é equivalente).
 
 **Fase 1.** O código está completo. Ela só fecha quando #9, #10, #11 e #12 forem mergeadas e o CI passar no GitHub. Não a marquei como concluída antes disso.
+
+
+## 15. Migration 007: menor privilégio estrito de `n8n_pipeline` (2026-10-22)
+
+**Decisões do Fonseca.** (1) **Um banco por cliente.** O schema `editorial` continua genérico, sem coluna de tenant; o n8n escolhe a string de conexão do cliente ao disparar o job; o direito ao esquecimento da LGPD é apagar o banco do cliente. (2) **`n8n_pipeline` sem `SELECT` direto.** O papel só executa funções `SECURITY DEFINER`, e, se precisa ler um job, lê por uma função.
+
+| Item | Decisão | Implementação |
+| --- | --- | --- |
+| `n8n_pipeline` | nenhum privilégio de tabela | Perde o `SELECT` em `state_transitions`, `config_baseline`, `jobs` e `signatures`, e as quatro políticas de leitura dele saem. Mantém o `USAGE` no schema |
+| `get_config` | passa a `SECURITY DEFINER` | Dona: `editorial_owner`, que ganha `SELECT` e uma política em `config_baseline`. **Substitui** o que §14 diz: "`get_config` continua `SECURITY INVOKER`" e "não lê `config_baseline`" |
+| `get_job(job_id)` | `Load Context` do `_TEMPLATE_STAGE` | Devolve as 13 colunas de `jobs` por nome, não o tipo da tabela, para que uma coluna futura não seja exposta por acidente. Job inexistente é erro |
+| `get_job_status(job_id)` | `Guard` e orquestrador | Devolve o status. Job inexistente é erro |
+| `find_jobs_by_execution(execution_id)` | `99_ERROR_HANDLER` | Devolve zero ou mais ids, o mais recente primeiro. `execution_id` vazio ou nulo é erro. O banco não escolhe entre vários jobs de uma mesma execução |
+| Leitura de `signatures` | `n8n_pipeline` não lê | O gate fica dentro de `guard_transition`. O estágio `10_APPROVAL` pode chamar `set_status` e tratar a recusa |
+
+**Limites conhecidos e UNKNOWN**
+- Não há função para listar jobs por status: nenhum workflow documentado a usa, porque o `_TEMPLATE_STAGE` recebe o `job_id`. Se o orquestrador passar a descobrir trabalho por status, a função nasce com esse consumidor.
+- `scripts/verify-baseline.js` lê a tabela `config_baseline` e deixa de funcionar com `n8n_pipeline`; roda com o papel de deploy.
+- `human_reviewer` segue lendo `jobs` e `signatures` pela tabela (a fila de aprovação). A decisão de hoje não mudou isso.
+- A string de conexão de cada cliente e a credencial de `human_reviewer` por cliente ficam no n8n e no cofre, fora do repositório.
+- Não verificado: se o papel que roda a migration no Supabase pode fazer `ALTER FUNCTION … OWNER TO editorial_owner` (a mesma ressalva de §14).
+
+**Testes** (Postgres 16.15 limpo, `--test-concurrency=1`): migrations, rollbacks e invariantes 126 (14 da 007, 17 nas invariantes, 1 rollback novo); scripts 24; conjunto 150 de 150. Mutação: 105 mutantes dos pontos de segurança das migrations 001 a 007 e do rollback da 007; a suíte inteira detecta 105 de 105. As suítes por migration deixam passar 15 deles, que só o arquivo de invariantes detecta. Dois mutantes (`R05` e `F06`) são equivalentes no estado final, porque a 007 redefine o objeto que eles alteravam, e continuam detectados pelos testes do estado intermediário.
