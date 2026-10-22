@@ -150,15 +150,15 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
 | U10 | **DECIDIDO** (Fonseca, 2026-10-22): formato PT-BR, vírgula decimal (`9,52`) | — | — |
-| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-k. Implementado em `claude/migration-001` (`1a91b7b`) e `claude/migration-002` (`0329c4c`). Ver `schema-contract.md` §10–12 | Fase 1, VL-6 | U11-l a U11-o (abertas) |
+| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-o. Implementado nas migrations 001 a 005 (PRs #6, #7, #8; 005 sem PR). Ver `schema-contract.md` §10–13 | Fase 1, VL-6 | — |
 | U11-h | **RESPONDIDO** (2026-10-22): `editorial.jobs` no schema `editorial` | `set_status`, `mark_running` (migração própria) | — |
 | U11-i | **RESPONDIDO** (2026-10-22): estados de erro voltam ao estado de trabalho de origem, além de NEEDS_REVIEW | retry de etapa | — |
 | U11-j | **RESPONDIDO** (2026-10-22): `editorial.signatures`; `guard_transition(job_id, from, to)` exige aprovação registrada | gate humano | — |
 | U11-k | **RESPONDIDO** (2026-10-22): nenhum estado novo; só AWAITING_APPROVAL e HUMAN_APPROVED | gates do relatório | — |
-| U11-l | Saída de `NEEDS_REVIEW`. Hoje não há saída: um job revisado por humano não tem caminho de volta | revisão humana, VL-7 | Fonseca |
-| U11-m | `signatures.decision` tem os valores `approved` e `rejected` (proposta, não confirmada); quem grava assinaturas (papel humano ainda não criado); só a UF do CRM é gravada, sem o número | gate, papel de gravação | Fonseca |
-| U11-n | Proveniência de `CLAUDE.md` §7 (`stage`, `execution_id`, `config_*`) em `jobs`. `CLAUDE.md` diz que linha sem proveniência não entra no banco; `jobs` foi pedido sem essas colunas | `jobs`, `set_status` | Fonseca |
-| U11-o | Limite de tentativas no retry: o banco permite ciclos ilimitados (`QA_FAILED` ↔ `COVERS_RENDERED`). Validade de assinatura reusada após rebobinamento: hoje inalcançável, mas precisa de regra antes de existir caminho de volta a `AWAITING_APPROVAL` | retry, gate | Fonseca |
+| U11-l | **RESPONDIDO** (2026-10-22): `NEEDS_REVIEW` sai para `AWAITING_APPROVAL` ou para o estado de trabalho de origem. Restrições do guard são escolha minha (§13) | revisão humana | — |
+| U11-m | **RESPONDIDO** (2026-10-22): `approved` e `rejected` confirmados; gravação pelo papel `human_reviewer`. Pendente: não deixar a credencial em workflow sem supervisão | gate | — |
+| U11-n | **RESPONDIDO** (2026-10-22): `jobs` ganha a proveniência de `CLAUDE.md` §7 | `jobs`, `set_status` | — |
+| U11-o | **RESPONDIDO** (2026-10-22): `jobs.attempt_count`; o limite de 3 é do código. Reuso de assinatura resolvido por `status_entered_at` (escolha minha) | retry, gate | — |
 
 ## 11. Decisões pendentes (Fonseca)
 
@@ -171,7 +171,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
-| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem oficial. Pendente: se os 90 px de `templates.json` seguem como zona segura de conteúdo, não foi confirmado |
+| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca, 2026-10-22): 64 px é a margem externa (chrome). Os 90 px de `templates.json` passam a ser a zona segura de conteúdo |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
 | D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **decidido** (Fonseca, 2026-10-22): só no VL-4 (Fase 3). Exige também a nota de direitos (U7, VL-1) antes da entrada |
 

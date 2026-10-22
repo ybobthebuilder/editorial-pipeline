@@ -180,3 +180,35 @@ Decisões do Fonseca, implementadas em `claude/migration-002` (`0329c4c`, sobre 
 **Governança.** PR #5 (`claude/governance-public-private`, candidato `c41a9eb88`, base `e821de1`) corrige `CLAUDE.md` e `docs/PUBLIC_PRIVATE.md`: trigger vira função, `get_config` lê só o público, `jobs` e `signatures` ficam em `editorial`, 17 estados, rebobinamento, migração 002. Não foi revisada (sem veredito). `docs/STAGES.md` §2 ainda menciona trigger; fica para um passo próprio.
 
 **Testes.** `001`: 19 de 19 (`1a91b7b`). `002`: 17 de 17 (`0329c4c`). As duas suítes juntas: 36 de 36, com `--test-concurrency=1` (ambas criam papéis globais). Oito mutantes da `002` detectados.
+
+
+## 13. Migrations 003 a 005 (2026-10-22)
+
+Decisões do Fonseca de 2026-10-22, implementadas em `claude/migration-003` (`cc4ca36`), `-004` (`73e91e5`) e `-005` (`51c65df`). PRs #7 (003, base #6) e #8 (004, base #7); 005 sem PR.
+
+| ID | Decisão | Implementação |
+| --- | --- | --- |
+| U11-l | `NEEDS_REVIEW` sai para `AWAITING_APPROVAL` ou para o estado de trabalho anterior | 11 arestas novas. O guard decide o destino válido por job, a partir de `jobs.previous_status` |
+| U11-m | `approved` e `rejected`; gravação por papel `human_reviewer` | Papel sem login, separado de `n8n_pipeline`. INSERT só nas colunas `job_id, reviewer_name, crm_uf, decision, notes`; `id` e `signed_at` vêm do banco. Só assina job em `AWAITING_APPROVAL` (política RLS). Não atualiza nem apaga |
+| U11-n | proveniência em `jobs` | `source_origin`, `input_context` (jsonb), `config_source`, `config_version` (obrigatórios); `last_stage`, `last_execution_id` (gravados por `mark_running`). `model` fica de fora: é por chamada de LLM |
+| U11-o | `attempt_count` no banco; limite de 3 no código | Conta tentativas desde o último avanço. `mark_running` soma e devolve; `set_status` zera ao avançar, mantém em falha e retry, zera ao sair de `NEEDS_REVIEW` |
+| D-08 | 64 px de margem externa; 90 px de zona segura | Só documentação; entra no baseline visual (VL-4) |
+
+**Regras do guard que são escolha minha (aprovadas pelo Fonseca na mesma data, cada uma é uma condição):**
+1. `NEEDS_REVIEW → AWAITING_APPROVAL` só se o job chegou a `QA_PASSED` ou além. Sem isso, um job em `RECEIVED` pularia para o gate.
+2. Depois do gate (`HUMAN_APPROVED`, `PUBLISHED`), a IA não refaz: o job só volta a `AWAITING_APPROVAL`.
+3. A assinatura só vale se gravada depois de o job entrar no estado atual (`jobs.status_entered_at`). Sem isso, uma aprovação antiga liberaria uma nova revisão.
+
+**Funções.** `guard_transition` é `SECURITY DEFINER`. `set_status(job_id, next)` bloqueia a linha, chama o guard e grava `previous_status` e `status_entered_at`. `mark_running(job_id, stage, execution_id)` devolve `attempt_count`. Recusa job em estado de erro, `NEEDS_REVIEW` ou `PUBLISHED`. Todas com `search_path` fixo; EXECUTE só para `n8n_pipeline`.
+
+**Reversibilidade.** `supabase/rollbacks/NNN_….down.sql` para as cinco. A suíte `rollbacks.test.js` descobre as migrations, falha se faltar rollback, e confere que subir, descer e subir restaura o catálogo idêntico (colunas, constraints, índices, funções com segurança e `search_path`, políticas, ACLs, papéis e linhas de `state_transitions`). A 005 é não transacional (`CREATE INDEX CONCURRENTLY`); o harness a aplica sem `psql -1`.
+
+**Risco residual, decisão do Fonseca.** `human_reviewer` é um papel de banco. Se a mesma instância do n8n guarda as credenciais de `n8n_pipeline` e de `human_reviewer`, a automação consegue assinar: o banco não distingue pessoa de workflow. A credencial dele não deve ficar em workflow que roda sem supervisão.
+
+**Limites conhecidos**
+- Não há `create_job`; os jobs são criados pelo dono do schema.
+- As funções pertencem ao papel que roda a migration. Um dono dedicado e sem login reduz o alcance de um erro nelas.
+- `now()` marca o início da transação: uma assinatura gravada numa transação iniciada antes de o job entrar no estado é recusada (falha fechada).
+- Não verificado: se o Supabase CLI ignora `supabase/rollbacks/`.
+
+**Testes** (Postgres 16.15 limpo, `--test-concurrency=1`): 003: 22; 004: 13 (inclui concorrência de `set_status`); 005: 5; conjunto: 82 de 82. Mutantes detectados: 11 (003), 11 (004), 4 (005), 3 (rollbacks).

@@ -53,7 +53,7 @@
 
 ## VL-6 — Workflows n8n 06–09 (bloqueado pelas Fases 1 e 4)
 
-- [ ] **CP-VL6.1** U1 decidida (`editorial.config_baseline`). U11-a a g respondidas e implementadas em `claude/migration-001` (16 testes contra Postgres 16.15 limpo). Abertas: U11-l a U11-o (saída de NEEDS_REVIEW, valores e papel de assinatura, proveniência em `jobs`, limite de retry e reuso de assinatura). Fechadas em 2026-10-22: U11-h a U11-k. Permanece [ ] até as abertas fecharem. *Tipo:* humano.
+- [ ] **CP-VL6.1** U1 decidida (`editorial.config_baseline`). U11-a a g respondidas e implementadas em `claude/migration-001` (16 testes contra Postgres 16.15 limpo). U11-h a U11-o respondidos em 2026-10-22; migrations 001 a 005 implementadas. Permanece [ ] até as PRs #6, #7 e #8 serem revisadas e mergeadas pelo Fonseca e a 005 ganhar PR. *Tipo:* humano.
 - [ ] **CP-VL6.2** Cartões de etapa 06–09 no formato de `STAGES.md` §7, revisados. *Tipo:* humano.
 - [ ] **CP-VL6.3** Workflows seguem o `_TEMPLATE_STAGE`, estão sanitizados (sem credential ID, `pinData` ou URL privada) e cada parâmetro de nó foi conferido em docs.n8n.io. *Verificar:* `sanitize-workflow --check` (Fase 4). *Tipo:* auto + humano.
 - [ ] **CP-VL6.4** Nenhum nó de agente; LLM só em Basic LLM Chain ou Information Extractor com Structured Output Parser; temperatura 0, exceto headline. *Tipo:* auto.
@@ -109,3 +109,8 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | CP-VL6.1 (gate) | passou: 19 de 19 testes; `requires_gate` só em AWAITING_APPROVAL → HUMAN_APPROVED, recusado pelo guard (falha fechada); 3 mutantes detectados | commit `1a91b7b0a68f7b4122fdbfe290ee67570266b699` | implementer (sem review) |
 | 2026-10-22 | CP-VL6.1 (jobs, assinaturas, rebobinamento) | passou: 17 de 17 testes da 002; 36 de 36 com a 001; 8 mutantes da 002 detectados | `0329c4c` | implementer (sem review) |
 | 2026-10-22 | governança (CLAUDE.md, PUBLIC_PRIVATE) | PR #5 aberta, sem veredito | `c41a9eb88` | implementer (sem review) |
+| 2026-10-22 | CP-VL6.1 (003: saída de NEEDS_REVIEW, proveniência, human_reviewer) | passou: 22 de 22 na 003; 62 de 62 no conjunto; 11 mutantes detectados | `cc4ca36` | implementer (sem review) |
+| 2026-10-22 | CP-VL6.1 (004: set_status, mark_running) | passou: 13 de 13 na 004; 76 de 76 no conjunto; 11 mutantes detectados, inclusive o bloqueio de linha | `73e91e5` | implementer (sem review) |
+| 2026-10-22 | CP-VL6.1 (005: índices CONCURRENTLY) | passou: 5 de 5; 82 de 82 no conjunto; 4 mutantes detectados | `51c65df` | implementer (sem review) |
+| 2026-10-22 | rollbacks (001 a 005) | passou: subir, descer e subir restaura o catálogo idêntico; 3 mutantes dos scripts detectados | `5779311` | implementer (sem review) |
+| 2026-10-22 | PRs abertas: #6 (001+002), #7 (003, base #6), #8 (004, base #7); #5 atualizada (`733b06a`) | sem veredito; aguardam revisão do Fonseca | — | — |
