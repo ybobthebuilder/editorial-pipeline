@@ -112,12 +112,13 @@ test('the module has no require() or import, so it runs in the n8n Cloud Code no
 
 // The tests above exercise the mechanics with example terms. The ones below use the real v0.1 list
 // that Fonseca supplied on 2026-10-22 (U22), read from the config file, never copied into code.
-// Amended the same day: the isolated "100%" left the list. numbers.js handles the arithmetic and the
-// list handles the legal wording, so a verified 100% is publishable and only promises are blocked.
+// Amended the same day: the isolated "100%" left the list and the promise "100% eficaz" joined it.
+// numbers.js handles the arithmetic and the list handles the legal wording, so a verified 100% is
+// publishable and only promises are blocked.
 const { readFileSync: readFile } = require('node:fs');
 const { join: joinPath } = require('node:path');
 
-const V01 = ['cura', 'garantido', 'milagroso', 'revolucionário', 'melhor do Brasil', 'resultado certo', 'definitivo', 'sem riscos', 'imediato'];
+const V01 = ['cura', 'garantido', 'milagroso', 'revolucionário', 'melhor do Brasil', 'resultado certo', 'definitivo', 'sem riscos', 'imediato', '100% eficaz'];
 const REAL = JSON.parse(readFile(joinPath(__dirname, '..', 'config', 'baseline', 'cfm_blocklist.json'), 'utf8'));
 const hits = (text) => findBlockedTerms([{ id: 'x', text }], REAL).matches.map((m) => m.term);
 
@@ -144,6 +145,16 @@ test('"100%" alone is not forbidden; the promise forms are stopped by the word t
   for (const text of ['Efic\u00e1cia de 100%.', '(100%)', '100%', 'Resposta em 100%']) assert.deepEqual(hits(text), [], text);
   assert.deepEqual(hits('100% garantido'), ['garantido']);
   assert.deepEqual(hits('100% garantido e imediato'), ['garantido', 'imediato']);
+});
+
+test('"100% eficaz" is a phrase of the list: case, spacing and accents do not hide it, a longer word or another figure does', () => {
+  assert.deepEqual(hits('Tratamento 100% eficaz.'), ['100% eficaz']);
+  assert.deepEqual(hits('100%  EFICAZ'), ['100% eficaz']);
+  assert.deepEqual(hits('(100% eficaz)'), ['100% eficaz']);
+  assert.deepEqual(hits('1100% eficaz'), []);
+  assert.deepEqual(hits('99,9% eficaz'), []);
+  assert.deepEqual(hits('100% eficazes'), []);
+  assert.deepEqual(hits('eficaz em 100%'), []);
 });
 
 test('mechanics: a term that ends in "%" is found as a whole figure and not inside another number or word', () => {
@@ -176,8 +187,7 @@ test('several terms in one text are all reported, each with its position in the 
 
 test('known gaps, by design (whole forms only): these slip through and must be added to the list to be caught', () => {
   // Pinned so that any change in what slips through is a decision, not an accident.
-  // "100% eficaz" is a promise that Fonseca named on 2026-10-22, but it is not a term of the list.
-  const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucion\u00e1ria', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100% eficaz', '100% seguro'];
+  const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucion\u00e1ria', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100% eficazes', '100% seguro'];
   for (const text of slips) assert.deepEqual(hits(text), [], text);
   assert.equal(findBlockedTerms([{ id: 'x', text: slips.join(' ') }], REAL).passed, true);
 });
@@ -192,6 +202,10 @@ test('a verified 100% is publishable: it passes QA-NUM and QA-CFM, and "100% gar
   assert.equal(checkNumbersAllowed(promise, [{ value: 100, unit: '%' }]).passed, true);
   assert.equal(findBlockedTerms(promise, REAL).passed, false);
   assert.deepEqual(hits(promise[0].text), ['garantido']);
+  const eficaz = [{ id: 'headline', text: '100% eficaz' }];
+  assert.equal(checkNumbersAllowed(eficaz, [{ value: 100, unit: '%' }]).passed, true);
+  assert.equal(findBlockedTerms(eficaz, REAL).passed, false);
+  assert.deepEqual(hits(eficaz[0].text), ['100% eficaz']);
   // The numeric gate still decides on its own: with 100% not allowed, QA-NUM fails.
   assert.equal(checkNumbersAllowed(plain, [{ value: 92, unit: '%' }]).passed, false);
 });
