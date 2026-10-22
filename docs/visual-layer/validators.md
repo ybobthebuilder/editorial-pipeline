@@ -8,8 +8,8 @@
 
 | Validador | Branch | Commit | Testes | Mutantes detectados | Dependências | Fonte da regra |
 | --- | --- | --- | --- | --- | --- | --- |
-| `math.js` | `claude/validators-math` | `da1083e9dc2e4ccb765a1e7ba126743bc829ffb4` | 11 | 5 de 5 | nenhuma | `CLAUDE.md` §3 (exemplo 84 → 92) |
-| `contrast.js` | `claude/validators-contrast` | `dcb572140146af36505d5a1350c9bcfcbec6c664` | 17 | 10 de 11 (o 11º é equivalente) | nenhuma | W3C `w3c/wcag`, `terms/20`, lido pelo GitHub |
+| `math.js` | `claude/validators-math` | `198c75e6dc627b68acaf6669b2da61506362d542` | 12 | 5 de 5 | nenhuma | `CLAUDE.md` §3 (exemplo 84 → 92) |
+| `contrast.js` | `claude/validators-contrast` | `d6bf5de1bf751b5cec87a5d46a9019d6f7a34ccf` | 18 | 10 de 11 (o 11º é equivalente) | nenhuma | W3C `w3c/wcag`, `terms/20`, lido pelo GitHub |
 | `schema.js` | `claude/validators-schema` | `759df316c9e30066c5de264deaae5a2c5dd65554` | 26 | 11 de 11 | nenhum `require` | lista do Code node conferida pelo Fonseca; subconjunto próprio |
 | `numbers.js` | — | — | — | — | — | **bloqueado** por U10 (formato numérico) |
 | `geometry.js` | — | — | — | — | — | **bloqueado** por U2 (forma de `cover_spec`) |
@@ -51,19 +51,19 @@ Nenhum dos três branches tem PR. Nenhum tem veredito de reviewer.
 
 - O código de `schema.js` não tem `require` nem `import`. Um teste verifica o próprio fonte.
 - Lista de módulos nativos do Code node do n8n Cloud, conferida pelo Fonseca no trecho oficial: `crypto`, `http`, `https`, `url`, `util`, `querystring`, `stream`, `zlib`, `os`, `buffer`, `timers`, `string_decoder`, `events`, `dns`, `net`, `tls`, `assert`. Pacotes npm externos não são suportados no Cloud.
-- **Lacuna:** `math.js` e `contrast.js` também não importam nada, verificado por leitura, mas só `schema.test.js` tem o teste que garante isso.
+- **Lacuna fechada:** `math.js` e `contrast.js` têm agora o mesmo teste de ausência de `require` e `import` (commits `198c75e` e `d6bf5de`). Mutante verificado: `require` em `math.js` falha o teste. Um `import` em `contrast.js` falha antes, no carregamento, por erro de sintaxe num arquivo CJS.
 
 ## 4. Não construído, e por quê
 
 | Item | Bloqueio | Destrava com |
 | --- | --- | --- |
-| `numbers.js` | U10: formato numérico (`9,52` ou `9.52`) | decisão de locale |
+| `numbers.js` | U10 decidido (formato PT-BR, vírgula decimal, `9,52`). Desbloqueado; ainda não construído | decisão do Fonseca, 2026-10-22 |
 | `geometry.js` | U2: forma de `cover_spec` e mapa de slots | aprovação de `schema-contract.md` (U11) e mapa de slots (CP-VL1.5) |
 | `citation.js` | estágio 03_VERIFY, fora do escopo visual | — |
 
-## 5. Proposta de CI (PROPOSED, não commitada)
+## 5. CI de validadores (aprovada; preparada, não ativa)
 
-Fica aqui e não em `.github/`, porque essa pasta pertence ao CODEOWNERS (`@ybobthebuilder`). O Fonseca decide se entra.
+Aprovada pelo Fonseca. Preparada no branch `claude/ci-validators` (commit `90619f6ace61f4e17a736ecb637f2ddc2d4f56c6`), em `.github/workflows/validators.yml`. Não está no `main` e não é ativada até os três branches de validadores serem unificados no `main`.
 
 O passo de teste tem uma guarda. Sem ela, o `main` ficaria verde com zero testes, porque o glob não casa nenhum arquivo e o Node sai com código 0.
 
@@ -71,6 +71,7 @@ Verificado localmente com `bash -eo pipefail`, que é o shell padrão dos passos
 - no branch `claude/validators-schema`, código 0;
 - no `main`, código 1, sem testes.
 - O YAML foi lido com PyYAML 6.0.3.
+- Unificação simulada localmente, sem push: os três branches juntos passam o passo exato do CI com 56 de 56 testes e código 0.
 
 ```yaml
 name: validators
@@ -105,4 +106,4 @@ jobs:
 
 ## 6. Próximo passo
 
-Nada novo a executar até as respostas de D-08, U10 e U11-a a U11-g. O que depende de você é: revisar este documento, decidir se o workflow entra e em qual ordem, e revisar `schema-contract.md`.
+Decisões de D-08, U10 e U11-a a g estão registradas. Pendentes: U11-h e U11-i (`schema-contract.md`, §10). A migration de `state_transitions`, `config_baseline`, `guard_transition` e `get_config` está em `claude/migration-001`, sem PR. Ficam de fora `set_status` e `mark_running` (U11-h). Para revisão: este documento, a migration e o workflow.

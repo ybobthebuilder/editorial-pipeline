@@ -87,3 +87,38 @@ Nenhum item acima autoriza escrever a migration antes de U11-a a U11-g estarem r
 
 - Digest SHA-256 deste arquivo é registrado no PR de revisão, com `reviewed_commit_sha = null`.
 - Revisão de documento não autoriza merge nem migration.
+
+## 10. Respostas do Fonseca (2026-10-22) e o que foi implementado
+
+Este bloco não altera as seções 1 a 9, que continuam como foram revisadas. Ele registra as respostas e o estado de cada uma.
+
+| ID | Resposta | Implementação |
+| --- | --- | --- |
+| U11-a | `state_transitions` tem `from_status`, `to_status` e `is_error_path` (booleano) | `supabase/migrations/001_init_editorial_schema.sql` (branch `claude/migration-001`). Constraint `state_transitions_error_flag` |
+| U11-b | Estados de erro têm entrada e saída explícitas | Entradas: 03_VERIFY, 08_RENDER, 09_QA. Saídas: só `NEEDS_REVIEW`. Ver U11-i |
+| U11-c | `get_config` NÃO lê o schema privado. O público funciona sozinho | `get_config` lê só `editorial.config_baseline`; `source` é sempre `public`; chave ausente levanta erro |
+| U11-d | `set_status` valida a transição chamando `guard_transition` de forma explícita | `guard_transition(from, to)` é função. `set_status` NÃO está na migration (depende de U11-h) |
+| U11-e | `job_id` será UUID | Sem tabela de jobs na migration. Aplica-se quando U11-h fechar |
+| U11-f | Role `n8n_pipeline` com permissões mínimas: EXECUTE nas funções, SELECT nas tabelas | Role `NOLOGIN`; SELECT nas duas tabelas; EXECUTE nas duas funções; RLS com política de SELECT |
+| U11-g | Tudo no schema `editorial` | Schema `editorial` |
+
+**Verificação:** 16 testes contra Postgres 16.15 limpo, na migration aplicada em uma transação com `ON_ERROR_STOP`. Nove mutantes que alteram comportamento foram detectados. Um mutante é equivalente: um `IF p_from = p_to` que levanta erro não muda nada, porque o guard já recusa auto-laços por não haver linha `X → X`.
+
+### Conflitos com a documentação do projeto (não resolvidos por mim)
+
+1. **`CLAUDE.md` §5 fala em trigger `guard_transition()`.** A decisão U11-d é função chamada explicitamente. `CLAUDE.md` §5 e `STAGES.md` §2 precisam de atualização. Não alterei esses documentos.
+2. **`CLAUDE.md` §9 e `PUBLIC_PRIVATE.md` §4 dizem que `get_config` resolve o override privado primeiro.** A decisão U11-c diz o contrário. Esses documentos precisam de atualização, e o fallback documentado ainda não existe.
+3. **Exemplo `copy_draft → verification_failed`.** `copy_draft` é nome do relatório NATURE.exe, que é design-time. Em `CLAUDE.md`, `VERIFICATION_FAILED` é gravado pelo 03_VERIFY, a partir de `EVIDENCE_EXTRACTED`. A migration usa os nomes do `CLAUDE.md`.
+4. **"Qualquer estado → NEEDS_REVIEW" (`CLAUDE.md` §5)** foi lido literalmente: inclui `PUBLISHED` e os três estados de erro. Se `PUBLISHED` deve ficar de fora, é uma linha a remover.
+
+### Perguntas novas (UNKNOWN)
+
+| ID | Pergunta | Bloqueia | Quem responde |
+| --- | --- | --- | --- |
+| U11-h | Onde vive a tabela de jobs. `CLAUDE.md` diz `editorial_intel.jobs`; a decisão U11-g diz `editorial`. `set_status` e `mark_running` dependem disso, e o público não pode depender do privado | `set_status`, `mark_running`, VL-6 | Fonseca |
+| U11-i | Saídas dos estados de erro e rewind manual. Só `NEEDS_REVIEW` tem saída definida. Uma etapa que falhou (ex.: `VERIFICATION_FAILED`) não tem caminho de retry: o guard recusa voltar a `EVIDENCE_EXTRACTED` | retry de etapa, VL-7 (U9) | Fonseca |
+
+### Migration
+
+- Branch `claude/migration-001`, commit `3276ff2c0b41871348095d683d0d2aae9ffeb570`. Sem PR.
+- Teste: `PGHOST=… PGPORT=… PGUSER=postgres node --test tests/migrations/001_init_editorial_schema.test.js`. Se `PGHOST` não estiver definido, o teste falha com mensagem; não pula em silêncio.

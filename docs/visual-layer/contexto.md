@@ -149,8 +149,10 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U7 | direitos de uso do pacote "Lambda-inspired" no repo público | VL-4 | Fonseca |
 | U8 | se escrita no Figma funciona no seat View | só o design-time | teste do usuário ou seat Full |
 | U9 | como semear um job sintético em `INSIGHTS_RANKED` sem violar `guard_transition()` | VL-7 | Fonseca / Fase 1 |
-| U10 | regra de locale para números (`9,52` × `9.52`) | `numbers.js` | Fonseca |
-| U11 | colunas e tipos de `state_transitions` e `config_baseline`; assinaturas de `guard_transition()`, `mark_running()`, `set_status()` e `get_config()`; como funções do schema `editorial` operam sobre `editorial_intel.jobs` sem violar "o público funciona sem o privado" | Fase 1 (migrations), VL-6, VL-7 | Fonseca, com evidência de schema |
+| U10 | **DECIDIDO** (Fonseca, 2026-10-22): formato PT-BR, vírgula decimal (`9,52`) | — | — |
+| U11 | **RESPONDIDO** (Fonseca, 2026-10-22): a-g. Implementado em `claude/migration-001`; ver `schema-contract.md` §10 | Fase 1 (migration testada), VL-6 | — (abertos: U11-h e U11-i) |
+| U11-h | Onde vive a tabela de jobs: `CLAUDE.md` diz `editorial_intel.jobs`; a decisão U11-g diz `editorial`. `set_status` e `mark_running` dependem disso, e o público não pode depender do privado | `set_status`, `mark_running`, VL-6 | Fonseca |
+| U11-i | Saídas dos estados de erro e rewind manual: só `NEEDS_REVIEW` tem saída. Sem caminho de retry para `VERIFICATION_FAILED`, `QA_FAILED` ou `RENDER_FAILED` | retry de etapa, VL-7 (U9) | Fonseca |
 
 ## 11. Decisões pendentes (Fonseca)
 
@@ -163,7 +165,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | D-05 | Regras regulatórias (CFM) se aplicam? | decidir antes do VL-3; se sim, módulo opcional do `09_QA` |
 | D-06 | Quem corrige os SVGs (XML, ids de slot) | patch proposto no VL-1, aprovado antes de entrar no repo |
 | D-07 | Módulos em CommonJS puro, sem dependências | confirmar (`validators/math.js` já segue isso) |
-| D-08 | Margem: o chrome (marcador e rodapé em x=76) é isento dos 90 px? | tratar como isento e registrar a exceção no mapa de slots |
+| D-08 | Margem do chrome (marcador e rodapé em x=76) | **decidido** (Fonseca): margem padrão de 64 px para o offset do chrome. Interpretação a confirmar: os 90 px de `templates.json` seguem como zona segura de conteúdo |
 | D-09 | Mapeamento estágio → status de saída (§4) | confirmar a inferência |
 | D-10 | Qual fase autoriza a entrada dos SVGs no repo. O Fonseca falou em "Fase 5", mas em `CLAUDE.md` a Fase 5 é Etapas 01 e 02 (ingest e extract), sem relação com a camada visual. A entrada da marca liga-se ao VL-4, que em `CLAUDE.md` é a Fase 3 (Contratos e baseline) | **aberta**: o Fonseca confirma qual fase ou marco é a referência |
 
@@ -178,6 +180,8 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 - Módulos do Code node do n8n Cloud (VERIFIED pelo Fonseca, trecho oficial colado na sessão; não verificado pelo assistente, cujo acesso à documentação foi bloqueado): só nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
 - Branch `claude/docs-visual-layer`: estes três documentos, como proposta.
 - Decisão do usuário em 2026-10-22: o baseline fica em `editorial.config_baseline` (U1, D-02). É uma decisão informada, não uma evidência de schema implantado.
+- Branch `claude/migration-001` (`3276ff2c0b41871348095d683d0d2aae9ffeb570`): `supabase/migrations/001_init_editorial_schema.sql` e 16 testes contra Postgres 16.15 limpo. Sem PR.
+- Branch `claude/ci-validators` (`90619f6ace61f4e17a736ecb637f2ddc2d4f56c6`): workflow de validadores, preparado e não ativo. Sem PR.
 - Nenhum arquivo de marca foi adicionado ao repo.
 - Os documentos antigos em `design-system/claude/nature-exe-roadmap` descrevem a orquestra de agentes e **estão superados por este conjunto**.
 
