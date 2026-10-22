@@ -105,6 +105,9 @@ function dropDatabase(db, extraRoles = []) {
 // mean the catalog is the same.
 function snapshot(db) {
   const ns = `(SELECT oid FROM pg_namespace WHERE nspname = 'editorial')`;
+  // The order of the entries of an ACL means nothing: a GRANT after a REVOKE lands at the end of the
+  // array. Entries are compared sorted, so a rollback that re-grants is equal to the state before.
+  const acl = (col) => `coalesce((SELECT string_agg(x::text, ',' ORDER BY x::text) FROM unnest(${col}) x), '')`;
   const roles = PROJECT_ROLES.map((r) => `'${r}'`).join(', ');
   const catalog = `SELECT line FROM (
     SELECT 'col|' || c.relname || '|' || a.attname || '|' || format_type(a.atttypid, a.atttypmod) || '|' || a.attnotnull
@@ -114,7 +117,7 @@ function snapshot(db) {
       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
      WHERE c.relnamespace = ${ns} AND c.relkind = 'r' AND a.attnum > 0 AND NOT a.attisdropped
     UNION ALL
-    SELECT 'attacl|' || c.relname || '|' || a.attname || '|' || a.attacl::text
+    SELECT 'attacl|' || c.relname || '|' || a.attname || '|' || ${acl('a.attacl')}
       FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
      WHERE c.relnamespace = ${ns} AND a.attacl IS NOT NULL
     UNION ALL
@@ -126,17 +129,17 @@ function snapshot(db) {
     UNION ALL
     SELECT 'fn|' || p.oid::regprocedure::text || '|' || pg_get_userbyid(p.proowner) || '|' || p.prosecdef
            || '|' || coalesce(p.proconfig::text, '')
-           || '|' || coalesce(p.proacl::text, '') || '|' || pg_get_functiondef(p.oid)
+           || '|' || ${acl('p.proacl')} || '|' || pg_get_functiondef(p.oid)
       FROM pg_proc p WHERE p.pronamespace = ${ns}
     UNION ALL
     SELECT 'pol|' || tablename || '|' || policyname || '|' || cmd || '|' || roles::text
            || '|' || coalesce(qual, '') || '|' || coalesce(with_check, '')
       FROM pg_policies WHERE schemaname = 'editorial'
     UNION ALL
-    SELECT 'rel|' || c.relname || '|' || c.relrowsecurity || '|' || coalesce(c.relacl::text, '')
+    SELECT 'rel|' || c.relname || '|' || c.relrowsecurity || '|' || ${acl('c.relacl')}
       FROM pg_class c WHERE c.relnamespace = ${ns} AND c.relkind = 'r'
     UNION ALL
-    SELECT 'ns|' || coalesce(nspacl::text, '') FROM pg_namespace WHERE nspname = 'editorial'
+    SELECT 'ns|' || ${acl('nspacl')} FROM pg_namespace WHERE nspname = 'editorial'
     UNION ALL
     SELECT 'role|' || rolname || '|' || rolcanlogin FROM pg_roles WHERE rolname IN (${roles})
   ) s ORDER BY line;`;

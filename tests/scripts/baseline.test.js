@@ -1,6 +1,6 @@
 'use strict';
 
-// seed-baseline.js and verify-baseline.js against a Postgres built up to migration 006, with
+// seed-baseline.js and verify-baseline.js against a Postgres built up to migration 007, with
 // synthetic baseline files in a temporary directory. Run with --test-concurrency=1.
 
 const { test, before, after } = require('node:test');
@@ -45,7 +45,7 @@ const reset = () => ok(db, 'TRUNCATE editorial.config_baseline;');
 const rows = () => ok(db, `SELECT key || '|' || version || '|' || hash FROM editorial.config_baseline ORDER BY key;`);
 
 before(() => {
-  db = h.createDatabase('006');
+  db = h.createDatabase('007');
 });
 
 after(() => {
@@ -144,14 +144,25 @@ test('seed needs a role that can write config_baseline: n8n_pipeline cannot', ()
   assert.equal(ok(db, 'SELECT count(*) FROM editorial.config_baseline;'), '0');
 });
 
-test('verify agrees after a seed, also for the read-only n8n_pipeline role', () => {
+test('verify agrees after a seed', () => {
   reset();
   const dir = makeDir();
   assert.equal(run(SEED, ['--dir', dir, '--version', 'v1']).status, 0);
-  assert.equal(run(VERIFY, ['--dir', dir, '--version', 'v1']).status, 0);
-  const r = run(VERIFY, ['--dir', dir], { PGOPTIONS: '-c role=n8n_pipeline' });
+  const r = run(VERIFY, ['--dir', dir, '--version', 'v1']);
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /conferem entre arquivos, \.checksums e banco/);
+});
+
+test('n8n_pipeline reads the configuration only through get_config, so verify cannot run as that role', () => {
+  reset();
+  const dir = makeDir();
+  assert.equal(run(SEED, ['--dir', dir, '--version', 'v1']).status, 0);
+  const r = run(VERIFY, ['--dir', dir], { PGOPTIONS: '-c role=n8n_pipeline' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /permission denied for table config_baseline/);
+  // The path that role does have returns what the seed wrote.
+  const viaFunction = JSON.parse(ok(db, `SELECT editorial.get_config('scoring_weights');`, { role: 'n8n_pipeline' }));
+  assert.deepEqual(viaFunction, { content: { a: 1, b: [1, 2] }, source: 'public', version: 'v1', hash: sha(FILES['scoring_weights.json']) });
 });
 
 test('verify reports each kind of drift between the files and the database', () => {

@@ -8,6 +8,10 @@
 // The allowlists below are deliberate. A new function, policy, grant or table makes a test fail until
 // the allowlist is edited in the same pull request: that edit is the review point.
 // Run with --test-concurrency=1 (see _harness.js).
+//
+// Model (decision of 2026-10-22): one database per client, so there is no tenant column and no
+// per-doctor isolation inside a database. n8n_pipeline holds no table privilege at all: it reaches the
+// data only through SECURITY DEFINER functions that take a key and return what the key points to.
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -20,7 +24,6 @@ const RUNTIME = ['n8n_pipeline', 'human_reviewer', 'editorial_owner'];
 const OUTSIDERS = ['public', 'anon', 'authenticated'];
 const PINNED = 'pg_catalog, editorial, pg_temp';
 let db;
-let migrationRole;
 
 const lines = (sql) => {
   const out = ok(db, sql);
@@ -29,7 +32,6 @@ const lines = (sql) => {
 
 before(() => {
   db = h.createDatabase(null);
-  migrationRole = ok(db, 'SELECT current_user;');
   // Worst case of a Supabase-like platform: default privileges hand every new table and function to
   // PUBLIC, anon and authenticated. The REVOKEs in the migrations must undo that; on a bare Postgres
   // they would be dead code and no test could tell.
@@ -81,17 +83,14 @@ test('the policies are exactly this inventory; PUBLIC, anon and authenticated ha
       || '|' || ${norm('qual')} || '|' || ${norm('with_check')}
     FROM pg_policies WHERE schemaname = 'editorial' ORDER BY 1;`);
   const want = [
-    'config_baseline|config_baseline_read_n8n|SELECT|PERMISSIVE|{n8n_pipeline}|true|',
+    'config_baseline|config_baseline_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
     'jobs|jobs_insert_owner|INSERT|PERMISSIVE|{editorial_owner}||((status = \'RECEIVED\'::text) AND (attempt_count = 0))',
     'jobs|jobs_read_human|SELECT|PERMISSIVE|{human_reviewer}|true|',
-    'jobs|jobs_read_n8n|SELECT|PERMISSIVE|{n8n_pipeline}|true|',
     'jobs|jobs_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
     'jobs|jobs_update_owner|UPDATE|PERMISSIVE|{editorial_owner}|true|true',
     'signatures|signatures_insert_human|INSERT|PERMISSIVE|{human_reviewer}||(EXISTS ( SELECT 1 FROM editorial.jobs j WHERE ((j.id = signatures.job_id) AND (j.status = \'AWAITING_APPROVAL\'::text))))',
     'signatures|signatures_read_human|SELECT|PERMISSIVE|{human_reviewer}|true|',
-    'signatures|signatures_read_n8n|SELECT|PERMISSIVE|{n8n_pipeline}|true|',
     'signatures|signatures_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
-    'state_transitions|state_transitions_read_n8n|SELECT|PERMISSIVE|{n8n_pipeline}|true|',
     'state_transitions|state_transitions_read_owner|SELECT|PERMISSIVE|{editorial_owner}|true|',
   ];
   assert.deepEqual(got, want);
@@ -116,14 +115,14 @@ test('the privilege matrix on tables and columns is exactly this, and nothing re
     ) s ORDER BY line;`);
   const col = (role, table, priv, cols) => cols.map((c) => `${role}|${table}|${priv}|${c}`);
   const want = [
-    // n8n_pipeline reads; every write goes through the functions.
-    'n8n_pipeline|config_baseline|SELECT|*', 'n8n_pipeline|jobs|SELECT|*',
-    'n8n_pipeline|signatures|SELECT|*', 'n8n_pipeline|state_transitions|SELECT|*',
+    // n8n_pipeline has no line here: no privilege on any table or column. It reads and writes
+    // only through functions.
     // human_reviewer reads two tables and inserts a signature in five columns: no id, no signed_at.
     'human_reviewer|jobs|SELECT|*', 'human_reviewer|signatures|SELECT|*',
     ...col('human_reviewer', 'signatures', 'INSERT', ['job_id', 'reviewer_name', 'crm_uf', 'decision', 'notes']),
     // editorial_owner owns the definer functions: the least that they need, no DELETE, no signature write.
-    'editorial_owner|jobs|SELECT|*', 'editorial_owner|signatures|SELECT|*', 'editorial_owner|state_transitions|SELECT|*',
+    'editorial_owner|config_baseline|SELECT|*', 'editorial_owner|jobs|SELECT|*',
+    'editorial_owner|signatures|SELECT|*', 'editorial_owner|state_transitions|SELECT|*',
     ...col('editorial_owner', 'jobs', 'INSERT', ['source_origin', 'input_context', 'config_source', 'config_version']),
     ...col('editorial_owner', 'jobs', 'UPDATE', ['status', 'previous_status', 'status_entered_at', 'updated_at',
       'attempt_count', 'last_stage', 'last_execution_id']),
@@ -159,27 +158,24 @@ test('no project role is a member of any role, and none of them owns a relation 
 
 // ---- Functions ------------------------------------------------------------------------------
 
-test('every function pins search_path; EXECUTE goes to n8n_pipeline and the owner only; definers belong to editorial_owner', () => {
-  const got = lines(`SELECT p.proname || '|' || p.prosecdef || '|' || pg_get_userbyid(p.proowner) || '|'
+test('every function is a SECURITY DEFINER of editorial_owner with a pinned search_path; EXECUTE goes to n8n_pipeline and the owner only', () => {
+  const got = lines(`SELECT p.proname || '|' || p.prosecdef::text || '|' || pg_get_userbyid(p.proowner) || '|'
       || coalesce((SELECT substr(c, 13) FROM unnest(p.proconfig) c WHERE c LIKE 'search_path=%'), '') || '|'
       || coalesce((SELECT string_agg(g, ',' ORDER BY g) FROM (
            SELECT CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END AS g
              FROM aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a WHERE a.privilege_type = 'EXECUTE') x), '')
     FROM pg_proc p WHERE p.pronamespace = 'editorial'::regnamespace ORDER BY p.proname;`);
-  const grantees = (owner) => [owner, 'n8n_pipeline'].sort().join(',');
+  const row = (name) => `${name}|true|editorial_owner|${PINNED}|editorial_owner,n8n_pipeline`;
   assert.deepEqual(got, [
-    `create_job|true|editorial_owner|${PINNED}|${grantees('editorial_owner')}`,
-    `get_config|false|${migrationRole}|${PINNED}|${grantees(migrationRole)}`,
-    `guard_transition|true|editorial_owner|${PINNED}|${grantees('editorial_owner')}`,
-    `mark_running|true|editorial_owner|${PINNED}|${grantees('editorial_owner')}`,
-    `set_status|true|editorial_owner|${PINNED}|${grantees('editorial_owner')}`,
-  ]);
+    'create_job', 'find_jobs_by_execution', 'get_config', 'get_job', 'get_job_status',
+    'guard_transition', 'mark_running', 'set_status',
+  ].map(row));
 });
 
 test('search_path of the definers starts with pg_catalog, ends with pg_temp and has no public', () => {
   const paths = lines(`SELECT substr(c, 13) FROM pg_proc p, unnest(p.proconfig) c
     WHERE p.pronamespace = 'editorial'::regnamespace AND p.prosecdef AND c LIKE 'search_path=%';`);
-  assert.equal(paths.length, 4);
+  assert.equal(paths.length, 8);
   for (const path of paths) {
     const parts = path.split(',').map((s) => s.trim());
     assert.equal(parts[0], 'pg_catalog', path);
@@ -200,6 +196,14 @@ test('temporary objects cannot hijack a SECURITY DEFINER function', () => {
 });
 
 // ---- What the runtime roles cannot do -------------------------------------------------------
+
+test('n8n_pipeline reads no table at all: not a row, not a count, not a plan', () => {
+  for (const table of ['state_transitions', 'config_baseline', 'jobs', 'signatures']) {
+    fails(db, `SELECT * FROM editorial.${table};`, new RegExp(`permission denied for table ${table}`), N8N);
+  }
+  fails(db, 'SELECT count(*) FROM editorial.jobs;', /permission denied for table jobs/, N8N);
+  fails(db, 'EXPLAIN SELECT 1 FROM editorial.signatures;', /permission denied for table signatures/, N8N);
+});
 
 test('the runtime roles cannot escalate; n8n_pipeline cannot alter the schema, rewrite a function or write a table', () => {
   // SET ROLE is authorized by the session user, which is a superuser here; SET SESSION AUTHORIZATION
@@ -275,12 +279,13 @@ test('jobs has valid indexes on status and, partial, on last_execution_id; no in
 
 test('the hot queries can use their index, even with sequential scans discouraged and RLS in force', () => {
   const plan = (role, query) => ok(db, `SET enable_seqscan = off;\nEXPLAIN (COSTS OFF) ${query}`, { role });
-  // orchestrator: the jobs waiting in a stage
-  assert.match(plan('n8n_pipeline', "SELECT id FROM editorial.jobs WHERE status = 'PDF_PARSED' LIMIT 50;"), /jobs_status_idx/);
-  // approval queue of the reviewer
+  // The read functions run as editorial_owner, so the plans are checked as that role.
+  // orchestrator and Guard: the jobs waiting in a stage
+  assert.match(plan('editorial_owner', "SELECT id FROM editorial.jobs WHERE status = 'PDF_PARSED' LIMIT 50;"), /jobs_status_idx/);
+  // approval queue of the reviewer, who reads the table directly
   assert.match(plan('human_reviewer', "SELECT id FROM editorial.jobs WHERE status = 'AWAITING_APPROVAL' ORDER BY created_at LIMIT 50;"), /jobs_status_idx/);
-  // 99_ERROR_HANDLER finds the job by execution
-  assert.match(plan('n8n_pipeline', "SELECT id FROM editorial.jobs WHERE last_execution_id = 'exec-1234';"), /jobs_last_execution_id_idx/);
+  // find_jobs_by_execution, for 99_ERROR_HANDLER
+  assert.match(plan('editorial_owner', "SELECT id FROM editorial.jobs WHERE last_execution_id = 'exec-1234';"), /jobs_last_execution_id_idx/);
   // the gate in guard_transition
-  assert.match(plan('n8n_pipeline', `SELECT 1 FROM editorial.signatures s WHERE s.job_id = '${id(1)}' AND s.decision = 'approved';`), /signatures_job_id_idx/);
+  assert.match(plan('editorial_owner', `SELECT 1 FROM editorial.signatures s WHERE s.job_id = '${id(1)}' AND s.decision = 'approved';`), /signatures_job_id_idx/);
 });

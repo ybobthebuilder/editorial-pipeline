@@ -1,7 +1,7 @@
 'use strict';
 
 // seed-baseline.js and verify-baseline.js with --skills (decision D-12: skills/ is the single source of
-// the prompts). Synthetic skills in a temporary directory, a Postgres built up to migration 006.
+// the prompts). Synthetic skills in a temporary directory, a Postgres built up to migration 007.
 // Run with --test-concurrency=1.
 
 const { test, before, after } = require('node:test');
@@ -62,7 +62,7 @@ const reset = () => ok(db, 'TRUNCATE editorial.config_baseline;');
 const keys = () => ok(db, `SELECT string_agg(key, ',' ORDER BY key) FROM editorial.config_baseline;`);
 
 before(() => {
-  db = h.createDatabase('006');
+  db = h.createDatabase('007');
 });
 after(() => {
   h.dropDatabase(db);
