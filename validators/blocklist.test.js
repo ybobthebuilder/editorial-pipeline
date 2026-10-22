@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { findBlockedTerms } = require('./blocklist.js');
+const { checkNumbersAllowed } = require('./numbers.js');
 
 // The terms below are placeholders for the mechanism. The real list is the config's (U22).
 const TERMS = ['cura', 'o melhor', 'promoção'];
@@ -107,4 +108,79 @@ test('the module has no require() or import, so it runs in the n8n Cloud Code no
   const source = readFileSync(join(__dirname, 'blocklist.js'), 'utf8');
   assert.equal(/\brequire\s*\(/.test(source), false);
   assert.equal(/^\s*import\s/m.test(source), false);
+});
+
+// The tests above exercise the mechanics with example terms. The ones below use the real v0.1 list
+// that Fonseca supplied on 2026-10-22 (U22), read from the config file, never copied into code.
+const { readFileSync: readFile } = require('node:fs');
+const { join: joinPath } = require('node:path');
+
+const V01 = ['cura', 'garantido', '100%', 'milagroso', 'revolucionário', 'melhor do Brasil', 'resultado certo', 'definitivo', 'sem riscos', 'imediato'];
+const REAL = JSON.parse(readFile(joinPath(__dirname, '..', 'config', 'baseline', 'cfm_blocklist.json'), 'utf8'));
+const hits = (text) => findBlockedTerms([{ id: 'x', text }], REAL).matches.map((m) => m.term);
+
+test('cfm_blocklist.json is exactly the v0.1 list, in order, with clean strings', () => {
+  assert.deepEqual(REAL, V01);
+  assert.equal(new Set(REAL.map((t) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase())).size, REAL.length, 'no duplicates');
+  for (const term of REAL) {
+    assert.equal(term, term.normalize('NFC'));
+    assert.equal(term, term.trim());
+    assert.equal(term.includes('  '), false);
+  }
+});
+
+test('every term of the v0.1 list is found on its own, in any case and without accents', () => {
+  for (const term of REAL) {
+    assert.deepEqual(hits(`Texto com ${term} no meio.`), [term], term);
+    assert.deepEqual(hits(term.toUpperCase()), [term], `${term} upper`);
+    assert.deepEqual(hits(term.normalize('NFD').replace(/\p{M}/gu, '')), [term], `${term} without accents`);
+  }
+  assert.deepEqual(hits('REVOLUCIONARIO'), ['revolucionário']);
+});
+
+test('"100%" is found as a whole figure and not inside another number or word', () => {
+  assert.deepEqual(hits('Eficácia de 100%.'), ['100%']);
+  assert.deepEqual(hits('(100%)'), ['100%']);
+  assert.deepEqual(hits('100% garantido'), ['100%', 'garantido']);
+  for (const text of ['1100%', 'a100%', '100%a', '100,0%', '99,9%', '100']) assert.deepEqual(hits(text), [], text);
+});
+
+test('"melhor do Brasil" is a phrase: case, spacing and a closing full stop do not hide it, a longer word does', () => {
+  assert.deepEqual(hits('O melhor do Brasil'), ['melhor do Brasil']);
+  assert.deepEqual(hits('somos melhor do brasil'), ['melhor do Brasil']);
+  assert.deepEqual(hits('melhor  do   Brasil.'), ['melhor do Brasil']);
+  assert.deepEqual(hits('melhor do Brasília'), []);
+  assert.deepEqual(hits('o melhor do mundo'), []);
+});
+
+test('several terms in one text are all reported, each with its position in the original', () => {
+  const text = 'Garantido: cura imediata e resultado certo.';
+  const result = findBlockedTerms([{ id: 'headline', text }], REAL);
+  assert.equal(result.passed, false);
+  assert.deepEqual(result.matches.map((m) => [m.id, m.term, m.text]), [
+    ['headline', 'garantido', 'Garantido'],
+    ['headline', 'cura', 'cura'],
+    ['headline', 'resultado certo', 'resultado certo'],
+  ]);
+  for (const m of result.matches) assert.equal(text.slice(m.start, m.end), m.text);
+});
+
+test('known gaps, by design (whole forms only): these slip through and must be added to the list to be caught', () => {
+  // Pinned so that any change in what slips through is a decision, not an accident.
+  const slips = ['curar', 'curas', 'garantida', 'garantidos', 'revolucionária', 'definitiva', 'imediata', 'imediatamente', 'milagrosa', 'sem risco', 'resultados certos', '100 %', '100 %'];
+  for (const text of slips) assert.deepEqual(hits(text), [], text);
+  assert.equal(findBlockedTerms([{ id: 'x', text: slips.join(' ') }], REAL).passed, true);
+});
+
+test('precedence today: a verified 100% passes QA-NUM and still fails QA-CFM, because the gates are independent', () => {
+  // A number that numbers.js allows (it came from a VERIFIED evidence) is not exempt from the list.
+  // No code lets one gate override the other, and QA-CFM cannot be waived (contracts-proposal.md,
+  // section 6). Changing this is a policy decision for Fonseca: remove "100%" from the list, or
+  // define an exemption for verified values. Until then this test pins what the code does.
+  const items = [{ id: 'headline', text: 'Resposta em 100%' }];
+  assert.equal(checkNumbersAllowed(items, [{ value: 100, unit: '%' }]).passed, true);
+  assert.equal(findBlockedTerms(items, REAL).passed, false);
+  assert.deepEqual(hits(items[0].text), ['100%']);
+  // The numeric gate alone does not decide: with 100% not allowed, QA-NUM fails too.
+  assert.equal(checkNumbersAllowed(items, [{ value: 92, unit: '%' }]).passed, false);
 });
