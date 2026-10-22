@@ -52,11 +52,11 @@ Workflows criativos (insights, visual, covers, QA) acessam **apenas evidências 
 ## 5. Máquina de Estados Vive no Banco
 
 - Tabela `state_transitions` define transições válidas.
-- Trigger `guard_transition()` rejeita saltos inválidos.
+- Função `guard_transition(job_id, from, to)` rejeita saltos inválidos e transições com `requires_gate` sem assinatura aprovada para o job. É `SECURITY DEFINER` com `search_path` fixo e é chamada explicitamente por `set_status()`, não por trigger (decisão U11-d). Só `set_status()` altera `editorial.jobs.status` e só `mark_running()` registra tentativas; nenhum papel recebe UPDATE direto em `jobs`. `attempt_count` registra as tentativas desde o último avanço; o limite de 3 é do orquestrador, não do banco.
 - Workflows **nunca** fazem UPDATE direto no status.
 - Workflows **sempre** chamam `mark_running()` e `set_status()`.
 
-**Estados válidos** (13 total):
+**Estados válidos** (17 total: 13 de caminho feliz e 4 de erro):
 
 ```
 RECEIVED → PDF_PARSED → EVIDENCE_EXTRACTED → EVIDENCE_VERIFIED 
@@ -65,8 +65,15 @@ RECEIVED → PDF_PARSED → EVIDENCE_EXTRACTED → EVIDENCE_VERIFIED
 → AWAITING_APPROVAL → HUMAN_APPROVED → PUBLISHED
 
 Erros: VERIFICATION_FAILED, QA_FAILED, RENDER_FAILED, NEEDS_REVIEW
-Qualquer estado → NEEDS_REVIEW (rewind manual)
+Qualquer estado → NEEDS_REVIEW (rewind manual), inclusive PUBLISHED
+VERIFICATION_FAILED → EVIDENCE_EXTRACTED
+RENDER_FAILED → COVERS_SPECIFIED
+QA_FAILED → COVERS_RENDERED
+NEEDS_REVIEW → AWAITING_APPROVAL (só se o job já chegou a QA_PASSED ou além)
+NEEDS_REVIEW → estado de trabalho de origem (a IA refaz; depois do gate a IA não refaz)
 ```
+
+**Gate humano**: `AWAITING_APPROVAL → HUMAN_APPROVED` é a única transição com `requires_gate`. Sem assinatura `approved` para o job, gravada depois de ele entrar em AWAITING_APPROVAL, o guard recusa a transição. Uma aprovação antiga não vale para uma nova revisão. Quem grava a assinatura é o papel `human_reviewer`, nunca `n8n_pipeline`.
 
 ## 6. Idempotência Obrigatória
 
@@ -100,12 +107,10 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 
 `editorial.get_config(key)` retorna `{ content, source, version, hash }`:
 
-1. **Nível 1 (Público)**: `editorial_baseline.config_baseline` (repo público, auditável)
-2. **Nível 2 (Privado)**: `editorial_intel.config_overrides` (aprendizado, overrides, prompts v2+)
+1. **Nível 1 (Público)**: `editorial.config_baseline` (repo público, auditável)
+2. **Nível 2 (Privado)**: `editorial_intel.config_overrides` (aprendizado, overrides, prompts v2+). **Não consultado nesta versão** (decisão U11-c).
 
-**UNKNOWN — baseline schema:** this section names `editorial_baseline.config_baseline`, while the schema inventory below places `config_baseline` under `editorial`. Neither location is verified against deployed schema or migrations. Preserve both references as an unresolved documentation discrepancy; Fonseca must resolve it from authorized schema evidence before dependent SQL or migrations. Documented object and function names are planned requirements, not proof of deployed objects or callable signatures.
-
-**Resultado**: sobreposição ativa if existe em privado, senão baseline público.
+**Resultado nesta versão**: `get_config` lê só o nível 1 e devolve `source = 'public'`. Chave ausente levanta erro, sem valor padrão. A sobreposição privada será acrescentada por migração própria, com fallback documentado. Até lá, nenhum workflow depende de `config_overrides`.
 
 **Chaves iniciais**:
 - `scoring_weights` — pesos para score
@@ -137,22 +142,24 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 ### editorial (schema, auditável)
 - `state_transitions` — máquina de estados
 - `config_baseline` — espelho do repo público
-- Funções: `guard_transition()`, `mark_running()`, `set_status()`, `get_config()`
+- `jobs` — `id`, `status`, `created_at`, `updated_at`, proveniência (`source_origin`, `input_context`, `config_source`, `config_version`, `last_stage`, `last_execution_id`), `attempt_count`, `previous_status`, `status_entered_at` (decisões U11-h, U11-n, U11-o)
+- `signatures` — assinatura humana do gate, por job; `decision` é `approved` ou `rejected` (decisões U11-j, U11-m)
+- Funções: `guard_transition(job_id, from, to)`, `mark_running(job_id, stage, execution_id)`, `set_status(job_id, next_status)`, `get_config()`
 - Contratos e views públicas
 
 ### editorial_intel (schema, privado)
-- `papers`, `jobs`, `job_events`
+- `papers`, `job_events` (`jobs` está em `editorial`, decisão U11-h)
 - `evidence`, `verification`, `insights`
 - `visual_specs`, `cover_specs`
 - `qa_results`, `llm_calls`, `feedback`
 - `experiments`, `analytics`, `config_overrides`
 - Views de qualidade
 
-**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas (EXECUTE nas funções, CRUD nas tabelas de intel, SELECT no baseline).
+**Segurança**: RLS ativado em todas as tabelas. REVOKE ALL para `anon` e `authenticated`. Role dedicada `n8n_pipeline` com permissões mínimas: EXECUTE em `guard_transition`, `set_status`, `mark_running` e `get_config`; SELECT nas tabelas do schema `editorial`; nenhuma escrita direta em `signatures` nem em `jobs`. Papel `human_reviewer`, separado e sem relação de membro com `n8n_pipeline`: lê `jobs` e `signatures` e insere assinaturas só de jobs em AWAITING_APPROVAL; não atualiza nem apaga. O banco não distingue pessoa de workflow: a credencial de `human_reviewer` não pode ficar em workflow que roda sem supervisão. Permissões sobre tabelas de `editorial_intel` serão definidas na migração que as criar.
 
 ## Estrutura do Repo Público
 
-**PLANNED — target structure, not an inventory:** paths below that are absent from the inspected repository are planned only. At baseline `7dd6868f26f5969f0ea08a19fa51a3ab5fa778aa`, `supabase/migrations/001_init_editorial_schema.sql` and `contracts/job_ref.schema.json` do not exist. Their filenames imply no implemented content. Verify the repository tree before referencing any path as existing.
+**PLANNED — target structure, not an inventory:** paths below that are absent from the inspected repository are planned only. At baseline `7dd6868f26f5969f0ea08a19fa51a3ab5fa778aa`, `supabase/migrations/001_init_editorial_schema.sql` and `contracts/job_ref.schema.json` do not exist. Their filenames imply no implemented content. Verify the repository tree before referencing any path as existing. O DDL de `editorial_intel` fica no repositório privado; este repositório não tem migração desse schema.
 
 ```
 editorial-pipeline/
@@ -167,7 +174,7 @@ editorial-pipeline/
 │   └── SECURITY.md                 # RLS, roles, secrets
 ├── supabase/migrations/
 │   ├── 001_init_editorial_schema.sql
-│   ├── 002_init_editorial_intel_schema.sql
+│   ├── 002_jobs_and_signatures.sql
 │   └── ...
 ├── contracts/
 │   ├── job_ref.schema.json
@@ -272,6 +279,6 @@ Todos seguem `_TEMPLATE_STAGE`:
 
 ---
 
-**Última atualização**: 2026-10-11
-**Versão**: 1.0
+**Última atualização**: 2026-10-22
+**Versão**: 1.1
 **Autor**: Arquitetura do projeto editorial-pipeline
