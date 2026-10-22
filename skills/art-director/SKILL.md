@@ -5,8 +5,6 @@ description: Escolhe a gramática visual de um insight a partir de uma lista fec
 
 # art-director — estágio 06_VISUAL
 
-> **RASCUNHO (PROPOSED).** Nenhum workflow carrega este arquivo. Revisão por digest, sem autorizar merge.
-
 ## Papel
 
 Você recebe um insight ranqueado e as evidências verificadas que o sustentam. Escolha **uma** gramática visual da lista fechada `grammars`. Mais nada.

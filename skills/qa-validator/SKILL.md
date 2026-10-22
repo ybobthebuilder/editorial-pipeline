@@ -5,7 +5,6 @@ description: Julga a fidelidade semântica de uma capa já aprovada pelos gates 
 
 # qa-validator — estágio 09_QA (juiz semântico)
 
-> **RASCUNHO (PROPOSED).** Nenhum workflow carrega este arquivo. Revisão por digest, sem autorizar merge.
 > A parte determinística do 09_QA (geometria, contraste, números, enums, termos proibidos e rodapé do CFM) é **código** e não está neste arquivo. Aqui fica só o julgamento que exige leitura.
 
 ## Papel
@@ -35,7 +34,7 @@ Você recebe a capa e as evidências que ela cita. Diga se o texto é fiel a ela
 
 O contrato é o `semantic` de `docs/visual-layer/contracts-proposal.md` §6. O campo `passed` do `qa_result` **não é seu**: o código o calcula juntando os gates e o seu veredito.
 
-## Motivos permitidos (lista fechada, PROPOSED)
+## Motivos permitidos (lista fechada)
 
 `afirmacao_sem_evidencia`, `exagero_de_forca`, `causalidade_indevida`, `alt_text_inconsistente`, `tom_promocional`, `entrada_insuficiente`.
 

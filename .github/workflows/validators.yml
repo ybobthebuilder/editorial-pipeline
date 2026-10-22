@@ -16,7 +16,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run validator tests and refuse an empty run
+      - name: Run validator tests and refuse an empty or failing run
+        # node exits 0 when a glob matches nothing, and the pipe to tee hides a failing exit code,
+        # hence the two greps (the same guard as migrations.yml).
         run: |
           node --test 'validators/*.test.js' | tee test-output.txt
           grep -qE '^# tests [1-9][0-9]*$' test-output.txt
+          grep -qE '^# fail 0$' test-output.txt
+      - name: Run skills tests and refuse an empty or failing run
+        run: |
+          node --test 'tests/skills/*.test.js' | tee skills-output.txt
+          grep -qE '^# tests [1-9][0-9]*$' skills-output.txt
+          grep -qE '^# fail 0$' skills-output.txt
+      - name: Check config/baseline and skills against their .checksums
+        run: node scripts/verify-baseline.js --dir config/baseline --skills skills --offline true
