@@ -48,12 +48,14 @@ Este documento define a divisão formal entre o código público e os dados/conf
 Fonte de verdade para:
 - `state_transitions`
 - `config_baseline`
+- `jobs` (decisão U11-h)
+- `signatures`: assinaturas humanas do gate, por job (decisão U11-j)
 - funções de transição e acesso ao config
 - views e contratos públicos
 
 ### `editorial_intel` (privado)
 Fonte de verdade para:
-- jobs, evidences, verification
+- evidences, verification (`jobs` está em `editorial`, decisão U11-h)
 - insights, visual specs, cover specs
 - analytics and experiments
 - config overrides
@@ -73,11 +75,15 @@ Fonte de verdade para:
 
 Illustrative JSON only: `source` may be `"public"` or `"private"`; the other strings are placeholders. This example does not verify a deployed function, schema, or executable contract.
 
-### Ordem de resolução
-1. verifica se existe override privado
-2. se não existir, usa baseline pública
-3. se houver conflito, mantém a sobreposição ativa privada
-4. hash precisa bater com o repositório público
+### Ordem de resolução nesta versão
+
+`get_config` lê só a camada pública (decisão U11-c):
+1. lê `editorial.config_baseline`
+2. devolve `source: "public"`
+3. chave ausente levanta erro, sem valor padrão
+4. o hash precisa bater com o repositório público
+
+A ordem com sobreposição privada (override primeiro; baseline se não houver override; sobreposição ativa em caso de conflito) é alvo futuro. Não é executada hoje e exige migração própria, com fallback documentado. Nenhum workflow pode depender de `config_overrides` antes disso.
 
 ## 5. Segurança
 
@@ -85,9 +91,10 @@ Illustrative JSON only: `source` may be `"public"` or `"private"`; the other str
 - REVOKE ALL para `anon` e `authenticated`
 - role `n8n_pipeline` com permissões mínimas
 - `n8n_pipeline` pode:
-  - EXECUTE nas funções necessárias
-  - CRUD nas tabelas de intel
-  - SELECT no baseline público
+  - EXECUTE em `guard_transition` e `get_config`
+  - SELECT em `state_transitions`, `config_baseline`, `jobs` e `signatures`
+- `n8n_pipeline` não grava em `signatures` (assinatura é humana) nem em `jobs.status` (só `set_status` altera status)
+- permissões sobre tabelas de `editorial_intel` não existem ainda; serão definidas na migração que criar essas tabelas
 - `n8n_pipeline` não deve ter acesso irrestrito a schemas privados
 
 ## 6. Regras de exposição
