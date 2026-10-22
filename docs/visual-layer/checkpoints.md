@@ -114,3 +114,8 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | CP-VL6.1 (005: índices CONCURRENTLY) | passou: 5 de 5; 82 de 82 no conjunto; 4 mutantes detectados | `51c65df` | implementer (sem review) |
 | 2026-10-22 | rollbacks (001 a 005) | passou: subir, descer e subir restaura o catálogo idêntico; 3 mutantes dos scripts detectados | `5779311` | implementer (sem review) |
 | 2026-10-22 | PRs abertas: #6 (001+002), #7 (003, base #6), #8 (004, base #7); #5 atualizada (`733b06a`) | sem veredito; aguardam revisão do Fonseca | — | — |
+| 2026-10-22 | PRs #5, #6, #7, #8 mergeadas pelo Fonseca; #7 e #8 entraram em branches da pilha, não no `main` | consolidação aberta como #9 (003 e 004); #10 (005) | `c42c08f`, `51c65df` | — |
+| 2026-10-22 | CP-VL6.1 (006: editorial_owner, create_job) | passou: 12 de 12; 94 de 94 no conjunto; 9 mutantes e 1 do rollback detectados | `35e2e09` | implementer (sem review) |
+| 2026-10-22 | seed-baseline e verify-baseline | passou: 12 de 12; 10 de 11 mutantes detectados (o 11º é equivalente) | `6b4ba6c` | implementer (sem review) |
+| 2026-10-22 | CI de migrations | YAML conferido; passo exato simulado: 106 de 106; execução vazia falha. Não rodou no GitHub Actions | `26f2023` | implementer (sem review) |
+| 2026-10-22 | PRs abertas: #11 (006, scripts, CI), #12 (STAGES.md e CLAUDE.md) | sem veredito; aguardam revisão do Fonseca | `26f2023`, `e9050bf` | — |

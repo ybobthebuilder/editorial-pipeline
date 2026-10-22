@@ -212,3 +212,28 @@ Decisões do Fonseca de 2026-10-22, implementadas em `claude/migration-003` (`cc
 - Não verificado: se o Supabase CLI ignora `supabase/rollbacks/`.
 
 **Testes** (Postgres 16.15 limpo, `--test-concurrency=1`): 003: 22; 004: 13 (inclui concorrência de `set_status`); 005: 5; conjunto: 82 de 82. Mutantes detectados: 11 (003), 11 (004), 4 (005), 3 (rollbacks).
+
+
+## 14. Migration 006, scripts de baseline e CI (2026-10-22)
+
+**Correção.** Escrevi em §12 e em descrições de PR que `docs/STAGES.md` §2 mencionava trigger. Não mencionava: já dizia "função `guard_transition()`". A lacuna real era outra: o guard agora recebe o job e quem o chama é `set_status`, não o workflow. A PR #12 corrige isso.
+
+**Estado do merge.** O Fonseca mergeou #5, #6, #7 e #8. #6 e #5 foram para o `main`. #7 e #8 tinham como base os branches `claude/migration-002` e `claude/migration-003`, então entraram nesses branches e **não chegaram ao `main`**. A falha foi do empilhamento que eu montei. O conteúdo é o mesmo (diff de árvore vazio). A consolidação é a PR #9; a 005 é a #10. Daqui em diante toda PR tem o `main` como base.
+
+| Item | Decisão | Implementação |
+| --- | --- | --- |
+| `editorial_owner` | papel dedicado, sem login, dono das funções `SECURITY DEFINER` | Sem superusuário, sem BYPASSRLS. Lê `state_transitions`, `signatures` e `jobs`; insere 4 colunas de proveniência e atualiza 7 colunas de controle de `jobs`; não apaga, não grava assinatura, não lê `config_baseline`. Políticas de RLS próprias. `get_config` continua `SECURITY INVOKER` |
+| `create_job` | criação de job pelo n8n | `create_job(source_origin, input_context, config_source, config_version)` devolve o id; status nasce `RECEIVED`. Não é idempotente |
+| Senha do `human_reviewer` | cofre separado, nunca no n8n do robô | Registrado em `CLAUDE.md` (PR #12) |
+| `seed-baseline`, `verify-baseline` | scripts, não migration | `scripts/*.js`, sem dependências. Formatos PROPOSTOS: chave = nome do arquivo sem `.json`; hash = sha256 dos bytes; `.checksums` no formato do `sha256sum`; versão informada por `--version`. Prompts não são semeados |
+| CI | Postgres efêmero a cada push | `.github/workflows/migrations.yml`: `postgres:16` como serviço, suítes de migration, rollback e scripts, recusa execução vazia. Conferido localmente; não rodou no GitHub Actions |
+
+**Limites conhecidos**
+- Não verificado: se o papel que roda a migration no Supabase pode fazer `ALTER FUNCTION … OWNER TO editorial_owner`.
+- Não verificado: como o Supabase CLI trata a 005 (não transacional) e a pasta `supabase/rollbacks/`.
+- Ações do CI fixadas por tag, não por SHA.
+- `CLAUDE.md` lista os scripts como `.ts`; ficaram `.js`.
+
+**Testes.** 106 de 106 (migrations e rollbacks 94, scripts 12). Mutantes: 9 da 006 e 1 do rollback, 10 de 11 dos scripts (o 11º é equivalente).
+
+**Fase 1.** O código está completo. Ela só fecha quando #9, #10, #11 e #12 forem mergeadas e o CI passar no GitHub. Não a marquei como concluída antes disso.
