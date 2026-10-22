@@ -143,7 +143,7 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 | U1 | **DECIDIDO** em 2026-10-22 pelo usuário: o baseline fica em `editorial.config_baseline`. Evidência de schema implantado segue UNKNOWN, e `CLAUDE.md` §9 ainda cita as duas formas | — (a Fase 1 segue exigindo U11) | Fonseca: confirmar a decisão e ajustar o `CLAUDE.md` |
 | U2 | campos de `visual_spec`, `cover_spec`, `qa_result` (os arquivos de contrato não existem) | VL-3 | Fonseca aprova proposta (VL-3) |
 | U3 | conteúdo e schema de `visual_library` | VL-4 | idem |
-| U4 | engine e formato do render no n8n Cloud (SVG puro × PNG); módulos permitidos no Code node | VL-5, VL-6 | verificação em docs.n8n.io + Fonseca |
+| U4 | engine e formato do render no n8n Cloud (SVG puro × PNG). Módulos permitidos: **resolvido** pela lista conferida pelo Fonseca (ver nota em §10) | VL-5, VL-6 | Fonseca, para a engine de render |
 | U5 | schema de `verification_thresholds` e limiares de QA | validação de faixa, VL-4 | Fonseca |
 | U6 | aplicabilidade de regras regulatórias (CFM) ao domínio | módulo opcional do 09_QA | Fonseca |
 | U7 | direitos de uso do pacote "Lambda-inspired" no repo público | VL-4 | Fonseca |
@@ -171,6 +171,10 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 - `main` do repo em `e821de1…`: só documentação de governança, **sem código**.
 - Branch `claude/validators-math` (`da1083e9dc2e4ccb765a1e7ba126743bc829ffb4`): `validators/math.js` e `math.test.js`, 11 testes passando, 5 mutantes detectados. Sem PR.
 - Branch `claude/validators-contrast` (`dcb572140146af36505d5a1350c9bcfcbec6c664`): `validators/contrast.js` e `contrast.test.js`, 17 testes passando, 10 de 11 mutantes detectados (o 11º é equivalente). Sem PR.
+- Branch `claude/validators-schema` (`759df316c9e30066c5de264deaae5a2c5dd65554`): `validators/schema.js` e `schema.test.js`, 26 testes passando, 11 de 11 mutantes detectados. Sem PR.
+- Módulos do Code node do n8n Cloud (VERIFIED pelo Fonseca, a partir do trecho oficial colado na sessão; o assistente não conseguiu acessar a documentação): só nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
+- Branch `claude/validators-schema` (`759df316c9e30066c5de264deaae5a2c5dd65554`): `validators/schema.js` e `schema.test.js`, 26 testes passando, 11 de 11 mutantes detectados. Sem PR.
+- Módulos do Code node do n8n Cloud (VERIFIED pelo Fonseca, trecho oficial colado na sessão; não verificado pelo assistente, cujo acesso à documentação foi bloqueado): só nativos (crypto, http, https, url, util, querystring, stream, zlib, os, buffer, timers, string_decoder, events, dns, net, tls, assert); pacotes npm externos não são suportados no Cloud.
 - Branch `claude/docs-visual-layer`: estes três documentos, como proposta.
 - Decisão do usuário em 2026-10-22: o baseline fica em `editorial.config_baseline` (U1, D-02). É uma decisão informada, não uma evidência de schema implantado.
 - Nenhum arquivo de marca foi adicionado ao repo.

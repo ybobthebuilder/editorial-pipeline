@@ -16,7 +16,7 @@
 | --- | --- | --- | --- | --- |
 | VL-0 | alinhamento: estes docs revisados e decisões D-01 a D-09 | — | — | em revisão |
 | VL-1 | design-time: auditoria do pacote de marca e do Figma (somente leitura) | — | VL-0 | não iniciado |
-| VL-2 | validadores: `math` ✔, `contrast` ✔, `numbers`, `schema`, `geometry` | 2 | — | parcial (`math` e `contrast` em branches, sem PR) |
+| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` (bloqueado por U10), `geometry` | 2 | — | parcial (`math`, `contrast` e `schema` em branches, sem PR) |
 | VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | bloqueado por U2 |
 | VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | bloqueado por U3, U7 |
 | VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado |
@@ -54,7 +54,7 @@
   1. `math.js` ✔ — `computeDeltas`; no branch `claude/validators-math`, 11 testes, 5 mutantes detectados.
   2. `contrast.js` ✔ — razão de contraste WCAG entre cores hex (`#RGB` e `#RRGGBB`), sem arredondar; fórmula conferida na fonte oficial `w3c/wcag`; branch `claude/validators-contrast`, 17 testes, 10 de 11 mutantes detectados. A comparação com limiares (4,5:1 e 3:1) fica para quem consome (VL-4 e `geometry.js`).
   3. `numbers.js` — extrai tokens numéricos e verifica que cada número exibido na capa aparece nas evidências `VERIFIED` citadas; bloqueado em parte por U10 (locale).
-  4. `schema.js` — validador de JSON Schema em subconjunto documentado, sem `ajv`; o subconjunto de palavras-chave é decisão de VL-3.
+  4. `schema.js` ✔ — validador de JSON Schema em subconjunto documentado, sem módulos importados (o Code node do n8n Cloud só aceita módulos nativos, conforme trecho conferido pelo Fonseca); falha fechado para palavra-chave desconhecida e `$ref`; branch `claude/validators-schema`, 26 testes e 11 de 11 mutantes detectados. O subconjunto poderá ser ampliado em VL-3 se o contrato exigir.
   5. `geometry.js` — dado um template e um `cover_spec`: slots conhecidos, linhas e caracteres dentro do orçamento, dimensões do canvas, conteúdo dentro da zona segura.
 - **Fora desta fase:** validação de faixa de `math` (depende de U5) e `citation.js` (é do `03_VERIFY`).
 - **Aceite:** CP-VL2.1 a CP-VL2.7.
