@@ -8,6 +8,10 @@
 //   - hash = sha256 of the file bytes, hex
 //   - config/baseline/.checksums = sha256sum text format: "<64 hex>  <file name>"
 //   - version = given by the caller (--version); the files carry none
+//   - prompts (decision D-12: skills/ is the single source of the prompts): each skills/<name>/SKILL.md
+//     becomes one config row. The key comes from PROMPT_KEYS (CLAUDE.md section 9), the hash is the
+//     sha256 of the whole file, and the content is { name, description, body } with body = the text
+//     after the frontmatter. skills/.checksums lists "<name>/SKILL.md". The content format is PROPOSED.
 
 const { createHash } = require('node:crypto');
 const { existsSync, readFileSync, readdirSync, statSync } = require('node:fs');
@@ -82,6 +86,77 @@ function loadVerified(dir) {
   return { entries, errors: checkChecksums(dir, entries) };
 }
 
+// The closed list of prompt keys of CLAUDE.md section 9 that have a skill. A skill folder that is not
+// here is an error, so a new prompt is a reviewed change to this table.
+const PROMPT_KEYS = {
+  'art-director': 'prompt.06_visual',
+  'copywriter-cfm': 'prompt.07_covers',
+  'qa-validator': 'prompt.09_qa',
+};
+const FRONTMATTER = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
+
+function parseSkill(text) {
+  const match = FRONTMATTER.exec(text);
+  if (!match) return { error: 'frontmatter ausente' };
+  const meta = {};
+  for (const line of match[1].split('\n')) {
+    const kv = /^([a-z-]+): (.+)$/.exec(line);
+    if (!kv) return { error: `linha de frontmatter inválida: ${line}` };
+    if (kv[1] in meta) return { error: `campo repetido no frontmatter: ${kv[1]}` };
+    meta[kv[1]] = kv[2];
+  }
+  if (Object.keys(meta).sort().join(',') !== 'description,name') {
+    return { error: 'o frontmatter deve ter só name e description' };
+  }
+  return { meta, body: match[2] };
+}
+
+// Reads skills/<name>/SKILL.md. An empty directory is an error, never a pass.
+function readSkills(dir) {
+  const errors = [];
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+    return { entries: [], errors: [`diretório não encontrado: ${dir}`] };
+  }
+  const names = readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
+  if (names.length === 0) errors.push(`nenhuma skill em ${dir}`);
+  const entries = [];
+  for (const name of names) {
+    const key = PROMPT_KEYS[name];
+    if (!key) {
+      errors.push(`${name}: sem chave de prompt definida em PROMPT_KEYS`);
+      continue;
+    }
+    const path = join(dir, name, 'SKILL.md');
+    if (!existsSync(path)) {
+      errors.push(`${name}/SKILL.md não encontrado`);
+      continue;
+    }
+    const bytes = readFileSync(path);
+    const parsed = parseSkill(bytes.toString('utf8'));
+    if (parsed.error) {
+      errors.push(`${name}/SKILL.md: ${parsed.error}`);
+      continue;
+    }
+    if (parsed.meta.name !== name) {
+      errors.push(`${name}/SKILL.md: name (${parsed.meta.name}) difere da pasta`);
+      continue;
+    }
+    entries.push({
+      key,
+      file: `${name}/SKILL.md`,
+      hash: sha256(bytes),
+      content: { name: parsed.meta.name, description: parsed.meta.description, body: parsed.body },
+    });
+  }
+  return { entries, errors };
+}
+
+function loadVerifiedSkills(dir) {
+  const { entries, errors } = readSkills(dir);
+  if (errors.length) return { entries, errors };
+  return { entries, errors: checkChecksums(dir, entries) };
+}
+
 function psql(args, input) {
   const result = spawnSync('psql', ['-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1', ...args], { input, encoding: 'utf8' });
   if (result.error) throw result.error;
@@ -121,8 +196,10 @@ function deepEqual(a, b) {
 }
 
 // Compares the verified files with config_baseline: same keys, same hash, same content, and
-// the same version when one is given.
-function compareWithDatabase(entries, rows, version) {
+// the same version when one is given. scope says which rows of the table are being checked:
+// baseline files own every key without the prompt. prefix, skills own the prompt. keys, and a row
+// outside the scope is not reported as orphan.
+function compareWithDatabase(entries, rows, version, scope = { baseline: true, skills: false }) {
   const errors = [];
   const byKey = new Map(rows.map((r) => [r.key, r]));
   for (const entry of entries) {
@@ -134,7 +211,8 @@ function compareWithDatabase(entries, rows, version) {
   }
   const files = new Set(entries.map((e) => e.key));
   for (const row of rows) {
-    if (!files.has(row.key)) errors.push(`${row.key}: está no banco e não tem arquivo`);
+    const inScope = row.key.startsWith('prompt.') ? scope.skills : scope.baseline;
+    if (inScope && !files.has(row.key)) errors.push(`${row.key}: está no banco e não tem arquivo`);
   }
   return errors;
 }
@@ -151,4 +229,4 @@ function parseArgs(argv, allowed) {
   return out;
 }
 
-module.exports = { readBaseline, checkChecksums, loadVerified, seed, readDatabaseRows, compareWithDatabase, parseArgs, sha256, deepEqual };
+module.exports = { readBaseline, readSkills, checkChecksums, loadVerified, loadVerifiedSkills, PROMPT_KEYS, seed, readDatabaseRows, compareWithDatabase, parseArgs, sha256, deepEqual };
