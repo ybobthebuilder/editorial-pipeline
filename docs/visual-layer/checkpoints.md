@@ -22,7 +22,7 @@
 ## VL-2 — Validadores (Fase 2)
 
 - [x] **CP-VL2.1** `validators/math.js` (`computeDeltas`): exemplo 84→92 dá `delta_absolute` 8 e `delta_relative` 9,52; base zero dá `null`; entrada não numérica lança `TypeError`. *Verificar:* `node --test 'validators/*.test.js'` → 11 de 11; 5 mutantes detectados. *Evidência:* branch `claude/validators-math`, commit `da1083e9dc2e4ccb765a1e7ba126743bc829ffb4` (sem PR, sem veredito de reviewer).
-- [ ] **CP-VL2.2** `contrast.js` reproduz a tabela CALCULATED de `contexto.md` §7.3 com tolerância de 0,01 (ex.: `--fg`/`--bg` = 15,67; `--accent`/`--bg` = 3,14). Fórmula conferida na especificação do W3C e citada no código. *Tipo:* auto.
+- [x] **CP-VL2.2** `contrast.js` reproduz a tabela CALCULATED de `contexto.md` §7.3 com tolerância de 0,005 (ex.: `--fg`/`--bg` = 15,67; `--accent`/`--bg` = 3,14), mais as âncoras 21:1 e 1:1. *Verificar:* `node --test 'validators/*.test.js'` → 17 de 17; 10 de 11 mutantes detectados (o 11º é equivalente: limiar 0,03928 × 0,04045, sem efeito em canais de 8 bits). *Fórmula:* `w3c/wcag`, `guidelines/terms/20/relative-luminance.html` e `contrast-ratio.html`, lidos em 2026-10-22 pelo repositório oficial no GitHub (`w3.org` está bloqueado no ambiente). *Evidência:* branch `claude/validators-contrast`, commit `dcb572140146af36505d5a1350c9bcfcbec6c664` (sem PR, sem veredito de reviewer).
 - [ ] **CP-VL2.3** `numbers.js`: número exibido que não aparece na evidência `VERIFIED` é reprovado; correspondência por número inteiro, nunca por substring (`8` não casa com `80`). Regra de locale decidida (U10). *Tipo:* auto.
 - [ ] **CP-VL2.4** `schema.js`: subconjunto de palavras-chave documentado; aceita todas as fixtures válidas e rejeita todas as inválidas; sem dependência externa; restrições do Code node do n8n Cloud conferidas em docs.n8n.io. *Tipo:* auto + humano.
 - [ ] **CP-VL2.5** `geometry.js`: reprova slot desconhecido, excesso de linhas, excesso de caracteres, dimensão errada e conteúdo fora da zona segura; aprova o caso no limite. *Tipo:* auto.
@@ -102,3 +102,4 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | Data | CP | Resultado | Evidência | Quem |
 | --- | --- | --- | --- | --- |
 | 2026-10-22 | CP-VL2.1 | passou: 11 de 11 testes, 5 mutantes detectados | commit `da1083e9dc2e4ccb765a1e7ba126743bc829ffb4` | implementer (sem review) |
+| 2026-10-22 | CP-VL2.2 | passou: 17 de 17 testes, 10 de 11 mutantes detectados (1 equivalente) | commit `dcb572140146af36505d5a1350c9bcfcbec6c664` | implementer (sem review) |

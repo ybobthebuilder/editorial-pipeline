@@ -170,6 +170,8 @@ Quatro papéis fixos: **master** (especificação e coordenação), **researcher
 
 - `main` do repo em `e821de1…`: só documentação de governança, **sem código**.
 - Branch `claude/validators-math` (`da1083e9dc2e4ccb765a1e7ba126743bc829ffb4`): `validators/math.js` e `math.test.js`, 11 testes passando, 5 mutantes detectados. Sem PR.
+- Branch `claude/validators-contrast` (`dcb572140146af36505d5a1350c9bcfcbec6c664`): `validators/contrast.js` e `contrast.test.js`, 17 testes passando, 10 de 11 mutantes detectados (o 11º é equivalente). Sem PR.
+- Branch `claude/docs-visual-layer`: estes três documentos, como proposta.
 - Decisão do usuário em 2026-10-22: o baseline fica em `editorial.config_baseline` (U1, D-02). É uma decisão informada, não uma evidência de schema implantado.
 - Nenhum arquivo de marca foi adicionado ao repo.
 - Os documentos antigos em `design-system/claude/nature-exe-roadmap` descrevem a orquestra de agentes e **estão superados por este conjunto**.
