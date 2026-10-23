@@ -35,6 +35,28 @@ test('the qa-validator input carries cta and caption, and its rules cover an ine
   assert.match(QA, /Vale também para a `caption`/);
 });
 
+test('the qa-validator judges the caption always: its claims need evidence and are held to the evidence strength, with or without a CTA (review of #45)', () => {
+  assert.match(QA, /Cada afirmação dos slots e da `caption` precisa de uma evidência/);
+  assert.match(QA, /Linguagem mais forte que a evidência é reprovação, nos slots e na `caption`/);
+  assert.match(QA, /A `caption` existe sempre e é julgada sempre, com ou sem CTA/);
+  assert.match(QA, /O `cta` só existe quando o template tem o slot `cta_label`/);
+  assert.doesNotMatch(QA, /`cta` e `caption` só existem/);
+});
+
+test('the copywriter example teaches its own rules: nothing the evidence does not say, and a caption that does not repeat the CTA (review of #45)', () => {
+  assert.doesNotMatch(COPY, /em um ano/);
+  const example = jsonBlocks(COPY).find((b) => 'caption' in b && b.caption !== 'string');
+  const evidence = jsonBlocks(COPY).find((b) => Array.isArray(b.blocklist) && b.blocklist.length > 1).evidences.map((e) => e.claim).join(' ');
+  const cta = example.slots.find((s) => s.slot_id === 'cta_label').lines[0];
+  assert.equal(example.caption.toLowerCase().includes(cta.toLowerCase()), false, 'the caption repeats the CTA');
+  assert.equal(example.caption.toLowerCase().includes('salve'), false);
+  // every number of the example is one of the allowed numbers, which come from the evidence
+  for (const n of example.caption.match(/\d+%/g) || []) assert.ok(evidence.includes(n.replace('%', '')), n);
+  for (const line of example.slots.find((s) => s.slot_id === 'headline').lines) {
+    for (const n of line.match(/\d+%/g) || []) assert.ok(evidence.includes(n.replace('%', '')), n);
+  }
+});
+
 test('the copywriter input carries the limits of the decision, equal to the validator\'s constants', () => {
   const example = jsonBlocks(COPY).find((b) => Array.isArray(b.blocklist) && b.blocklist.length > 1);
   assert.deepEqual(example.limits, { cta_max_chars: CTA_MAX, caption_max_chars: CAPTION_MAX });

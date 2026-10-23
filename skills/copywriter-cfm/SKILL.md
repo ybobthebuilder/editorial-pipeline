@@ -72,7 +72,7 @@ Entrada (fictícia):
 Saída:
 
 ```json
-{ "evidence_ids": ["ev-0001"], "slots": [ { "slot_id": "headline", "lines": ["De 84% para 92%", "em um ano"] }, { "slot_id": "cta_label", "lines": ["Salve este post"] } ], "alt_text": "Capa escura com a variação de 84% para 92% em destaque.", "caption": "O indicador foi de 84% para 92%. Salve este post para rever o dado.", "caption_evidence_ids": ["ev-0001"] }
+{ "evidence_ids": ["ev-0001"], "slots": [ { "slot_id": "headline", "lines": ["De 84% para 92%", "no indicador"] }, { "slot_id": "cta_label", "lines": ["Salve este post"] } ], "alt_text": "Capa escura com a variação de 84% para 92% em destaque.", "caption": "O indicador passou de 84% para 92%, conforme a evidência citada.", "caption_evidence_ids": ["ev-0001"] }
 ```
 
-`headline` e os limites de linha do exemplo são fictícios. "em um ano" é só ilustração; num caso real, o prazo viria de uma evidência. "Salve este post" pede um gesto e nada mais; um CTA que mande digitar uma palavra para receber algo não é permitido.
+`headline` e os limites de linha do exemplo são fictícios. "Salve este post" pede um gesto e nada mais; um CTA que mande digitar uma palavra para receber algo não é permitido.

@@ -43,11 +43,11 @@ O contrato é o `semantic` de `docs/visual-layer/contracts-proposal.md` §6. O c
 ## Regras
 
 1. **Reprove só com um motivo da lista.** `verdict: "fail"` nunca vem com `reasons` vazio, e `verdict: "pass"` sempre vem vazio.
-2. **Cada afirmação dos slots precisa de uma evidência da entrada que a sustente.** Se não há, motivo `afirmacao_sem_evidencia`. A força da afirmação vem da evidência, não do texto.
-3. **Linguagem mais forte que a evidência é reprovação.** Verbo de causa ("causa", "garante", "prova") apoiado em estudo que só observou associação: `causalidade_indevida`. Certeza onde a evidência é tímida: `exagero_de_forca`.
+2. **Cada afirmação dos slots e da `caption` precisa de uma evidência da entrada que a sustente.** Se não há, motivo `afirmacao_sem_evidencia`. A força da afirmação vem da evidência, não do texto.
+3. **Linguagem mais forte que a evidência é reprovação, nos slots e na `caption`.** Verbo de causa ("causa", "garante", "prova") apoiado em estudo que só observou associação: `causalidade_indevida`. Certeza onde a evidência é tímida: `exagero_de_forca`.
 4. **O `alt_text` tem de descrever o que o texto da capa afirma.** Se diz outra coisa: `alt_text_inconsistente`.
 5. **Tom de venda, urgência ou promessa: `tom_promocional`.** Vale também para a `caption`.
-6. **O CTA tem de ser texto inerte: um pedido de gesto (salvar, comentar, compartilhar).** Se ele manda digitar uma palavra, promete enviar, entregar ou responder algo, ou leva a um canal de contato: `cta_promete_entrega`. `cta` e `caption` só existem quando o template os tem; se faltam, não há o que julgar neles.
+6. **O CTA tem de ser texto inerte: um pedido de gesto (salvar, comentar, compartilhar).** Se ele manda digitar uma palavra, promete enviar, entregar ou responder algo, ou leva a um canal de contato: `cta_promete_entrega`. O `cta` só existe quando o template tem o slot `cta_label`: sem CTA, não há CTA a julgar. A `caption` existe sempre e é julgada sempre, com ou sem CTA.
 7. **Se a entrada vier incompleta ou ilegível, não julgue: `fail` com `entrada_insuficiente`.** Falhar fechado é melhor que chutar.
 8. **Não confira números, contraste, tamanho nem termos proibidos.** O código já fez, com regra exata (`QA-NUM`, `QA-CTR`, `QA-OVF`, `QA-CFM`). Repetir aqui só introduz erro.
 9. **Não reescreva a capa nem sugira texto novo.** Sua saída é só o veredito e os motivos.

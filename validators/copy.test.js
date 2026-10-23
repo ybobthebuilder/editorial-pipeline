@@ -40,10 +40,14 @@ test('the semantic boundary is not the code\'s: a CTA that promises a delivery p
 });
 
 test('a CTA with a URL or a domain is refused', () => {
+  // a bare IP address is a link too (found in review of #44)
+  for (const text of ['8.8.8.8', '192.168.0.1', '192.168.0.100', '10.0.0.255', '10.0.0.1:80', 'acesse 8.8.8.8 já', '8.8.8.8.', '\u0668.\u0668.\u0668.\u0668', '1.2.3.4.5', '...8.8.8.8', 'veja:8.8.8.8']) {
+    assert.ok(cta(text).includes('cta_com_url'), text);
+  }
   for (const text of ['https://exemplo.com', 'http://x', 'ftp://x', 'HTTPS://X.COM', 'www.exemplo', 'WWW.X', 'exemplo.com', 'exemplo.com.br', 'bit.ly/abc', 'wa.me/5511', 'veja exemplo.org', 'a-b.co', 'ação.com', 'x.io', 'link: t.me/x']) {
     assert.ok(cta(text).includes('cta_com_url'), text);
   }
-  for (const text of ['Salve este post', 'Fim. Comente', 'Versão 2.0', 'a.b', 'Sim.', 'Ok... salve', 'e.g. salvar', '3.14']) {
+  for (const text of ['Salve este post', 'Fim. Comente', 'Versão 2.0', 'a.b', 'Sim.', 'Ok... salve', 'e.g. salvar', '3.14', '1.2.3', '10.5', 'Top 1.0.0', '2.0.', '999.999', '1234.5.6.7', '5.6.7.1234', '12.34.56.78901', '1.2.3.']) {
     assert.equal(cta(text).includes('cta_com_url'), false, text);
   }
 });
@@ -51,6 +55,7 @@ test('a CTA with a URL or a domain is refused', () => {
 test('known false positives are on purpose: p.ex and Sr.Silva read as domains', () => {
   assert.ok(cta('p.ex').includes('cta_com_url'));
   assert.ok(cta('Sr.Silva').includes('cta_com_url'));
+  assert.ok(cta('1.2.3.4').includes('cta_com_url')); // four numbers joined by dots read as an IP address
 });
 
 test('a CTA with a mention is refused, in both widths of the at sign', () => {
@@ -62,6 +67,11 @@ test('a CTA with a hashtag is refused, in both widths of the number sign', () =>
 });
 
 test('a CTA with a phone number is refused: eight digits or more in one run of digits and separators', () => {
+  // typographic dashes between the digits do not split the number (found in review of #44)
+  for (const dash of ['\u2010', '\u2011', '\u2012', '\u2013', '\u2014', '\u2015', '\u2212']) {
+    assert.ok(cta(`11 99999${dash}0000`).includes('cta_com_telefone'), JSON.stringify(dash));
+    assert.ok(cta(`1234${dash}5678`).includes('cta_com_telefone'), JSON.stringify(dash));
+  }
   for (const text of ['11 99999-0000', '(11) 99999 0000', '+55 11 99999-0000', '12345678', '1234-5678', '11.99999.0000', '99999 0000', '١٢٣٤٥٦٧٨']) {
     assert.ok(cta(text).includes('cta_com_telefone'), text);
   }

@@ -1,0 +1,47 @@
+{
+  "job_id": "00000000-0000-4000-8000-000000000005",
+  "stage": "07_COVERS",
+  "config_source": "public",
+  "config_version": "v1",
+  "model": "synthetic-model-v0",
+  "execution_id": "exec-r005",
+  "created_at": "2026-10-23T12:00:00Z",
+  "visual_spec_id": "vs-0001",
+  "template_id": "reel-01-capa",
+  "evidence_ids": [
+    "ev-0001"
+  ],
+  "slots": [
+    {
+      "slot_id": "label_top",
+      "kind": "chrome",
+      "lines": [
+        "REELS / COVER 005"
+      ]
+    },
+    {
+      "slot_id": "headline",
+      "kind": "claim",
+      "lines": [
+        "Dados",
+        "sem ruído",
+        "em 30s."
+      ]
+    },
+    {
+      "slot_id": "tag",
+      "kind": "chrome",
+      "lines": [
+        "EP. 01 / SINTÉTICO"
+      ]
+    },
+    {
+      "slot_id": "cfm_footer",
+      "kind": "chrome",
+      "lines": [
+        "Nome Sintético – MÉDICO – CRM/SP 000000"
+      ]
+    }
+  ],
+  "alt_text": "Capa escura de Reels com o título Dados sem ruído em 30s."
+}

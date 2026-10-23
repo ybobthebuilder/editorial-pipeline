@@ -81,7 +81,7 @@
 
 - **Objetivo:** `renderCover(cover_spec, visual_library)` → string SVG, em código puro e determinístico.
 - **Escopo:** preenche slots, escapa texto, não faz rede nem acessa arquivo; rejeita antes de renderizar o que `geometry.js` reprova. Saída em PNG fica atrás da decisão D-03.
-- **Local do código:** UNKNOWN na estrutura planejada; proposta `render/render.js` (módulo colável no Code node), a confirmar.
+- **Local do código:** `render/render.js` e `render/render.test.js` (PROPOSED, a confirmar; a estrutura planejada de `CLAUDE.md` não lista o diretório). **Estado (2026-10-23):** `renderCover(coverSpec, library, { markup, geometry })` implementado, em PR. O markup é entrada: como ele chega ao estágio do n8n é UNKNOWN.
 - **Aceite:** CP-VL5.1 a CP-VL5.5. **Riscos:** XML bem formado sem dependências (o `node:test` não traz parser XML); fontes: o render usa Arial e monospace, e `Suisse Intl` não é distribuída.
 
 ## VL-6 — Workflows n8n 06–09 (bloqueado)
