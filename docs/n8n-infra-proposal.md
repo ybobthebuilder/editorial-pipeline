@@ -42,7 +42,7 @@ Regras do contrato (**PROPOSED**, a confirmar):
 | L3 | `STAGES.md` §3 passo 2: "config baseline/override". A sobreposição privada **não existe** nesta versão (U11-c) | o texto do template promete um fallback que o banco não tem | ajustar o texto; sem pergunta |
 | L4 | `STAGES.md` §5: o handler "localiza o job pela `last_execution_id`", e `find_jobs_by_execution` devolve **zero ou vários** | o handler precisa tratar 0 (execução que não chegou a `mark_running`), 1 e N jobs | Q4 |
 | L5 | `mark_running` recusa job em estado de erro ou `PUBLISHED`; o retry de `RENDER_FAILED` e `QA_FAILED` só ocorre depois de `set_status` para o estado de retry | o orquestrador (ou o handler) tem de mover o job de `*_FAILED` para o estado de origem **antes** de chamar a etapa de novo; isso não está escrito em nenhum card | Q4 |
-| L6 | `CLAUDE.md` (Segurança) manda `gitleaks` como pre-commit hook e no CI. **Não há** configuração de `gitleaks` no repositório nem passo no CI (`validators.yml` e `migrations.yml` não o têm) | hoje nada varre segredo num export de workflow nem em nenhum arquivo; a sanitização do §5 é a única barreira | Q7 |
+| L6 | **Fechada em 2026-10-23** (PR do `gitleaks`): `.github/workflows/gitleaks.yml`, `.gitleaks.toml` e `scripts/hooks/pre-commit`. Texto original: `CLAUDE.md` (Segurança) manda `gitleaks` como pre-commit hook e no CI, e não havia configuração nem passo no CI (`validators.yml` e `migrations.yml` não o tinham) | hoje nada varre segredo num export de workflow nem em nenhum arquivo; a sanitização do §5 é a única barreira | Q7 |
 
 ## 4. `99_ERROR_HANDLER` e `_TEMPLATE_STAGE`: o que se pode afirmar sem JSON
 
