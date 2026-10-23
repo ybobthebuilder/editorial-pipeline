@@ -1,0 +1,220 @@
+{
+  "tokens": [
+    {
+      "name": "bg",
+      "value": "#101010"
+    },
+    {
+      "name": "surface",
+      "value": "#1A1A1A"
+    },
+    {
+      "name": "fg",
+      "value": "#F2F2F2"
+    },
+    {
+      "name": "muted",
+      "value": "#B8B8B8"
+    },
+    {
+      "name": "accent",
+      "value": "#6C8CFF"
+    }
+  ],
+  "color_pairs": [
+    {
+      "text": "fg",
+      "on": "bg",
+      "text_size": "normal"
+    },
+    {
+      "text": "muted",
+      "on": "bg",
+      "text_size": "normal"
+    },
+    {
+      "text": "accent",
+      "on": "bg",
+      "text_size": "large"
+    },
+    {
+      "text": "bg",
+      "on": "accent",
+      "text_size": "large"
+    }
+  ],
+  "grammars": [
+    {
+      "grammar_id": "metrica",
+      "description": "Sintético: um número em destaque.",
+      "templates": [
+        "post-02-metrica"
+      ]
+    },
+    {
+      "grammar_id": "convite",
+      "description": "Sintético: chamada para ação.",
+      "templates": [
+        "story-01-convite"
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "template_id": "post-02-metrica",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "format": "4:5",
+      "svg": "assets/brand/post-02-metrica.svg",
+      "svg_sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "decor",
+          "x": 100,
+          "y": [
+            120
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 100,
+          "y": [
+            430,
+            540,
+            650
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            110,
+            110,
+            110
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 3,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1283
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "story-01-convite",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "format": "9:16",
+      "svg": "assets/brand/story-01-convite.svg",
+      "svg_sha256": "0000000000000000000000000000000000000000000000000000000000000002",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 100,
+          "y": [
+            300
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 100,
+          "y": [
+            800,
+            925
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            124,
+            124
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cta_label",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1500
+          ],
+          "anchor": "middle",
+          "family": "mono",
+          "font_size": [
+            28
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "bg",
+          "on": "accent"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1540
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    }
+  ]
+}

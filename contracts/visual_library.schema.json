@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "visual_library",
+  "description": "config/baseline/visual_library.json (key visual_library, CLAUDE.md section 9): closed visual grammar, templates and slot geometry. Proposal: docs/visual-layer/visual-library-proposal.md. The safe zone is NOT in the file: it lives in validators/geometry.js. Cross-references, uniqueness, contrast and geometry are checked by validators/visual_library.js.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tokens",
+    "color_pairs",
+    "grammars",
+    "templates"
+  ],
+  "properties": {
+    "tokens": {
+      "type": "array",
+      "minItems": 1,
+      "description": "color tokens by name; an array because the schema subset has no map of unknown keys",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        }
+      }
+    },
+    "color_pairs": {
+      "type": "array",
+      "minItems": 1,
+      "description": "allowed (text, on) pairs; the threshold comes from text_size, applied by code (4.5 normal, 3 large)",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "on",
+          "text_size"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "on": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text_size": {
+            "enum": [
+              "normal",
+              "large"
+            ]
+          }
+        }
+      }
+    },
+    "grammars": {
+      "type": "array",
+      "minItems": 1,
+      "description": "the closed list the art-director chooses from (U17); the model sees grammar_id and description",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "grammar_id",
+          "description",
+          "templates"
+        ],
+        "properties": {
+          "grammar_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "templates": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "template_ids; at most one per format (checked by code)"
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "template_id",
+          "canvas",
+          "format",
+          "svg",
+          "svg_sha256",
+          "slots"
+        ],
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "must be exactly the template_id enum of cover_spec (checked by code)"
+          },
+          "canvas": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "width",
+              "height"
+            ],
+            "properties": {
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "format": {
+            "enum": [
+              "1:1",
+              "4:5",
+              "9:16"
+            ],
+            "description": "derived from canvas and checked by code"
+          },
+          "svg": {
+            "type": "string",
+            "pattern": "^assets/brand/[a-z0-9-]+\\.svg$",
+            "description": "path of the template markup in this repository (owned_brand_asset, decision of 2026-10-22)"
+          },
+          "svg_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "ties the markup to the geometry; checked against the file by the baseline test, not by validators/visual_library.js"
+          },
+          "slots": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slot_id",
+                "kind",
+                "x",
+                "y",
+                "anchor",
+                "family",
+                "font_size",
+                "weight",
+                "letter_spacing",
+                "max_lines",
+                "token",
+                "on"
+              ],
+              "properties": {
+                "slot_id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "description": "id of the <text> element in the template SVG after the patch (D-06)"
+                },
+                "kind": {
+                  "enum": [
+                    "claim",
+                    "chrome"
+                  ],
+                  "description": "set by the library, never by the model; claim passes numbers.js, chrome is fixed by layout. Chrome is NOT exempt from the safe zone (decision of 2026-10-22)"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "baseline of each line, one number per line (max_lines)"
+                },
+                "anchor": {
+                  "enum": [
+                    "start",
+                    "middle",
+                    "end"
+                  ]
+                },
+                "family": {
+                  "enum": [
+                    "sans",
+                    "mono"
+                  ],
+                  "description": "the two families geometry.js measures (U20)"
+                },
+                "font_size": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  "description": "size of each line, one number per line (max_lines)"
+                },
+                "weight": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 1000
+                },
+                "letter_spacing": {
+                  "type": "number"
+                },
+                "max_lines": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "token": {
+                  "type": "string",
+                  "description": "text color: name of a token; the pair (token, on) must be in color_pairs (checked by code)"
+                },
+                "on": {
+                  "type": "string",
+                  "description": "background color: name of a token"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "tokens": [
+    {
+      "name": "bg",
+      "value": "#101010"
+    },
+    {
+      "name": "surface",
+      "value": "#1A1A1A"
+    },
+    {
+      "name": "fg",
+      "value": "#F2F2F2"
+    },
+    {
+      "name": "muted",
+      "value": "#B8B8B8"
+    },
+    {
+      "name": "accent",
+      "value": "#6C8CFF"
+    }
+  ],
+  "color_pairs": [
+    {
+      "text": "fg",
+      "on": "bg",
+      "text_size": "normal"
+    },
+    {
+      "text": "muted",
+      "on": "bg",
+      "text_size": "normal"
+    }
+  ],
+  "grammars": [
+    {
+      "grammar_id": "manifesto",
+      "description": "Sintético: uma afirmação.",
+      "templates": [
+        "post-01-manifesto"
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "template_id": "post-01-manifesto",
+      "canvas": {
+        "width": 1080,
+        "height": 1080
+      },
+      "format": "1:1",
+      "svg": "assets/brand/post-01-manifesto.svg",
+      "svg_sha256": "0000000000000000000000000000000000000000000000000000000000000003",
+      "slots": [
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 100,
+          "y": [
+            455,
+            569
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            114,
+            114
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1013
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    }
+  ]
+}
