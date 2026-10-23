@@ -25,6 +25,11 @@ jobs:
           node --test 'validators/*.test.js' | tee test-output.txt
           grep -qE '^# tests [1-9][0-9]*$' test-output.txt
           grep -qE '^# fail 0$' test-output.txt
+      - name: Run render tests and refuse an empty or failing run
+        run: |
+          node --test 'render/*.test.js' | tee render-output.txt
+          grep -qE '^# tests [1-9][0-9]*$' render-output.txt
+          grep -qE '^# fail 0$' render-output.txt
       - name: Run skills tests and refuse an empty or failing run
         run: |
           node --test 'tests/skills/*.test.js' | tee skills-output.txt
