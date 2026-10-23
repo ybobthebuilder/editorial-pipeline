@@ -13,7 +13,7 @@ const ROOT = join(__dirname, '..');
 const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
 const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: [], qa_result: ['semantic'], image_assets: [], post_copy: [] };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -406,4 +406,34 @@ test('post_copy: caption is 1 to 300 code points, text only; blank text, hashtag
   assert.deepEqual(ok('Texto com #hashtag e @mencao'), []);
   assert.deepEqual(Object.keys(schemaOf('post_copy').properties).slice(-2), ['evidence_ids', 'caption']);
   assert.equal(schemaOf('post_copy').properties.caption.maxLength, 300);
+});
+
+test('cover_spec: cta is optional, 1 to 40 code points, text only (D-17)', () => {
+  assert.equal(Object.hasOwn(validOf('cover_spec'), 'cta'), false);
+  assert.equal(fixture('cover_spec', 'valid-02').cta, 'Salve este post');
+  assert.deepEqual(errorsOf('cover_spec', fixture('cover_spec', 'valid-02')), []);
+  const ok = (cta) => { const d = validOf('cover_spec'); d.cta = cta; return errorsOf('cover_spec', d); };
+  assert.deepEqual(ok('x'), []);
+  assert.deepEqual(ok('x'.repeat(40)), []);
+  assert.deepEqual(ok('\u{1F600}'.repeat(40)), [], 'length counts code points, not UTF-16 units');
+  assert.deepEqual(ok('Comente abaixo'), []);
+  for (const bad of ['', 'x'.repeat(41), '\u{1F600}'.repeat(41), 5, null, ['x'], { text: 'x' }]) {
+    const d = validOf('cover_spec'); d.cta = bad;
+    assert.deepEqual(paths('cover_spec', d), ['$.cta'], JSON.stringify(bad).slice(0, 20));
+  }
+  assert.equal(schemaOf('cover_spec').properties.cta.maxLength, 40);
+  assert.equal(schemaOf('cover_spec').required.includes('cta'), false);
+});
+
+test('cover_spec: the rules about cta that the schema cannot express are the code\'s (copy.js): slot, mirror, symbols', () => {
+  const d = validOf('cover_spec'); // post-02-metrica has no cta_label slot
+  d.cta = 'Salve este post';
+  assert.deepEqual(errorsOf('cover_spec', d), [], 'a cta on a template without cta_label');
+  const v = clone(fixture('cover_spec', 'valid-02'));
+  v.cta = 'Comente abaixo'; // different from slots[cta_label].lines
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'a cta that does not match the slot');
+  v.cta = 'exemplo.com @perfil #tag 11 99999-0000';
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'URL, mention, hashtag and phone are not the schema\'s');
+  delete v.cta;
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'a cta_label slot without cta');
 });
