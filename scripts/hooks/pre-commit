@@ -1,0 +1,11 @@
+#!/bin/sh
+# pre-commit: refuses a commit whose staged changes contain a secret (CLAUDE.md, Segurança).
+# Enable it once per clone:  git config core.hooksPath scripts/hooks
+# It fails closed: without gitleaks installed the commit is refused, with the install command.
+# Skipping a commit on purpose is git's own  --no-verify , and CI scans the same content anyway.
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "gitleaks não encontrado; o commit foi recusado." >&2
+  echo "Instale a versão fixada do CI:  go install github.com/zricethezav/gitleaks/v8@v8.30.1" >&2
+  exit 1
+fi
+exec gitleaks git --pre-commit --staged --no-banner --no-color --redact -v

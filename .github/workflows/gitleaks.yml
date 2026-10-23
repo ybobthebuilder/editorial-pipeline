@@ -1,0 +1,54 @@
+name: gitleaks
+
+# Secret scan (CLAUDE.md, Segurança: gitleaks no pre-commit e no CI). It runs the gitleaks CLI at a pinned
+# version, built from the Go module proxy, instead of a third-party action: no license, no extra token and
+# no write permission. Bump GITLEAKS_VERSION on purpose, together with the version in scripts/hooks/pre-commit and in README.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  GITLEAKS_VERSION: v8.30.1
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: Install gitleaks at the pinned version
+        run: |
+          GOBIN="$RUNNER_TEMP/bin" go install "github.com/zricethezav/gitleaks/v8@${GITLEAKS_VERSION}"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Self-test, the scanner must catch a planted secret
+        # A scan that finds nothing proves nothing if the scanner is blind (shallow clone, wrong rules). The
+        # token is built at run time, so no secret-shaped string sits in this file.
+        run: |
+          set -eu
+          dir="$(mktemp -d)"
+          cd "$dir"
+          git init -q
+          token="ghp_$(head -c 300 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 36)"
+          printf 'github_token = "%s"\n' "$token" > planted.txt
+          git add planted.txt
+          git -c user.email=t@example.invalid -c user.name=t -c commit.gpgsign=false commit -q -m planted
+          if gitleaks git --no-banner --no-color --redact . >/dev/null 2>&1; then
+            echo "gitleaks did not catch a planted secret" >&2
+            exit 1
+          fi
+      - name: Scan the whole history and refuse an empty scan
+        run: |
+          set -o pipefail
+          gitleaks git --no-banner --no-color --redact -v . 2>&1 | tee gitleaks-history.txt
+          grep -qE '[1-9][0-9]* commits scanned' gitleaks-history.txt
+      - name: Scan the working tree
+        run: gitleaks dir --no-banner --no-color --redact .
