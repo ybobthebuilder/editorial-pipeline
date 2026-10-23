@@ -5,6 +5,8 @@
 > Companheiros: `slot-map-v0.md` (slots e gramáticas), `contracts-proposal.md` (§4 e §5), `contexto.md` (§7 e decisões D-04, D-08, U19, U23), `geometry.js`, `contrast.js`.
 > **Não verificado nesta sessão:** os originais `templates.json` e `tokens.css` não estão acessíveis. Os números abaixo vêm do `slot-map-v0.md` e de `contexto.md` §7, que os transcrevem, e das 6 cópias dos SVGs.
 
+> **Atualização de 2026-10-22 (decisões do Fonseca, depois do merge):** Q1: o markup SVG mora em `assets/brand/` e cada template o referencia (`svg` e `svg_sha256`). Q2: nada é isento das faixas (não existe `exempt_from_bands`), e o rodapé do CFM é o slot `cfm_footer`, a 12 px, centralizado, na linha de base de `geometry.cfmFooterBaseline`. Q3, Q4 e Q7 seguiram a recomendação. **Desvios desta proposta no schema** (`contracts/visual_library.schema.json`), todos por limite do subconjunto de `schema.js`: `tokens` é uma lista de `{ name, value }`, e não um mapa; `y` e `font_size` são sempre listas, com um número por linha (`max_lines`), e `line_height` não existe. O validador é `validators/visual_library.js`. Q5 (faixa 380 a 1600 do `reel-02-overlay`) e Q6 seguem abertas. O texto abaixo não foi reescrito.
+
 ## 1. O que esta proposta fecha
 
 `CLAUDE.md` §9 lista `visual_library` como chave de configuração ("gramática visual fechada"), e o roadmap pede `config/baseline/visual_library.json` (VL-4). Nenhum documento define o conteúdo desse arquivo. Esta proposta define **a forma**, **quem lê cada campo** e **como cada regra é verificada**. Não define o texto de nenhum template.
