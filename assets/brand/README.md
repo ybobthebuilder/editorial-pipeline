@@ -4,13 +4,22 @@ Six SVG templates, one per `template_id` of `config/baseline/visual_library.json
 that the render (VL-5) fills; the geometry of every text lives in `visual_library.json` and a test
 (`validators/visual_library.baseline.test.js`) keeps the two equal.
 
+## Proveniência
+
+Markup declarado de propriedade do autor em 22/10/2026, sob owned_brand_asset.
+
+Registro da declaração do Fonseca (2026-10-22), aceita como nota de direitos e proveniência para a v0.1
+(CP-VL1.6, U7; 2026-10-23). Se os originais `templates.json` e `tokens.css` aparecerem, um patch de correção
+reconcilia as cópias (decisão de 2026-10-23).
+
 ## Rights and provenance
 
 - **VERIFIED (decision of the project owner, Fonseca, 2026-10-22):** these SVGs may enter the public
   repository, and the markup is the project's own (`owned_brand_asset`).
-- **UNKNOWN:** the rights note of the original design package (U7, CP-VL1.6) is still pending. The package
-  that the working copies came from describes itself as an unofficial reconstruction; nothing in this
-  repository verifies who owns it. The owner's declaration above is what authorizes this commit.
+- **UNVERIFIED by the assistant:** the package that the working copies came from describes itself as an
+  unofficial reconstruction; nothing in this repository verifies who owns it. The owner's declaration
+  (section "Proveniência" below) is what authorizes these files, and it is enough for CP-VL1.6 in v0.1
+  (decision of 2026-10-23).
 - Source: six working copies made outside the repository (XML fixed: a duplicated `text-anchor` removed in
   three files). The originals are no longer accessible, so equality with them was not re-checked.
   SHA-256 of those copies before the patch:
