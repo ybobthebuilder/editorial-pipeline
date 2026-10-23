@@ -17,7 +17,7 @@
 // UNKNOWN: whether the caption may carry a link. No decision exists, so it is not checked.
 //
 // Known false positives, on purpose (a rejected text is regenerated; a text that slips through is not
-// caught): "p.ex" and "Sr.Silva" read as domains, and "2026 2027" reads as a phone number (eight digits
+// caught): "p.ex" and "Sr.Silva" read as domains, four numbers joined by dots ("1.2.3.4") read as an IP address, and "2026 2027" reads as a phone number (eight digits
 // or more in one run of digits and separators).
 
 const CTA_MAX = 40;
@@ -27,7 +27,9 @@ const MENTION = /[@\uFF20]/;
 const HASHTAG = /[#\uFF03]/;
 const SCHEME_OR_WWW = /(?:[a-z][a-z0-9+.-]*:\/\/|www\.)/i;
 const DOMAIN = /[\p{L}\p{N}][\p{L}\p{N}-]*\.\p{L}{2,}/u;
-const PHONE_RUN = /\p{Nd}[\p{Nd}\s().\-]{6,}\p{Nd}/gu;
+const IPV4 = /(?<!\p{Nd})(?:\p{Nd}{1,3}\.){3}\p{Nd}{1,3}(?!\p{Nd})/u;
+// separators of a phone number: space, parentheses, dot, hyphen-minus, the typographic dashes U+2010 to U+2015 and the minus sign U+2212
+const PHONE_RUN = /\p{Nd}[\p{Nd}\s().\-\u2010-\u2015\u2212]{6,}\p{Nd}/gu;
 
 const codePoints = (text) => Array.from(text).length;
 
@@ -36,7 +38,7 @@ function assertString(value, what) {
 }
 
 function hasUrl(text) {
-  return SCHEME_OR_WWW.test(text) || DOMAIN.test(text);
+  return SCHEME_OR_WWW.test(text) || DOMAIN.test(text) || IPV4.test(text);
 }
 
 function hasPhone(text) {
