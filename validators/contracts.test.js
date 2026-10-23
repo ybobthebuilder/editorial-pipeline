@@ -1,6 +1,6 @@
 'use strict';
 
-// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets}.schema.json with validators/schema.js
+// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy}.schema.json with validators/schema.js
 // (checkpoints CP-VL3.2 and CP-VL3.3). The fixtures are synthetic; see fixtures/synthetic/contracts.
 
 const { test } = require('node:test');
@@ -10,10 +10,10 @@ const { join } = require('node:path');
 const { validate } = require('./schema.js');
 
 const ROOT = join(__dirname, '..');
-const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets'];
+const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
-const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: [], qa_result: ['semantic'], image_assets: [] };
+const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS' };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -42,7 +42,7 @@ test('required lists every property except the documented optional ones', () => 
   }
 });
 
-test('the provenance block is identical in the four schemas, except for the stage constant', () => {
+test('the provenance block is identical in the five schemas, except for the stage constant', () => {
   const block = (name) => {
     const properties = clone(schemaOf(name).properties);
     const out = {};
@@ -53,6 +53,7 @@ test('the provenance block is identical in the four schemas, except for the stag
   assert.deepEqual(block('cover_spec'), block('visual_spec'));
   assert.deepEqual(block('qa_result'), block('visual_spec'));
   assert.deepEqual(block('image_assets'), block('visual_spec'));
+  assert.deepEqual(block('post_copy'), block('visual_spec'));
   for (const name of CONTRACTS) assert.equal(schemaOf(name).properties.stage.const, STAGE[name], name);
 });
 
@@ -91,6 +92,10 @@ test('each invalid fixture fails for its stated cause and for no other', () => {
       'invalid-01-owned_photo-in-images': ['$.images[0].provenance: value is not one of the allowed enum members'],
       'invalid-02-exception-without-approval_id': ['$.exceptions[0].approval_id: missing required property'],
     },
+    post_copy: {
+      'invalid-01-caption-over-300': ['$.caption: length 301 is above maxLength 300'],
+      'invalid-02-missing-evidence_ids': ['$.evidence_ids: missing required property'],
+    },
   };
   for (const name of CONTRACTS) {
     for (const [file, errors] of Object.entries(expected[name])) {
@@ -110,7 +115,7 @@ test('CP-VL3.3: each of the seven provenance fields is required in every contrac
 });
 
 test('CP-VL3.3: every other required field is required too', () => {
-  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'] };
+  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'] };
   for (const name of CONTRACTS) {
     for (const key of extra[name]) {
       const data = validOf(name);
@@ -121,7 +126,7 @@ test('CP-VL3.3: every other required field is required too', () => {
 });
 
 test('CP-VL3.3: evidence_ids must be present, non-empty and made of non-empty strings', () => {
-  for (const name of ['visual_spec', 'cover_spec']) {
+  for (const name of ['visual_spec', 'cover_spec', 'post_copy']) {
     for (const [value, path] of [[[], '$.evidence_ids'], [[''], '$.evidence_ids[0]'], [[7], '$.evidence_ids[0]'], ['ev-0001', '$.evidence_ids'], [null, '$.evidence_ids']]) {
       const data = validOf(name);
       data.evidence_ids = value;
@@ -179,7 +184,8 @@ test('every listed enum member is accepted and the lists are exactly the proposa
 
 test('the stage constant ties each contract to its own stage', () => {
   for (const name of CONTRACTS) {
-    for (const other of CONTRACTS.filter((n) => n !== name)) {
+    // cover_spec and post_copy are both outputs of 07_COVERS, so they share the constant
+    for (const other of CONTRACTS.filter((n) => n !== name && STAGE[n] !== STAGE[name])) {
       const data = validOf(name);
       data.stage = STAGE[other];
       assert.deepEqual(paths(name, data), ['$.stage'], `${name} with stage ${STAGE[other]}`);
@@ -306,6 +312,7 @@ test('the smallest valid documents are accepted: one-character strings, one slot
     cover_spec: { ...provenance, stage: '07_COVERS', visual_spec_id: 'v', template_id: 'post-01-manifesto', evidence_ids: ['e'], slots: [{ slot_id: 's', kind: 'chrome', lines: ['l'] }], alt_text: 'a' },
     qa_result: { ...provenance, stage: '09_QA', cover_spec_id: 'c', gates: [{ gate_id: 'QA-DIM', status: 'passed', detail: 'd' }], passed: true },
     image_assets: { ...provenance, stage: '01_INGEST', images: [], exceptions: [] },
+    post_copy: { ...provenance, stage: '07_COVERS', evidence_ids: ['e'], caption: 'c' },
   };
   for (const name of CONTRACTS) assert.deepEqual(errorsOf(name, minimal[name]), [], name);
 });
@@ -382,4 +389,51 @@ test('fixtures are synthetic: fixed all-zero job ids, and no model names or priv
       assert.doesNotMatch(text, /"config_source": "private"/, `${name}/${file}`);
     }
   }
+});
+
+test('post_copy: caption is 1 to 300 code points, text only; blank text, hashtags and mentions are not the schema\'s', () => {
+  const ok = (caption) => { const d = validOf('post_copy'); d.caption = caption; return errorsOf('post_copy', d); };
+  assert.deepEqual(ok('x'), []);
+  assert.deepEqual(ok('x'.repeat(300)), []);
+  assert.deepEqual(ok('\u{1F600}'.repeat(300)), [], 'length counts code points, not UTF-16 units');
+  assert.deepEqual(ok('Legenda com acentuação, ç e ã.'), []);
+  for (const bad of ['', 'x'.repeat(301), '\u{1F600}'.repeat(301), 5, null, ['x']]) {
+    const d = validOf('post_copy'); d.caption = bad;
+    assert.deepEqual(paths('post_copy', d), ['$.caption'], JSON.stringify(bad).slice(0, 20));
+  }
+  // limits, proven so nobody mistakes the schema for the whole contract: code checks these (validators/copy.js)
+  assert.deepEqual(ok('   '), []);
+  assert.deepEqual(ok('Texto com #hashtag e @mencao'), []);
+  assert.deepEqual(Object.keys(schemaOf('post_copy').properties).slice(-2), ['evidence_ids', 'caption']);
+  assert.equal(schemaOf('post_copy').properties.caption.maxLength, 300);
+});
+
+test('cover_spec: cta is optional, 1 to 40 code points, text only (D-17)', () => {
+  assert.equal(Object.hasOwn(validOf('cover_spec'), 'cta'), false);
+  assert.equal(fixture('cover_spec', 'valid-02').cta, 'Salve este post');
+  assert.deepEqual(errorsOf('cover_spec', fixture('cover_spec', 'valid-02')), []);
+  const ok = (cta) => { const d = validOf('cover_spec'); d.cta = cta; return errorsOf('cover_spec', d); };
+  assert.deepEqual(ok('x'), []);
+  assert.deepEqual(ok('x'.repeat(40)), []);
+  assert.deepEqual(ok('\u{1F600}'.repeat(40)), [], 'length counts code points, not UTF-16 units');
+  assert.deepEqual(ok('Comente abaixo'), []);
+  for (const bad of ['', 'x'.repeat(41), '\u{1F600}'.repeat(41), 5, null, ['x'], { text: 'x' }]) {
+    const d = validOf('cover_spec'); d.cta = bad;
+    assert.deepEqual(paths('cover_spec', d), ['$.cta'], JSON.stringify(bad).slice(0, 20));
+  }
+  assert.equal(schemaOf('cover_spec').properties.cta.maxLength, 40);
+  assert.equal(schemaOf('cover_spec').required.includes('cta'), false);
+});
+
+test('cover_spec: the rules about cta that the schema cannot express are the code\'s (copy.js): slot, mirror, symbols', () => {
+  const d = validOf('cover_spec'); // post-02-metrica has no cta_label slot
+  d.cta = 'Salve este post';
+  assert.deepEqual(errorsOf('cover_spec', d), [], 'a cta on a template without cta_label');
+  const v = clone(fixture('cover_spec', 'valid-02'));
+  v.cta = 'Comente abaixo'; // different from slots[cta_label].lines
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'a cta that does not match the slot');
+  v.cta = 'exemplo.com @perfil #tag 11 99999-0000';
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'URL, mention, hashtag and phone are not the schema\'s');
+  delete v.cta;
+  assert.deepEqual(errorsOf('cover_spec', v), [], 'a cta_label slot without cta');
 });

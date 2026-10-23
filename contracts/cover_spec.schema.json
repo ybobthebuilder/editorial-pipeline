@@ -113,6 +113,12 @@
         }
       }
     },
+    "cta": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "optional short call to action written on the art (decision D-17, 2026-10-23): inert text, no automation. Length in code points. It exists if and only if the template has a cta_label slot, and slots[cta_label].lines must be exactly [cta]; no URL, @, # or phone number; blocklist and numbers apply. All checked by code (validators/copy.js)"
+    },
     "alt_text": {
       "type": "string",
       "minLength": 1

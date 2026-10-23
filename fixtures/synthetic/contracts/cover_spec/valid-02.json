@@ -37,11 +37,12 @@
     },
     {
       "slot_id": "cta_label",
-      "kind": "chrome",
+      "kind": "claim",
       "lines": [
-        "SAIBA MAIS"
+        "Salve este post"
       ]
     }
   ],
+  "cta": "Salve este post",
   "alt_text": "Convite em fundo escuro com o título em duas linhas."
 }
