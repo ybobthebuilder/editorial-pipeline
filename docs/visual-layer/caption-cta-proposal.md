@@ -4,6 +4,8 @@
 > Rótulos: **VERIFIED** (decisão do Fonseca ou arquivo do repositório), **PROPOSED** (desenho meu), **UNKNOWN** (sem fonte; vira pergunta na §9).
 > Companheiros: `contracts-proposal.md` (§3 proveniência, §5 `cover_spec`, §8 validadores), `slot-map-v0.md`, `skills/copywriter-cfm/SKILL.md`, `validators/blocklist.js`, `validators/numbers.js`, `contexto.md` (D-05, D-16).
 
+> **Aprovada em 2026-10-23 (Fonseca), com estas respostas:** Q1: a `caption` é saída do `07_COVERS`, no contrato `post_copy` (opção B), até 300 caracteres (Q3). Q2: na v0.1 o escopo são as capas e o carrossel de capa; o `cta` só vale se o template tiver o slot `cta_label`; um CTA no fim do carrossel exige template novo na v0.2. Q4, Q6 e Q7: recomendações aprovadas (sem hashtag nem menção na legenda; motivo `cta_promete_entrega` no `09_QA`; rejeição de URL, `@`, `#` e telefone). Q5: `cta_label` passa a `claim`. Registrado como D-17 em `contexto.md`. O texto abaixo é o aprovado e não foi reescrito; o digest citado nas PRs é o do texto sem esta nota.
+
 ## 1. As decisões (VERIFIED, Fonseca, 2026-10-23)
 
 1. **`caption`** é o texto da postagem, o que fica embaixo da imagem no Instagram. **Não aparece na arte.** Pertence ao contrato de payload do job (junto com `alt_text`), e não ao layout.
