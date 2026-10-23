@@ -1,0 +1,845 @@
+{
+  "tokens": [
+    {
+      "name": "bg",
+      "value": "#0B0B0B"
+    },
+    {
+      "name": "surface",
+      "value": "#141414"
+    },
+    {
+      "name": "fg",
+      "value": "#E7E6D9"
+    },
+    {
+      "name": "muted",
+      "value": "#B0AFA6"
+    },
+    {
+      "name": "accent",
+      "value": "#6236F4"
+    },
+    {
+      "name": "border",
+      "value": "#42413E"
+    }
+  ],
+  "color_pairs": [
+    {
+      "text": "muted",
+      "on": "bg",
+      "text_size": "normal"
+    },
+    {
+      "text": "fg",
+      "on": "bg",
+      "text_size": "normal"
+    },
+    {
+      "text": "bg",
+      "on": "fg",
+      "text_size": "normal"
+    },
+    {
+      "text": "accent",
+      "on": "bg",
+      "text_size": "large"
+    },
+    {
+      "text": "muted",
+      "on": "surface",
+      "text_size": "normal"
+    },
+    {
+      "text": "fg",
+      "on": "surface",
+      "text_size": "normal"
+    },
+    {
+      "text": "fg",
+      "on": "accent",
+      "text_size": "normal"
+    }
+  ],
+  "grammars": [
+    {
+      "grammar_id": "metrica",
+      "description": "Um número em destaque com a variação ou o contexto que o explica.",
+      "templates": [
+        "post-02-metrica"
+      ]
+    },
+    {
+      "grammar_id": "manifesto",
+      "description": "Uma afirmação central curta, com a promessa do conteúdo.",
+      "templates": [
+        "post-01-manifesto"
+      ]
+    },
+    {
+      "grammar_id": "capa",
+      "description": "Título de abertura de uma série: carrossel ou capa de Reels.",
+      "templates": [
+        "carousel-01-capa",
+        "reel-01-capa"
+      ]
+    },
+    {
+      "grammar_id": "convite",
+      "description": "Chamada para ação com um destaque, para Stories.",
+      "templates": [
+        "story-01-convite"
+      ]
+    },
+    {
+      "grammar_id": "overlay",
+      "description": "Texto sobreposto a um vídeo, em um capítulo.",
+      "templates": [
+        "reel-02-overlay"
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "template_id": "post-01-manifesto",
+      "canvas": {
+        "width": 1080,
+        "height": 1080
+      },
+      "format": "1:1",
+      "svg": "assets/brand/post-01-manifesto.svg",
+      "svg_sha256": "db23f40abc7eb6b9d0f1de69e9330f1f8aa2b550e65589e56af90438837c318e",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            125
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            455,
+            567
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            116,
+            114
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "subhead",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            635
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            32
+          ],
+          "weight": 400,
+          "letter_spacing": -1,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cta_label",
+          "kind": "chrome",
+          "x": 130,
+          "y": [
+            798
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "bg",
+          "on": "fg"
+        },
+        {
+          "slot_id": "footer_left",
+          "kind": "chrome",
+          "x": 76,
+          "y": [
+            991
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "counter",
+          "kind": "chrome",
+          "x": 1004,
+          "y": [
+            991
+          ],
+          "anchor": "end",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1013
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "post-02-metrica",
+      "canvas": {
+        "width": 1080,
+        "height": 1350
+      },
+      "format": "4:5",
+      "svg": "assets/brand/post-02-metrica.svg",
+      "svg_sha256": "6eeb3757b23a0bc6b3b7410eb1fe96fa73d3e13f9b37a8d0508cb68ea9ed51e2",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            125
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 86,
+          "y": [
+            425,
+            537,
+            649
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            110,
+            110,
+            110
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 3,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "metric_value",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            907
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            162
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "metric_label",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            976
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "subhead",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            1042
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            36
+          ],
+          "weight": 400,
+          "letter_spacing": -1,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "footer_left",
+          "kind": "chrome",
+          "x": 76,
+          "y": [
+            1261
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "counter",
+          "kind": "chrome",
+          "x": 1004,
+          "y": [
+            1261
+          ],
+          "anchor": "end",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1283
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "carousel-01-capa",
+      "canvas": {
+        "width": 1080,
+        "height": 1080
+      },
+      "format": "1:1",
+      "svg": "assets/brand/carousel-01-capa.svg",
+      "svg_sha256": "732f6b91852a4a9a1b1daaa3dbd03ac98857e029d2ef58a63d3a870774f450b4",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            125
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "numeral",
+          "kind": "chrome",
+          "x": 90,
+          "y": [
+            450
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            190
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 1,
+          "token": "accent",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            610,
+            698,
+            786
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            77,
+            77,
+            77
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 3,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "footer_left",
+          "kind": "chrome",
+          "x": 76,
+          "y": [
+            991
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "counter",
+          "kind": "chrome",
+          "x": 1004,
+          "y": [
+            991
+          ],
+          "anchor": "end",
+          "family": "mono",
+          "font_size": [
+            19
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1013
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "story-01-convite",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "format": "9:16",
+      "svg": "assets/brand/story-01-convite.svg",
+      "svg_sha256": "939598b1b40bf24ccd32997ba68b1d9d1d4efd1403ec7c911a0fc485cc7c6cde",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            290
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 83,
+          "y": [
+            535,
+            660
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            124,
+            124
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "subhead",
+          "kind": "claim",
+          "x": 90,
+          "y": [
+            739
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            39
+          ],
+          "weight": 400,
+          "letter_spacing": -1,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "highlight_label",
+          "kind": "chrome",
+          "x": 127,
+          "y": [
+            1002
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "surface"
+        },
+        {
+          "slot_id": "highlight",
+          "kind": "claim",
+          "x": 127,
+          "y": [
+            1110,
+            1203
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            83,
+            83
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "surface"
+        },
+        {
+          "slot_id": "cta_label",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1462
+          ],
+          "anchor": "middle",
+          "family": "mono",
+          "font_size": [
+            28
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "accent"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1540
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "reel-01-capa",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "format": "9:16",
+      "svg": "assets/brand/reel-01-capa.svg",
+      "svg_sha256": "b8fa914d1dac522a554817cd5c3c3f5f97439d55c2779019236d91a923cd170b",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            290
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 82,
+          "y": [
+            1000,
+            1165,
+            1308
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            164,
+            126,
+            108
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 3,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "tag",
+          "kind": "chrome",
+          "x": 122,
+          "y": [
+            1444
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            21
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "accent"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1540
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    },
+    {
+      "template_id": "reel-02-overlay",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "format": "9:16",
+      "svg": "assets/brand/reel-02-overlay.svg",
+      "svg_sha256": "4667ddb8e9be7da61fe0a7a40657c1ff2f53c63450e745e233df9a42d0c5eb36",
+      "slots": [
+        {
+          "slot_id": "label_top",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            290
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "chapter_label",
+          "kind": "chrome",
+          "x": 118,
+          "y": [
+            1237
+          ],
+          "anchor": "start",
+          "family": "mono",
+          "font_size": [
+            23
+          ],
+          "weight": 600,
+          "letter_spacing": 2,
+          "max_lines": 1,
+          "token": "muted",
+          "on": "bg"
+        },
+        {
+          "slot_id": "headline",
+          "kind": "claim",
+          "x": 83,
+          "y": [
+            1357,
+            1487
+          ],
+          "anchor": "start",
+          "family": "sans",
+          "font_size": [
+            133,
+            133
+          ],
+          "weight": 600,
+          "letter_spacing": -2,
+          "max_lines": 2,
+          "token": "fg",
+          "on": "bg"
+        },
+        {
+          "slot_id": "cfm_footer",
+          "kind": "chrome",
+          "x": 540,
+          "y": [
+            1540
+          ],
+          "anchor": "middle",
+          "family": "sans",
+          "font_size": [
+            12
+          ],
+          "weight": 400,
+          "letter_spacing": 0,
+          "max_lines": 1,
+          "token": "fg",
+          "on": "bg"
+        }
+      ]
+    }
+  ]
+}
