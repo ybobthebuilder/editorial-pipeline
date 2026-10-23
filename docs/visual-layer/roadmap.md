@@ -66,7 +66,7 @@
 - **Passo 1 (bloqueante):** **proposta de contratos** em documento (campos, enums fechados, campos de proveniência obrigatórios, referências `evidence_ids`), revisada por digest e aprovada. Sem isso, nenhum schema é escrito (U2). **Feito:** aprovada pelo Fonseca em 2026-10-22 (PR #15).
 - **Passo 2:** `contracts/visual_spec.schema.json`, `cover_spec.schema.json`, `qa_result.schema.json` + fixtures sintéticas (2 válidas e 2 inválidas por contrato) em `fixtures/synthetic/`. **Feito:** PR #20 (24 testes, 290 mutantes detectados); as fixtures ficaram em `fixtures/synthetic/contracts/`.
 - **Passo 3:** os prompts vivem em `skills/<nome>/SKILL.md` (D-12), com `skills/.checksums`, e a lista de termos em `config/baseline/cfm_blocklist.json`. **Feito (v0.1):** PRs #14, #17, #21, #22 e #23 (sem o `100%` isolado, D-13), mescladas. A PR #25 (`100% eficaz` na lista) está aberta. Nenhum teste roda contra um modelo; a temperatura do copywriter segue UNKNOWN.
-- **Passo 4 (PROPOSED):** impor por código e teste o bloqueio de mídia clínica da v1 (D-15), nas duas camadas decididas em U24 (schema de `image_assets` e validador de negócio). **Bloqueado por fonte:** o contrato `image_assets` v0.1.0 e o campo que identifica a foto clínica não estão neste repositório.
+- **Passo 4:** impor por código e teste o bloqueio de mídia clínica da v1 (D-15), nas duas camadas decididas em U24. **Implementado em PRs abertas** (migration 008 e o par `image_assets.schema.json` + `media.js`); a aprovação humana é um registro no banco, por decisão do Fonseca de 2026-10-22.
 - **Aceite:** CP-VL3.1 a CP-VL3.5.
 
 ## VL-4 — Baseline visual
@@ -124,7 +124,7 @@ Estágios 01–05 e 10–12; Fase 1 e Fase 4 como entregas; publicação e métr
 | Contratos inventados (U2) | retrabalho | proposta aprovada antes de qualquer schema |
 | Texto estoura slot sem medir fonte real | QA falha só no render | orçamento de caracteres por linha e testes de limite; medição real só com a fonte decidida |
 | Cota do Figma (seat View) | auditoria incompleta | orçamento fixo no VL-1; tratar o restante como UNKNOWN |
-| Mídia clínica entra sem bloqueio (D-15 sem código) | foto de paciente em peça publicada | CP-VL3.5; até lá, nada no repositório impõe o bloqueio |
+| Mídia clínica entra sem bloqueio (D-15 sem código) | foto de paciente em peça publicada | CP-VL3.5; o bloqueio está em PRs abertas e só vale depois do merge. Mesmo depois, o código só barra o que é declarado |
 | A lista de termos só pega a forma exata | variações passam (`curar`, `100% eficazes`) | decisão de ampliar a lista; o prompt pede ao modelo que evite; o juiz semântico do `09_QA` cobre o resto |
 | Rodapé do CFM dentro da faixa de 340 px do Reels (U18 e U23) | a identificação do médico pode ficar sob a interface na reprodução | decisão do Fonseca; o `QA-SAFE` trata esse slot como exceção explícita ou o rodapé sobe |
 | Chrome nas faixas dos 9:16 (`label_top`, `cta_label`) | reprovaria no `QA-SAFE` se o chrome entrar no gate; nenhum template 9:16 passaria como está | decidir entre isentar o chrome e mover o elemento (D-06) |
