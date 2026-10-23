@@ -169,7 +169,7 @@
         },
         {
           "slot_id": "cta_label",
-          "kind": "chrome",
+          "kind": "claim",
           "x": 130,
           "y": [
             798
@@ -631,7 +631,7 @@
         },
         {
           "slot_id": "cta_label",
-          "kind": "chrome",
+          "kind": "claim",
           "x": 540,
           "y": [
             1462
