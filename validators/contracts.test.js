@@ -164,7 +164,7 @@ test('every listed enum member is accepted and the lists are exactly the proposa
   assert.deepEqual(gate.status.enum, ['passed', 'failed', 'waived']);
   const semantic = schemaOf('qa_result').properties.semantic.properties;
   assert.deepEqual(semantic.verdict.enum, ['pass', 'fail']);
-  assert.deepEqual(semantic.reasons.items.enum, ['afirmacao_sem_evidencia', 'exagero_de_forca', 'causalidade_indevida', 'alt_text_inconsistente', 'tom_promocional', 'entrada_insuficiente']);
+  assert.deepEqual(semantic.reasons.items.enum, ['afirmacao_sem_evidencia', 'exagero_de_forca', 'causalidade_indevida', 'alt_text_inconsistente', 'tom_promocional', 'entrada_insuficiente', 'cta_promete_entrega']);
   for (const template of cover.template_id.enum) {
     const data = validOf('cover_spec');
     data.template_id = template;
