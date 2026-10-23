@@ -1,0 +1,7 @@
+# gitleaks configuration (found automatically at the repository root).
+# The default rules apply. An allowlist is added only for a proven false positive, with the reason in a
+# comment next to it; none is needed today (the history and the tree scan clean).
+title = "editorial-pipeline"
+
+[extend]
+useDefault = true
