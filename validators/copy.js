@@ -29,16 +29,20 @@ const SCHEME_OR_WWW = /(?:[a-z][a-z0-9+.-]*:\/\/|www\.)/i;
 const DOMAIN = /[\p{L}\p{N}][\p{L}\p{N}-]*\.\p{L}{2,}/u;
 const PHONE_RUN = /\p{Nd}[\p{Nd}\s().\-]{6,}\p{Nd}/gu;
 
+/** Count Unicode code points, including any surrounding whitespace. */
 const codePoints = (text) => Array.from(text).length;
 
+/** @throws {TypeError} If value is not a string, naming the field supplied in what. */
 function assertString(value, what) {
   if (typeof value !== 'string') throw new TypeError(`${what} must be a string`);
 }
 
+/** Detect a URL scheme, www. prefix, or domain-like substring, including p.ex and Sr.Silva. */
 function hasUrl(text) {
   return SCHEME_OR_WWW.test(text) || DOMAIN.test(text);
 }
 
+/** Detect at least eight Unicode decimal digits separated only by whitespace, parentheses, dots, or hyphens. */
 function hasPhone(text) {
   for (const run of text.match(PHONE_RUN) || []) {
     if ((run.match(/\p{Nd}/gu) || []).length >= PHONE_MIN_DIGITS) return true;
@@ -46,7 +50,10 @@ function hasPhone(text) {
   return false;
 }
 
-// Reasons shared by both texts, in a fixed order.
+/**
+ * Append reasons to errors in URL, at-sign, hashtag, then phone order, using prefix (cta or legenda).
+ * Both ASCII and fullwidth at-signs and number signs count; links enables URL and phone checks.
+ */
 function symbols(text, prefix, errors, { links }) {
   if (links && hasUrl(text)) errors.push({ reason: `${prefix}_com_url` });
   if (MENTION.test(text)) errors.push({ reason: `${prefix}_com_${prefix === 'cta' ? 'arroba' : 'mencao'}` });
@@ -54,11 +61,22 @@ function symbols(text, prefix, errors, { links }) {
   if (links && hasPhone(text)) errors.push({ reason: `${prefix}_com_telefone` });
 }
 
-// coverSpec: a cover_spec (cta optional); template: the library entry of coverSpec.template_id, with
-// slots[].slot_id. Returns { passed, errors: [{ reason }] }. Reasons: cta_sem_slot (a cta on a template
-// that has no cta_label slot), slot_sem_cta (the slot without a cta), cta_diferente_do_slot (the slot's
-// lines are not exactly [cta], or the slot is missing from the cover_spec), cta_so_espacos,
-// cta_acima_de_40, cta_com_url, cta_com_arroba, cta_com_hashtag, cta_com_telefone.
+/**
+ * Check CTA presence, its exact slot text, and mechanical content rules without changing the inputs.
+ * An undefined cta is absent; it is required exactly when the template has a cta_label slot.
+ * A present CTA must contain non-whitespace text and at most 40 Unicode code points, counting spaces.
+ * URL-like text, ASCII or fullwidth @ and #, and phone-like digit runs are rejected.
+ *
+ * coverSpec: a cover_spec (cta optional); template: the library entry of coverSpec.template_id, with
+ * slots[].slot_id. Returns { passed, errors: [{ reason }] }, with passed true exactly when errors is
+ * empty. Reasons, in order: cta_sem_slot (a cta on a template that has no cta_label slot), slot_sem_cta
+ * (the slot without a cta), cta_diferente_do_slot (the slot's lines are not exactly [cta], or the slot
+ * is missing from the cover_spec), cta_so_espacos, cta_acima_de_40, cta_com_url, cta_com_arroba,
+ * cta_com_hashtag, cta_com_telefone.
+ *
+ * @throws {TypeError} If either argument is not a non-null, non-array object, either slots field
+ * is not an array, or a present cta is not a string. Content violations are returned in errors.
+ */
 function checkCta(coverSpec, template) {
   if (coverSpec === null || typeof coverSpec !== 'object' || Array.isArray(coverSpec)) throw new TypeError('coverSpec must be an object');
   if (template === null || typeof template !== 'object' || Array.isArray(template)) throw new TypeError('template must be an object');
@@ -85,8 +103,15 @@ function checkCta(coverSpec, template) {
   return { passed: errors.length === 0, errors };
 }
 
-// caption: the text of post_copy. Returns { passed, errors: [{ reason }] }. Reasons: legenda_so_espacos,
-// legenda_acima_de_300, legenda_com_mencao, legenda_com_hashtag (no hashtag and no mention in v0.1).
+/**
+ * Check the caption text of post_copy for non-whitespace content and at most 300 Unicode code points,
+ * counting spaces. Reject ASCII and fullwidth @ and #; links and phone numbers are allowed here.
+ * Returns { passed, errors: [{ reason }] }, with passed true exactly when errors is empty.
+ * Reasons, in order: legenda_so_espacos, legenda_acima_de_300, legenda_com_mencao, legenda_com_hashtag
+ * (no hashtag and no mention in v0.1).
+ *
+ * @throws {TypeError} If caption is not a string. Content violations are returned in errors.
+ */
 function checkCaption(caption) {
   assertString(caption, 'caption');
   const errors = [];
