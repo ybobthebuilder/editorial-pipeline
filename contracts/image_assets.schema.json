@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "image_assets",
+  "description": "Images that arrive with a job (stage 01_INGEST). Contract proposal: docs/visual-layer/image-assets-proposal.md. Layer (a) of the clinical-media block lives here; layer (b) is validators/media.js.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "images",
+    "exceptions"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "01_INGEST",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref",
+          "provenance",
+          "subject",
+          "attribution",
+          "seal",
+          "alt_text"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^img://[A-Za-z0-9._/-]+$",
+            "description": "reference of the image inside the job, e.g. img://job-0001/0; must be unique across images and exceptions (checked by code)"
+          },
+          "provenance": {
+            "enum": [
+              "generated_illustration",
+              "stock_licensed"
+            ],
+            "description": "layer (a) of the clinical-media block (decision U24): owned_photo is not accepted here"
+          },
+          "subject": {
+            "enum": [
+              "none",
+              "person_not_patient",
+              "patient",
+              "before_after",
+              "exam",
+              "unknown"
+            ],
+            "description": "what the image shows, declared by the producer; patient, before_after, exam and unknown are always refused by code"
+          },
+          "attribution": {
+            "type": "string",
+            "minLength": 1,
+            "description": "credit and licence for stock; tool or model for a generated illustration; origin for an own photo"
+          },
+          "seal": {
+            "enum": [
+              "applied",
+              "not_applicable"
+            ],
+            "description": "a generated_illustration must carry the seal (applied); checked by code"
+          },
+          "alt_text": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 250
+          }
+        }
+      },
+      "description": "generated_illustration and stock_licensed only"
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref",
+          "provenance",
+          "subject",
+          "attribution",
+          "seal",
+          "alt_text",
+          "approval_id"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^img://[A-Za-z0-9._/-]+$",
+            "description": "reference of the image inside the job, e.g. img://job-0001/0; must be unique across images and exceptions (checked by code)"
+          },
+          "provenance": {
+            "const": "owned_photo"
+          },
+          "subject": {
+            "enum": [
+              "none",
+              "person_not_patient",
+              "patient",
+              "before_after",
+              "exam",
+              "unknown"
+            ],
+            "description": "what the image shows, declared by the producer; patient, before_after, exam and unknown are always refused by code"
+          },
+          "attribution": {
+            "type": "string",
+            "minLength": 1,
+            "description": "credit and licence for stock; tool or model for a generated illustration; origin for an own photo"
+          },
+          "seal": {
+            "enum": [
+              "applied",
+              "not_applicable"
+            ],
+            "description": "a generated_illustration must carry the seal (applied); checked by code"
+          },
+          "alt_text": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 250
+          },
+          "approval_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "description": "editorial.image_approvals.id, written only by human_reviewer; existence, job, ref and subject are checked by code against get_image_approvals"
+          }
+        }
+      },
+      "description": "owned_photo only, each with the id of a human approval record"
+    }
+  }
+}

@@ -3,7 +3,7 @@
 Invented data. No real paper, evidence, model output, database row or brand text. Every `job_id` is
 `00000000-0000-4000-8000-0000000000NN`, and `model` is `synthetic-model-v0` or `not_reported`.
 
-Per contract (`visual_spec`, `cover_spec`, `qa_result`), exactly four files:
+Per contract (`visual_spec`, `cover_spec`, `qa_result`, `image_assets`), exactly four files:
 
 | File | Meaning |
 | --- | --- |

@@ -4,6 +4,8 @@
 > Rótulos: **VERIFIED** (decisão do Fonseca ou arquivo do repo), **PROPOSED** (desenho meu), **UNKNOWN** (sem fonte; vira pergunta na §8).
 > **Não verificado:** o contrato `image_assets` v0.1.0 do relatório do Fonseca não está neste repositório. Só estes fragmentos dele chegaram a mim: o nome e a versão, o caminho `payload.images[]`, o exemplo de `ref` (`img://NX-2026-10-13-001/0`) e o enum de `provenance` (`generated_illustration`, `owned_photo`, `stock_licensed`). Esta proposta não o reproduz; ela desenha o mínimo para cumprir a decisão abaixo. Se o v0.1.0 existir à mão, ele substitui o que for conflito.
 
+> **Atualização de 2026-10-22 (decisão do Fonseca, depois do merge):** a proposta é o `image_assets` v0.1.0 oficial, e a aprovação de `owned_photo` é um registro em `editorial.image_approvals` (migration 008), não um flag. Em consequência, `human_approved` e `justification` saem do payload; `exceptions[]` carrega `approval_id`; a justificativa fica no registro. As razões `justificativa_vazia` e `aprovacao_ausente` da §6 viram `aprovacao_inexistente`, `aprovacao_de_outro_job`, `aprovacao_de_outra_imagem` e `assunto_divergente`, e entram `proveniencia_nao_permitida`, `atribuicao_vazia` e `alt_text_vazio`. O texto abaixo é o da proposta aprovada e não foi reescrito; vale o contrato em `contracts/image_assets.schema.json` e `validators/media.js`.
+
 ## 1. A decisão (VERIFIED, Fonseca, 2026-10-22)
 
 1. **Camada (a), schema.** No JSON Schema de `image_assets`, o enum `provenance` fica restrito a `generated_illustration` e `stock_licensed` por padrão.
