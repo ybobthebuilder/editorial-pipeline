@@ -22,7 +22,7 @@
 | `label_top` | chrome | 118 | 125 | 23 mono | 600 | muted | 1 |
 | `headline` | claim | 90 | 455 | 116 e 114 | 600 | fg | 2 |
 | `subhead` | claim | 90 | 635 | 32 | 400 | muted | 1 |
-| `cta_label` | chrome | 130 | 798 | 23 mono | 600 | bg (sobre botão creme) | 1 |
+| `cta_label` | claim (D-17) | 130 | 798 | 23 mono | 600 | bg (sobre botão creme) | 1 |
 | `footer_left` | chrome | 76 | 991 | 19 mono | 600 | muted | 1 |
 | `counter` | chrome | 1004 (fim) | 991 | 19 mono | 600 | muted | 1 |
 
@@ -57,7 +57,7 @@
 | `subhead` | claim | 90 | 934 | 39 | 400 | muted | 1 |
 | `highlight_label` | chrome | 127 | 1197 | 23 mono | 600 | muted | 1 |
 | `highlight` | claim | 127 | 1305 | 83 | 600 | fg | 2 (passo 93) |
-| `cta_label` | chrome | 390 | 1657 | 28 mono | 600 | fg | 1 |
+| `cta_label` | claim (D-17) | 390 | 1657 | 28 mono | 600 | fg | 1 |
 
 ### 2.5 `reel-01-capa` (1080×1920, largura útil: **UNKNOWN**, `templates.json` não declara margem lateral)
 

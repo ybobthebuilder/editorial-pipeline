@@ -152,3 +152,17 @@ test('the tokens are the project\'s six colors and the pairs in use are all allo
   const allowed = new Set(LIB.color_pairs.map((p) => `${p.text}|${p.on}`));
   assert.deepEqual([...used].sort(), [...allowed].sort());
 });
+
+test('cta_label is a claim, not chrome: the CTA is copy written by the model, so it goes through the prompt and numbers.js (D-17)', () => {
+  const holders = LIB.templates.filter((t) => t.slots.some((s) => s.slot_id === 'cta_label')).map((t) => t.template_id);
+  assert.deepEqual(holders, ['post-01-manifesto', 'story-01-convite']);
+  for (const t of LIB.templates) {
+    for (const s of t.slots) assert.equal(s.kind, s.slot_id === 'cta_label' ? 'claim' : s.kind, `${t.template_id}/${s.slot_id}`);
+    const cta = t.slots.find((s) => s.slot_id === 'cta_label');
+    if (cta) assert.equal(cta.kind, 'claim', t.template_id);
+  }
+  // the other chrome slots stay chrome
+  const chrome = LIB.templates.flatMap((t) => t.slots.filter((s) => s.kind === 'chrome').map((s) => s.slot_id));
+  assert.equal(chrome.includes('cta_label'), false);
+  assert.ok(chrome.includes('cfm_footer') && chrome.includes('label_top'));
+});
