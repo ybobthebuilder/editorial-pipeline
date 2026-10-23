@@ -46,9 +46,9 @@
 
 ## VL-5 — Núcleo de render
 
-- [ ] **CP-VL5.1** Mesma entrada produz SVG idêntico byte a byte. *Verificar:* teste compara hash SHA-256 de duas execuções. *Tipo:* auto.
-- [ ] **CP-VL5.2** Saída em XML bem formado; `& < > " '` escapados em todos os slots (teste com `<script>` e `&`). *Tipo:* auto.
-- [ ] **CP-VL5.3** Template desconhecido, slot ausente ou texto que estoura o orçamento são rejeitados antes de renderizar. *Tipo:* auto.
+- [x] **CP-VL5.1** Mesma entrada produz SVG idêntico byte a byte. *Estado:* implementado em `render/render.test.js` (PR do VL-5, sem veredito). *Verificar:* teste compara hash SHA-256 de duas execuções. *Tipo:* auto.
+- [x] **CP-VL5.2** Saída em XML bem formado; `& < > " '` escapados em todos os slots (teste com `<script>` e `&`). *Tipo:* auto.
+- [x] **CP-VL5.3** Template desconhecido, slot ausente ou texto que estoura o orçamento são rejeitados antes de renderizar. *Tipo:* auto.
 - [ ] **CP-VL5.4** Os 6 templates renderizam fixtures sintéticas; comparação visual com as referências aprovada por humano. *Tipo:* humano.
 - [ ] **CP-VL5.5** D-03 decidida; se PNG, a engine foi verificada na documentação do n8n. *Fecha:* U4. *Tipo:* humano.
 
@@ -144,3 +144,4 @@ Pirâmide com base determinística. Saída de LLM não se testa por texto exato,
 | 2026-10-22 | migration 008: `editorial.image_approvals` e `get_image_approvals(job_id)` (aprovação humana de imagem como registro, decisão do Fonseca) | passou: 166 de 166 testes de banco e scripts; 53 mutantes, 52 detectados e 1 equivalente | esta PR | — |
 | 2026-10-23 | VL-4, parte 1: `contracts/visual_library.schema.json`, `validators/visual_library.js` e fixtures sintéticas (sem o arquivo de baseline) | passou: 29 testes novos, 221 de 221 nos validadores; 75 mutantes do validador e do schema, 72 detectados e 3 equivalentes (`<` contra `<=` no contraste, qual valor de token duplicado vale, `derived === null` redundante). **Desvios da proposta:** `tokens` como lista e `y`/`font_size` sempre como listas, por limite do `schema.js`. **Não feito:** o arquivo `visual_library.json`, os SVGs em `assets/brand/` e os `.checksums` | esta PR | — |
 | 2026-10-23 | VL-4, parte 2: `assets/brand/*.svg` (6), `config/baseline/visual_library.json` e `.checksums`; D-16 (marcadores neutros, posicionamento pragmático, legenda com CTA) | passou: 11 testes do baseline real (hash do SVG, ids, posições, cores, nada nas faixas cortadas, SVG inerte); 21 de 21 mutantes do baseline e dos SVGs detectados; `verify-baseline --offline` confere 5 arquivos | esta PR | — |
+| 2026-10-23 | VL-5: `render/render.js` (`renderCover`), 27 testes, 6 fixtures sintéticas; CP-VL5.1 a CP-VL5.3 | passou: 27 de 27 em `render/render.test.js`; 65 de 65 mutantes detectados; checador de XML escrito no teste e testado contra 15 amostras quebradas. CP-VL5.4 (comparação visual por humano) e CP-VL5.5 (D-03) seguem abertos: os 6 PNGs de conferência estão no scratchpad da sessão, fora do repositório | esta PR | — |
