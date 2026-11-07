@@ -63,6 +63,8 @@ O repositório é público: nenhum segredo, token, string de conexão ou dado re
 - **No CI** (`.github/workflows/gitleaks.yml`): o mesmo `gitleaks`, na mesma versão, varre todo o histórico e a árvore de trabalho; antes disso, um autoteste planta um segredo e exige que o scanner o pegue, para um scanner cego não passar por limpo. A configuração é `.gitleaks.toml` (regras padrão, sem lista de exceções).
 - Trocar a versão do `gitleaks` é uma decisão: mude as três ocorrências (workflow, hook e este texto) na mesma PR.
 
+Para relatar uma vulnerabilidade, o que fazer se uma credencial vazar e o registro da auditoria, ver `docs/SECURITY.md`.
+
 ## Licença
 
 MIT. Ver `LICENSE`.
