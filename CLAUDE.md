@@ -194,7 +194,7 @@ editorial-pipeline/
 │   ├── DECISIONS.md                # Registro de decisões (D-nn, U-nn, U11-x), só acréscimo
 │   ├── ALUCINAÇÃO_GUARD.md         # Checklist de proibições
 │   ├── API_CONTRACTS.md            # (planejado) O que cada stage recebe/devolve
-│   ├── SECURITY.md                 # (planejado) RLS, roles, secrets
+│   ├── SECURITY.md                 # Reporte de vulnerabilidade, credencial exposta, defesas e auditoria de 2026-11-07
 │   ├── *-contract-proposal.md      # Propostas de contrato já decididas (evidence, verification, insight, job_ref)
 │   ├── n8n-infra-proposal.md       # Proposta da infraestrutura n8n (Fase 4), ainda sem decisão
 │   └── visual-layer/               # Camada visual: contexto, roadmap, checkpoints, propostas e decisões
