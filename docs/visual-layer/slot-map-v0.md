@@ -1,6 +1,7 @@
 # Mapa de slots v0 e lista de gramáticas (CP-VL1.5, U3, U12)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`); não autoriza merge.
+> **Status atual (2026-11-07):** o mapa de slots foi incorporado a `config/baseline/visual_library.json` (os 6 templates, 30 slots mais 6 rodapés do CFM); o teste `validators/visual_library.baseline.test.js` o confere contra o SVG de cada template.
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`); não autoriza merge.
 > **Direitos (U7, D-04).** Este documento contém geometria (posição, tamanho, token de cor) derivada de SVGs de um pacote que se declara reconstrução não oficial. Nenhum SVG, nenhum texto de exemplo dos templates e nenhum arquivo de marca está aqui. **Revise se geometria derivada pode ficar no repo público antes do merge.**
 > Rótulos: **VERIFIED** (atributo lido no SVG), **CALCULATED** (comparação reproduzível entre dois VERIFIED), **PROPOSED** (desenho nosso), **UNKNOWN**.
 

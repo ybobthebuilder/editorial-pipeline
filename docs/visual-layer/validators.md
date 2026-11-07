@@ -1,10 +1,35 @@
 # Validadores — interface, estado e proposta de CI (VL-2)
 
-> Status: **PROPOSED**, para revisão. Descreve o que está implementado em branches sem PR e o que não está. Não autoriza merge.
+> Status: **atualizado em 2026-11-07**. A seção 0 descreve o estado atual. As seções 1, 4, 5, 6 e 7 são o **histórico de 2026-10-22** (branches sem PR, validadores bloqueados, CI "preparado, não ativo") e não valem mais. Não autoriza merge.
 > Ambiente verificado: Node 22.22.0. Comando único de teste: `node --test 'validators/*.test.js'`. Passar só o diretório falha no Node 22.
 > Rótulos: **VERIFIED** (checado nesta sessão), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte).
 
-## 1. Estado por validador
+## 0. Estado atual (2026-11-07)
+
+Todos os validadores estão em `main`, sem `require` (as dependências entram por injeção) e com mutação registrada em `docs/visual-layer/checkpoints.md` e nas PRs. Comando: `node --test 'validators/*.test.js'`. O CI `validators` (`.github/workflows/validators.yml`) está **ativo**: roda os testes dos validadores, os de `render/` e os de `tests/skills/`, recusa uma execução vazia ou com falha e confere `config/baseline` e `skills/` contra os `.checksums`.
+
+| Validador | Para que serve | Testes |
+| --- | --- | --- |
+| `math.js` | `computeDeltas` (`delta_absolute`, `delta_relative`) | 12 |
+| `contrast.js` | razão de contraste WCAG | 18 |
+| `schema.js` | JSON Schema em subconjunto documentado | 26 |
+| `numbers.js` | números PT-BR contra valores permitidos | 22 |
+| `blocklist.js` | termos proibidos (gate `QA-CFM`) | 23 |
+| `geometry.js` | largura, linhas, zona segura (64 px; faixas de 260 e 340 nos 9:16) | 44 |
+| `visual_library.js` | regras da biblioteca visual; mais `visual_library.baseline.test.js` | 29 + 12 |
+| `media.js` | bloqueio de mídia clínica (D-15) | 23 |
+| `copy.js` | `cta` e `caption` (D-17) | 23 |
+| `citation.js` | citação literal por página (03_VERIFY) | 13 |
+| `verification.js` | regras entre campos do `verification` e a checagem NUMBERS | 22 |
+| `insight.js` | regras do `insight` (evidência `VERIFIED`, números) | 15 |
+| `job_ref.js` | regras do `job_ref` (uma linha por job, `page_count`) | 8 |
+| `contracts.test.js` | os 9 contratos de linha de `contracts/` (todos menos `visual_library`) contra suas fixtures | 32 |
+
+O núcleo de render (`render/render.js`) tem 27 testes em `render/`. A interface de cada validador está no cabeçalho do próprio arquivo; as seções 2 e 3 abaixo continuam valendo para `math`, `contrast` e `schema`.
+
+**Lacunas conhecidas:** não existe validador das regras entre campos do `qa_result` (`waived` proibido em `QA-CFM`, `gate_id` sem repetição, `passed` coerente com os gates); e a numeração de página (impressa, decisão do Fonseca) ainda não bate com o `citation.js`, que busca por posição no arquivo.
+
+## 1. Estado por validador (histórico, 2026-10-22)
 
 | Validador | Branch | Commit | Testes | Mutantes detectados | Dependências | Fonte da regra |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -45,7 +70,7 @@ Nenhum dos três branches tem PR. Nenhum tem veredito de reviewer.
 
 **Recusado com erro:** `$ref`, `oneOf`, `anyOf`, `not`, `format`, `uniqueItems`, `multipleOf`, `exclusiveMinimum`, `dependentRequired` e schemas booleanos.
 
-**Limite declarado:** regra cruzada entre campos não cabe no schema. O teste de exemplo mostra que o schema aceita `status: "waived"`. A proibição de `waived` em `G-CFM-*` precisa de um validador próprio, que depende de U2.
+**Limite declarado:** regra cruzada entre campos não cabe no schema. O teste de exemplo mostra que o schema aceita `status: "waived"`. A proibição de `waived` em `QA-CFM` (o id atual do gate; antes `G-CFM-*`) precisa de um validador próprio, que ainda não existe.
 
 ## 3. Restrição de plataforma
 
@@ -53,7 +78,7 @@ Nenhum dos três branches tem PR. Nenhum tem veredito de reviewer.
 - Lista de módulos nativos do Code node do n8n Cloud, conferida pelo Fonseca no trecho oficial: `crypto`, `http`, `https`, `url`, `util`, `querystring`, `stream`, `zlib`, `os`, `buffer`, `timers`, `string_decoder`, `events`, `dns`, `net`, `tls`, `assert`. Pacotes npm externos não são suportados no Cloud.
 - **Lacuna fechada:** `math.js` e `contrast.js` têm agora o mesmo teste de ausência de `require` e `import` (commits `198c75e` e `d6bf5de`). Mutante verificado: `require` em `math.js` falha o teste. Um `import` em `contrast.js` falha antes, no carregamento, por erro de sintaxe num arquivo CJS.
 
-## 4. Não construído, e por quê
+## 4. Não construído, e por quê (histórico, 2026-10-22)
 
 | Item | Bloqueio | Destrava com |
 | --- | --- | --- |
@@ -61,7 +86,7 @@ Nenhum dos três branches tem PR. Nenhum tem veredito de reviewer.
 | `geometry.js` | U2: forma de `cover_spec` e mapa de slots | aprovação de `schema-contract.md` (U11) e mapa de slots (CP-VL1.5) |
 | `citation.js` | estágio 03_VERIFY, fora do escopo visual | — |
 
-## 5. CI de validadores (aprovada; preparada, não ativa)
+## 5. CI de validadores (histórico: hoje ativa em `.github/workflows/validators.yml`)
 
 Aprovada pelo Fonseca. Preparada no branch `claude/ci-validators` (commit `90619f6ace61f4e17a736ecb637f2ddc2d4f56c6`), em `.github/workflows/validators.yml`. Não está no `main` e não é ativada até os três branches de validadores serem unificados no `main`.
 
@@ -104,11 +129,11 @@ jobs:
 - execução real no GitHub Actions. Simulei o passo localmente, com Node 22.22.0, e o runner real usa a própria imagem;
 - actions não fixadas em SHA. `actions/checkout@v4` e `actions/setup-node@v4` são tags móveis. Fixar em SHA é uma decisão de governança.
 
-## 6. Próximo passo
+## 6. Próximo passo (histórico, 2026-10-22)
 
 Decisões de D-08, U10 e U11-a a g estão registradas. Pendentes: U11-h e U11-i (`schema-contract.md`, §10). A migration de `state_transitions`, `config_baseline`, `guard_transition` e `get_config` está em `claude/migration-001`, sem PR. Ficam de fora `set_status` e `mark_running` (U11-h). Para revisão: este documento, a migration e o workflow.
 
-## 7. Atualização de 2026-10-22: unificação e `numbers.js`
+## 7. Atualização de 2026-10-22: unificação e `numbers.js` (histórico)
 
 - Os quatro branches foram unificados sobre o `main` na PR #13 (`claude/validators-unify`, `7953395`), junto com o workflow `validators.yml`, que passa a valer no `main`. 78 de 78 testes.
 - `numbers.js` (`extractNumbers`, `checkNumbersAllowed`): formato PT-BR (U10), unidade `%`, `pp` ou nenhuma, valor exato, `9.52` é erro de formato. 22 testes, 14 de 14 mutantes. Os números permitidos são montados pelo código a partir de evidências `VERIFIED` e de `computeDeltas`, nunca a partir de texto do LLM. Os limites conhecidos estão no cabeçalho do arquivo.

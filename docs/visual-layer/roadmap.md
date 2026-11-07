@@ -16,14 +16,16 @@
 | --- | --- | --- | --- | --- |
 | VL-0 | alinhamento: estes docs revisados e decisões D-01 a D-09 | — | — | em revisão |
 | VL-1 | design-time: auditoria do pacote de marca e do Figma (somente leitura) | — | VL-0 | não iniciado |
-| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `blocklist` ✔, `geometry` ✔ (parcial) | 2 | — | parcial: seis validadores mesclados (PRs #13, #16, #19). `geometry` mede largura, linhas e zona segura (64 px e, nos 9:16, as faixas de 260 e 340 px, PR #26 aberta), mas ainda não conhece slot nem template; isso depende do mapa de slots como config (VL-4) |
-| VL-3 | contratos `visual_spec`, `cover_spec`, `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | contratos e fixtures mesclados (PR #20); prompts em `skills/` na v0.1 mesclados (PR #21). Faltam a config do rodapé do CFM (formato definido em U18; origem de Nome, UF e Número UNKNOWN), a temperatura do copywriter e o bloqueio de mídia clínica (D-15, CP-VL3.5) |
-| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | **próximo item.** U3, U18 e U23 respondidos. Faltam U7 (direitos do pacote de marca), a decisão sobre o chrome nas faixas dos 9:16, a origem de Nome, UF e Número do rodapé, o contrato do próprio `visual_library.json` (nenhum está definido) e o patch dos SVGs (D-06) |
-| VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | não iniciado; depende do VL-4 |
-| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **Fase 1 fechada** (migrations 001 a 006, scripts de baseline e CI no `main`, CI verde no GitHub com 106 testes). Faltam a Fase 4 (infra n8n) e VL-5 |
+| VL-2 | validadores: `math` ✔, `contrast` ✔, `schema` ✔, `numbers` ✔, `blocklist` ✔, `geometry` ✔ | 2 | — | **concluído em `main`** (PRs #13, #16, #19 e seguintes). `geometry` mede largura, linhas e zona segura (64 px e, nos 9:16, as faixas de 260 e 340 px). A checagem de slot desconhecido e de canvas errado está em `render/render.js` e em `validators/visual_library.js`, não em `geometry.js` (CP-VL2.5). Depois vieram `media`, `visual_library`, `copy`, `citation`, `verification`, `insight` e `job_ref`; ver `validators.md` §0 |
+| VL-3 | contratos `visual_spec`, `cover_spec` e `qa_result` e prompts baseline | 3 | VL-0, VL-2 (`schema`) | contratos e fixtures mesclados (PR #20); prompts em `skills/` na v0.1 mesclados (PR #21). Acrescentados depois: `image_assets` e o bloqueio de mídia clínica (D-15), `post_copy`, `cta` e `caption` (D-17), e os contratos `evidence`, `verification`, `insight` e `job_ref`. Faltam a config `cfm_footer` (formato definido em U18; origem de Nome, UF e Número UNKNOWN) e a temperatura do copywriter |
+| VL-4 | baseline `visual_library` e checksums | 3 | VL-1, VL-3, D-04 | **mesclado em `main`:** contrato, `config/baseline/visual_library.json` com `.checksums`, `validators/visual_library.js` e os SVGs em `assets/brand/`. Pendente: a chave `cfm_footer` (origem de Nome, UF e Número do rodapé do CFM, UNKNOWN) |
+| VL-5 | núcleo de render em código puro | 8 | VL-3, VL-4 | **núcleo mesclado em `main`** (`render/render.js`, testes em `render/`, passo próprio no CI). Pendente: CP-VL5.5 (D-03: SVG no MVP, ou PNG) |
+| VL-6 | workflows n8n 06–09 e cartões de etapa | 4, 7, 8 | VL-5 e Fases 1 e 4 | **Fase 1 fechada** (migrations 001 a 008, scripts de baseline e CI no `main`). Falta a Fase 4 (infra n8n), que espera a amostra de export do n8n (`docs/n8n-infra-proposal.md`, Q3) |
 | VL-7 | integração sintética 06 → 09 | 9 (parcial) | VL-6 | bloqueado |
 
 **Caminho crítico:** VL-0 → VL-3 → VL-4 → VL-5 → VL-6 → VL-7. **Em paralelo:** VL-1 e VL-2 (não dependem do banco). **Fase 1 fechada em 2026-10-22.** A proposta de contratos foi aprovada e os schemas estão mesclados (PR #20); o bloqueio agora é o VL-4 (U7, o chrome nas faixas dos 9:16, o contrato do `visual_library.json` e o patch dos SVGs). U1 foi decidido em 2026-10-22 (`editorial.config_baseline`).
+
+> **Atualização de 2026-11-07:** VL-2, VL-4 e o núcleo do VL-5 estão em `main`. O bloqueio agora é a Fase 4 (infra n8n), que depende da amostra de export do n8n. O parágrafo acima é o texto original do marco.
 
 ---
 

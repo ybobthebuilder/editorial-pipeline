@@ -1,6 +1,7 @@
 # Proposta do `visual_library.json` (VL-4, contrato do arquivo)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `config/baseline/` nem em `contracts/`: o arquivo e o schema só são escritos depois da aprovação, como foi com os contratos (CP-VL3.1).
+> **Status atual (2026-11-07):** implementada e mesclada em `main`: `contracts/visual_library.schema.json`, `config/baseline/visual_library.json` (com `.checksums`), `validators/visual_library.js` e os SVGs em `assets/brand/`.
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `config/baseline/` nem em `contracts/`: o arquivo e o schema só são escritos depois da aprovação, como foi com os contratos (CP-VL3.1).
 > Rótulos: **VERIFIED** (visto em arquivo do repo ou nas cópias de trabalho dos SVGs, que ficam fora do repo por D-04), **PROPOSED** (desenho meu), **UNKNOWN** (sem fonte; vira pergunta na §8).
 > Companheiros: `slot-map-v0.md` (slots e gramáticas), `contracts-proposal.md` (§4 e §5), `contexto.md` (§7 e decisões D-04, D-08, U19, U23), `geometry.js`, `contrast.js`.
 > **Não verificado nesta sessão:** os originais `templates.json` e `tokens.css` não estão acessíveis. Os números abaixo vêm do `slot-map-v0.md` e de `contexto.md` §7, que os transcrevem, e das 6 cópias dos SVGs.

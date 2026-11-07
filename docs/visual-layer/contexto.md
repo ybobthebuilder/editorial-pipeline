@@ -59,7 +59,7 @@ RECEIVED → PDF_PARSED → EVIDENCE_EXTRACTED → EVIDENCE_VERIFIED → INSIGHT
 Erros: VERIFICATION_FAILED, QA_FAILED, RENDER_FAILED, NEEDS_REVIEW. Qualquer estado → NEEDS_REVIEW.
 ```
 
-Workflows nunca fazem `UPDATE` direto no status; chamam `mark_running()` e `set_status()`, e o trigger `guard_transition()` rejeita saltos. Os objetos citados no `CLAUDE.md` são **requisitos planejados**, não prova de objetos implantados.
+Workflows nunca fazem `UPDATE` direto no status; chamam `mark_running()` e `set_status()`, que chama a função `guard_transition()` (não é trigger, decisão U11-d), e ela rejeita saltos. Os objetos citados no `CLAUDE.md` são **requisitos planejados**, não prova de objetos implantados.
 
 ## 6. Design-time × runtime
 

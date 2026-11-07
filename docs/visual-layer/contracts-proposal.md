@@ -1,6 +1,7 @@
 # Proposta de contratos — `visual_spec`, `cover_spec`, `qa_result` (VL-3, passo 1)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo em `contracts/`**: os schemas só são escritos depois da aprovação (U2, CP-VL3.1).
+> **Status atual (2026-11-07):** APROVADA pelo Fonseca em 2026-10-22 (CP-VL3.1, PR #15) e implementada: os schemas estão em `contracts/` (PR #20). O formato do `insight_id`, que aqui era UNKNOWN, é `ins-NNNN` (`contracts/insight.schema.json`), e os `evidence_ids` seguem `ev-NNNN`; os contratos `evidence`, `verification`, `insight` e `job_ref` têm propostas próprias em `docs/`.
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo em `contracts/`**: os schemas só são escritos depois da aprovação (U2, CP-VL3.1).
 > Rótulos: **VERIFIED** (visto em arquivo do repo), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte; vira pergunta na §7).
 > Companheiros: `contexto.md`, `roadmap.md`, `checkpoints.md`, `validators.md`, `slot-map-v0.md` (mapa de slots e gramáticas) e `skills/` (rascunhos dos manuais dos estágios).
 > **Atualizada em 2026-10-22** com as decisões do Fonseca (D-05 sim; seguir as recomendações PROPOSED de U3 e U12 a U17). Ver §7.

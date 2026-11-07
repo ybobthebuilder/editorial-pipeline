@@ -1,6 +1,7 @@
 # Contrato de schema — Fase 1 (proposta para revisão)
 
-> Status: **PROPOSED**. Não é SQL e não autoriza migration. Revisão por digest SHA-256 com `reviewed_commit_sha = null`; não autoriza merge.
+> **Status atual (2026-11-07):** as decisões U11-a a U11-o estão implementadas nas migrations 001 a 008 (`supabase/migrations/`). A U11-d decidiu que `guard_transition()` é uma função chamada por `set_status()`, não um trigger, e os conflitos 1 a 3 da seção "Conflitos com a documentação do projeto" já foram resolvidos em `CLAUDE.md` §5 e §9, `STAGES.md` §2 e `PUBLIC_PRIVATE.md` §4. O texto abaixo é o histórico da proposta.
+> Status original: **PROPOSED**. Não é SQL e não autoriza migration. Revisão por digest SHA-256 com `reviewed_commit_sha = null`; não autoriza merge.
 > Objetivo: fechar U11 com o mínimo necessário para escrever `001_init_editorial_schema.sql`, sem inventar colunas, tipos ou assinaturas.
 > Rótulos: **VERIFIED** (citado num arquivo do repo, em qualquer nível de detalhe) · **PROPOSED** (desenho nosso, para aprovação) · **UNKNOWN** (sem fonte; bloqueia até decisão).
 

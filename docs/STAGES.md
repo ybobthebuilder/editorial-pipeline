@@ -135,7 +135,7 @@ Cada etapa deve respeitar:
 ### 04_INSIGHTS
 - identifica afirmativas, conclusões e achados relevantes
 - gera insights com uso controlado do LLM
-- apenas sobre evidências verificados
+- apenas sobre evidências verificadas
 
 ### 05_SCORE
 - calcula pontuações, deltas e conflitos

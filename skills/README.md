@@ -18,7 +18,7 @@ Cada `SKILL.md` é o **prompt de sistema e a fronteira** de um único nó de LLM
 | Arquivo | Estágio | O que o LLM faz | O que o código faz |
 | --- | --- | --- | --- |
 | `art-director` | 06_VISUAL | escolhe `grammar_id` numa lista fechada | valida o enum, define template e cores |
-| `copywriter-cfm` | 07_COVERS | escreve o texto dos slots `claim` e o `alt_text` | limites de linha, números (`numbers.js`), termos proibidos |
+| `copywriter-cfm` | 07_COVERS | escreve o texto dos slots `claim` (inclusive `cta_label`, quando o template o tem), o `alt_text` e a legenda (`caption`, D-17) | limites de linha, limites do `cta` (40) e da legenda (300), números (`numbers.js`), termos proibidos, URL, `@`, `#` e telefone (`copy.js`) |
 | `qa-validator` | 09_QA | só o juízo semântico | geometria, contraste, números, enums e o `passed` final |
 
 ## O que não foi escrito, e por quê

@@ -1,6 +1,7 @@
 # Proposta do contrato `image_assets` e do bloqueio de mídia clínica (D-15, U24)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `contracts/` nem em `validators/`.
+> **Status atual (2026-11-07):** APROVADA como v0.1.0 oficial (Fonseca, PR #29) e implementada: `contracts/image_assets.schema.json`, `validators/media.js` e a migration 008 (`editorial.image_approvals`).
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `contracts/` nem em `validators/`.
 > Rótulos: **VERIFIED** (decisão do Fonseca ou arquivo do repo), **PROPOSED** (desenho meu), **UNKNOWN** (sem fonte; vira pergunta na §8).
 > **Não verificado:** o contrato `image_assets` v0.1.0 do relatório do Fonseca não está neste repositório. Só estes fragmentos dele chegaram a mim: o nome e a versão, o caminho `payload.images[]`, o exemplo de `ref` (`img://NX-2026-10-13-001/0`) e o enum de `provenance` (`generated_illustration`, `owned_photo`, `stock_licensed`). Esta proposta não o reproduz; ela desenha o mínimo para cumprir a decisão abaixo. Se o v0.1.0 existir à mão, ele substitui o que for conflito.
 
