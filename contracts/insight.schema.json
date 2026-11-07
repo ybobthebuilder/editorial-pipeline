@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "insight",
+  "description": "Output of 04_INSIGHTS: one insight with the verified evidence that supports it. Contract proposal: docs/insight-contract-proposal.md (decisions of Fonseca, 2026-11-07). There is no score, rank or weight: the 05_SCORE stage has its own contract, and scoring_weights has no schema yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "insight_id",
+    "text",
+    "evidence_ids"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "04_INSIGHTS",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "insight_id": {
+      "type": "string",
+      "pattern": "^ins-[0-9]{4}$",
+      "description": "id of this insight inside the job; unique per job (checked by code). Score and ranking are not here: they belong to the 05_SCORE contract"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "the insight, in language that the cited evidence supports. Length in code points. Its numbers must be among those of the cited evidences (validators/numbers.js), and the strength of the language is judged by the semantic QA; both are checked by code and QA, not by the schema"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^ev-[0-9]{4}$"
+      },
+      "description": "the evidences that support the insight; more than one is allowed. Each id must exist in verification of the same job and be VERIFIED, with no repeats (checked by code, CLAUDE.md sections 4 and 8)"
+    }
+  }
+}
