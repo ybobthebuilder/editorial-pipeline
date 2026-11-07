@@ -31,6 +31,7 @@ Requer Node 22. Não há `package.json` nem dependências a instalar. Os comando
 node --test 'validators/*.test.js'
 node --test 'render/*.test.js'
 node --test 'tests/skills/*.test.js'
+node --test 'tests/docs/*.test.js'
 ```
 
 O `node` termina com código 0 quando o padrão não casa nenhum arquivo. O CI por isso recusa uma execução vazia ou com falha (`# tests` maior que 0 e `# fail 0`); confira essas duas linhas na saída. O CI também instala `fonts-liberation` antes desses testes: as larguras embutidas em `validators/geometry.js` vêm dessas fontes.

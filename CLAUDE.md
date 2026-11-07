@@ -246,6 +246,7 @@ editorial-pipeline/
 │   ├── n8n-pull.ts                 # (planejado) Baixa e sanitiza
 │   └── sanitize-workflow.ts        # (planejado) Remove credential IDs, pinData, URLs privadas
 ├── tests/
+│   ├── docs/                       # O mapa e as seções deste arquivo contra a árvore real e as citações "CLAUDE.md §N"
 │   ├── migrations/                 # Postgres limpo: migrations, rollbacks, papéis
 │   ├── scripts/
 │   └── skills/                     # Prompts: forma, hashes e amarração com contratos e validadores
@@ -297,7 +298,7 @@ Todos seguem `_TEMPLATE_STAGE`:
 - Segredos: `.env` (gitignored)
 - gitleaks como pre-commit hook e CI
 - CI (GitHub Actions):
-  - Testes dos validators, de `render/` e de `tests/skills/`; `verify-baseline` confere `config/baseline` e `skills/` contra os `.checksums`
+  - Testes dos validators, de `render/`, de `tests/skills/` e de `tests/docs/` (o mapa deste arquivo contra `git ls-files`: a PR que cria ou remove um caminho do mapa atualiza o mapa); `verify-baseline` confere `config/baseline` e `skills/` contra os `.checksums`
   - `sanitize-workflow --check` em n8n/workflows (planejado: ainda não há workflows)
   - gitleaks sobre o histórico e a árvore, com autoteste (planta um segredo e exige que o scanner o pegue)
   - Migrations e rollbacks testados em Postgres limpo
