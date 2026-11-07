@@ -1,6 +1,6 @@
 # Proposta de contrato — `job_ref` (01_INGEST)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria arquivo em `contracts/`**: o schema só é escrito depois da aprovação (U2).
+> Status: **DECIDIDA** pelo Fonseca em 2026-11-07 (as três recomendações: Q1, Q2 e Q3); o schema `contracts/job_ref.schema.json` segue esta proposta. Não autoriza merge.
 > Rótulos: **VERIFIED** (visto em arquivo do repo), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte).
 > Fontes: `CLAUDE.md` §2, §5, §6, §7, §8 e a estrutura PLANNED; `docs/STAGES.md` (cartão 01_INGEST); `supabase/migrations/003_review_exit_provenance_attempts.sql` (colunas de `jobs`); `contracts/image_assets.schema.json`; `validators/citation.js`.
 > **Premissa do Fonseca (2026-11-07):** o contrato H1 de entrada do job é tratado como **inexistente**. Esta proposta parte só do que o repositório sustenta.
@@ -46,8 +46,8 @@ O contrato da linha que o `01_INGEST` grava: o registro do arquivo que entrou no
 - `validators/contracts.test.js` ganha o contrato (mesmo padrão de `evidence`, `verification` e `insight`); mutação do schema.
 - Validação: `node --test 'validators/*.test.js'`. Aceite: tudo verde e todos os mutantes detectados.
 
-## 7. Perguntas (uma por vez, com a minha recomendação)
+## 7. Perguntas (respondidas pelo Fonseca, 2026-11-07: as três recomendações)
 
-- **Q1 (bloqueante).** A leitura A é a certa? **Recomendo sim:** a B não tem conteúdo, e A dá ao `01_INGEST` o que o `STAGES.md` diz que ele salva, além de fechar a origem do número de páginas do `citation.js`.
-- **Q2.** O MVP aceita só PDF? O `STAGES.md` diz "PDF ou arquivo". **Recomendo só `application/pdf` por ora:** outro tipo exige decidir como extrair texto por página, e isso não tem fonte.
-- **Q3.** Os metadados do paper entram no `job_ref`? **Recomendo não por ora:** nenhum estágio os usa. Quando um usar, o campo entra com o conjunto exato que ele pedir.
+- **Q1 → sim.** A leitura A é a certa? **Recomendo sim:** a B não tem conteúdo, e A dá ao `01_INGEST` o que o `STAGES.md` diz que ele salva, além de fechar a origem do número de páginas do `citation.js`.
+- **Q2 → só PDF.** O MVP aceita só PDF? O `STAGES.md` diz "PDF ou arquivo". **Recomendo só `application/pdf` por ora:** outro tipo exige decidir como extrair texto por página, e isso não tem fonte.
+- **Q3 → não por ora.** Os metadados do paper entram no `job_ref`? **Recomendo não por ora:** nenhum estágio os usa. Quando um usar, o campo entra com o conjunto exato que ele pedir.
