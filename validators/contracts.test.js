@@ -1,6 +1,6 @@
 'use strict';
 
-// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy}.schema.json with validators/schema.js
+// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy,evidence}.schema.json with validators/schema.js
 // (checkpoints CP-VL3.2 and CP-VL3.3). The fixtures are synthetic; see fixtures/synthetic/contracts.
 
 const { test } = require('node:test');
@@ -10,10 +10,10 @@ const { join } = require('node:path');
 const { validate } = require('./schema.js');
 
 const ROOT = join(__dirname, '..');
-const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy'];
+const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy', 'evidence'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
-const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [] };
+const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS', evidence: '02_EXTRACT' };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [], evidence: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -42,7 +42,7 @@ test('required lists every property except the documented optional ones', () => 
   }
 });
 
-test('the provenance block is identical in the five schemas, except for the stage constant', () => {
+test('the provenance block is identical in the six schemas, except for the stage constant', () => {
   const block = (name) => {
     const properties = clone(schemaOf(name).properties);
     const out = {};
@@ -54,6 +54,7 @@ test('the provenance block is identical in the five schemas, except for the stag
   assert.deepEqual(block('qa_result'), block('visual_spec'));
   assert.deepEqual(block('image_assets'), block('visual_spec'));
   assert.deepEqual(block('post_copy'), block('visual_spec'));
+  assert.deepEqual(block('evidence'), block('visual_spec'));
   for (const name of CONTRACTS) assert.equal(schemaOf(name).properties.stage.const, STAGE[name], name);
 });
 
@@ -96,6 +97,10 @@ test('each invalid fixture fails for its stated cause and for no other', () => {
       'invalid-01-caption-over-300': ['$.caption: length 301 is above maxLength 300'],
       'invalid-02-missing-evidence_ids': ['$.evidence_ids: missing required property'],
     },
+    evidence: {
+      'invalid-01-missing-execution_id': ['$.execution_id: missing required property'],
+      'invalid-02-page-zero': ['$.page: is below minimum 1'],
+    },
   };
   for (const name of CONTRACTS) {
     for (const [file, errors] of Object.entries(expected[name])) {
@@ -115,7 +120,7 @@ test('CP-VL3.3: each of the seven provenance fields is required in every contrac
 });
 
 test('CP-VL3.3: every other required field is required too', () => {
-  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'] };
+  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'], evidence: ['evidence_id', 'page', 'source_text', 'claim', 'measures'] };
   for (const name of CONTRACTS) {
     for (const key of extra[name]) {
       const data = validOf(name);
@@ -313,13 +318,14 @@ test('the smallest valid documents are accepted: one-character strings, one slot
     qa_result: { ...provenance, stage: '09_QA', cover_spec_id: 'c', gates: [{ gate_id: 'QA-DIM', status: 'passed', detail: 'd' }], passed: true },
     image_assets: { ...provenance, stage: '01_INGEST', images: [], exceptions: [] },
     post_copy: { ...provenance, stage: '07_COVERS', evidence_ids: ['e'], caption: 'c' },
+    evidence: { ...provenance, stage: '02_EXTRACT', evidence_id: 'ev-0001', page: 1, source_text: 's', claim: 'c', measures: [] },
   };
   for (const name of CONTRACTS) assert.deepEqual(errorsOf(name, minimal[name]), [], name);
 });
 
 test('a wrong JSON type is refused for every top-level property and for every nested one', () => {
   // The wrong value comes from the kind of the valid fixture, not from the schema under test.
-  const wrongFor = (value) => (typeof value === 'string' ? 5 : typeof value === 'boolean' ? 'true' : Array.isArray(value) ? 'x' : 5);
+  const wrongFor = (value) => (typeof value === 'string' ? 5 : typeof value === 'boolean' ? 'true' : Array.isArray(value) ? 'x' : typeof value === 'number' ? 'x' : 5);
   for (const name of CONTRACTS) {
     for (const [key, value] of Object.entries(validOf(name))) {
       const data = validOf(name);
@@ -436,4 +442,40 @@ test('cover_spec: the rules about cta that the schema cannot express are the cod
   assert.deepEqual(errorsOf('cover_spec', v), [], 'URL, mention, hashtag and phone are not the schema\'s');
   delete v.cta;
   assert.deepEqual(errorsOf('cover_spec', v), [], 'a cta_label slot without cta');
+});
+
+test('evidence: id, page, texts and measures; what the schema cannot express is the code\'s (citation, numbers, unique id)', () => {
+  const ok = (mutate) => { const d = validOf('evidence'); mutate(d); return errorsOf('evidence', d); };
+  const bad = (mutate, path) => { const d = validOf('evidence'); mutate(d); assert.deepEqual(paths('evidence', d), [path], path); };
+  for (const id of ['ev-0001', 'ev-9999']) assert.deepEqual(ok((d) => { d.evidence_id = id; }), [], id);
+  for (const id of ['', 'ev-1', 'ev-123', 'ev-00001', 'EV-0001', 'ev-000a', ' ev-0001', 'ev-0001 ', 5]) bad((d) => { d.evidence_id = id; }, '$.evidence_id');
+  assert.deepEqual(ok((d) => { d.page = 1; }), []);
+  for (const page of [0, -1, 1.5, '1', null]) bad((d) => { d.page = page; }, '$.page');
+  assert.deepEqual(ok((d) => { d.source_text = 'x'.repeat(1000); }), []);
+  assert.deepEqual(ok((d) => { d.source_text = '\u{1F600}'.repeat(1000); }), [], 'length counts code points');
+  for (const t of ['', 'x'.repeat(1001), '\u{1F600}'.repeat(1001), 5]) bad((d) => { d.source_text = t; }, '$.source_text');
+  assert.deepEqual(ok((d) => { d.claim = 'x'.repeat(300); }), []);
+  for (const t of ['', 'x'.repeat(301), '\u{1F600}'.repeat(301), null]) bad((d) => { d.claim = t; }, '$.claim');
+  assert.deepEqual(ok((d) => { d.measures = []; }), [], 'a claim without numbers');
+  assert.deepEqual(ok((d) => { d.measures = Array.from({ length: 10 }, () => ({ role: 'single', raw: '1' })); }), []);
+  bad((d) => { d.measures = Array.from({ length: 11 }, () => ({ role: 'single', raw: '1' })); }, '$.measures');
+  bad((d) => { d.measures = 'x'; }, '$.measures');
+  bad((d) => { d.measures[0] = 5; }, '$.measures[0]');
+  bad((d) => { d.measures[0].role = 'delta'; }, '$.measures[0].role');
+  bad((d) => { d.measures[0].raw = ''; }, '$.measures[0].raw');
+  assert.deepEqual(ok((d) => { d.measures[0].raw = 'x'.repeat(40); }), []);
+  bad((d) => { d.measures[0].raw = 'x'.repeat(41); }, '$.measures[0].raw');
+  bad((d) => { d.measures[0].raw = 84; }, '$.measures[0].raw');
+  bad((d) => { d.measures[0].value = 84; }, '$.measures[0].value');
+  for (const key of ['role', 'raw']) {
+    const d = validOf('evidence'); delete d.measures[0][key];
+    assert.deepEqual(errorsOf('evidence', d), [`$.measures[0].${key}: missing required property`], key);
+  }
+  for (const role of ['before', 'after', 'single']) assert.deepEqual(ok((d) => { d.measures[0].role = role; }), [], role);
+  assert.deepEqual(schemaOf('evidence').properties.measures.items.properties.role.enum, ['before', 'after', 'single']);
+  // no status or verified field: VERIFIED lives in verification.status (CLAUDE.md section 4)
+  for (const key of ['status', 'verified']) bad((d) => { d[key] = true; }, `$.${key}`);
+  // limits of the schema, proven so nobody mistakes it for the whole contract
+  assert.deepEqual(ok((d) => { d.source_text = '   '; }), [], 'blank text is the code\'s');
+  assert.deepEqual(ok((d) => { d.claim = 'Trecho que nao existe na pagina 99'; d.measures = [{ role: 'single', raw: '77%' }]; }), [], 'literal citation and numbers are the code\'s');
 });
