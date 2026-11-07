@@ -2,7 +2,7 @@
 
 Resumo executivo dos princípios inegociáveis que governam este projeto. Documento de referência rápida para LLMs, arquitetos e engenheiros.
 
-As decisões citadas aqui e nos docs (`D-nn`, `U-nn`, `U11-x`) estão registradas em `docs/visual-layer/` (principalmente `contexto.md` §11 e `schema-contract.md` §7).
+As decisões citadas aqui e nos docs (`D-nn`, `U-nn`, `U11-x`) estão listadas em `docs/DECISIONS.md`, que aponta para a fonte de cada uma em `docs/visual-layer/`.
 
 ## 1. Fronteira de Responsabilidades
 
@@ -191,6 +191,7 @@ editorial-pipeline/
 │   ├── STATE_MACHINE.md            # (planejado) Diagrama mermaid + tabela de transições
 │   ├── STAGES.md                   # Cartões de etapa (01_INGEST, 02_EXTRACT, ..., 00_ORCHESTRATOR)
 │   ├── PUBLIC_PRIVATE.md           # Fronteira de repos e schemas
+│   ├── DECISIONS.md                # Registro de decisões (D-nn, U-nn, U11-x), só acréscimo
 │   ├── ALUCINAÇÃO_GUARD.md         # Checklist de proibições
 │   ├── API_CONTRACTS.md            # (planejado) O que cada stage recebe/devolve
 │   ├── SECURITY.md                 # (planejado) RLS, roles, secrets

@@ -13,7 +13,8 @@ O que está pronto e o que falta muda a cada fase. A fonte é a seção "Fases d
 1. `CLAUDE.md`: os princípios que não se negociam e o mapa de diretórios.
 2. `docs/PUBLIC_PRIVATE.md`: o que fica neste repositório e o que fica no privado.
 3. `docs/STAGES.md`: um cartão por etapa, de `00_ORCHESTRATOR` a `12_PUBLISHED`.
-4. `docs/visual-layer/contexto.md`: a camada visual; a seção 11 lista as decisões `D-nn`, e `docs/visual-layer/schema-contract.md` §7 as `U11-x`.
+4. `docs/visual-layer/contexto.md`: a camada visual.
+5. `docs/DECISIONS.md`: o registro das decisões (`D-nn`, `U-nn`, `U11-x`), com a fonte de cada uma.
 
 ## Fronteira público/privado
 
