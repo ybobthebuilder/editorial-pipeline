@@ -35,5 +35,10 @@ jobs:
           node --test 'tests/skills/*.test.js' | tee skills-output.txt
           grep -qE '^# tests [1-9][0-9]*$' skills-output.txt
           grep -qE '^# fail 0$' skills-output.txt
+      - name: Run docs tests (CLAUDE.md map against git ls-files) and refuse an empty or failing run
+        run: |
+          node --test 'tests/docs/*.test.js' | tee docs-output.txt
+          grep -qE '^# tests [1-9][0-9]*$' docs-output.txt
+          grep -qE '^# fail 0$' docs-output.txt
       - name: Check config/baseline and skills against their .checksums
         run: node scripts/verify-baseline.js --dir config/baseline --skills skills --offline true
