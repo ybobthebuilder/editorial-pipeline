@@ -185,7 +185,7 @@ Um contrato (JSON Schema, em `contracts/`) descreve a forma de uma linha; o que 
 ```
 editorial-pipeline/
 ├── CLAUDE.md                        # Este arquivo
-├── README.md                        # O que é, como auditar, como rodar (hoje só documenta o gitleaks; o resto é planejado)
+├── README.md                        # O que é, por onde ler, como rodar os testes, como auditar a configuração e o gitleaks
 ├── LICENSE
 ├── docs/
 │   ├── STATE_MACHINE.md            # (planejado) Diagrama mermaid + tabela de transições
