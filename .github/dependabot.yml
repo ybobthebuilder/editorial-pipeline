@@ -1,0 +1,8 @@
+# Weekly pull requests that move the pinned GitHub Actions (.github/workflows/*) to a newer release.
+# The workflows pin each Action to a commit SHA with the version in a comment; this keeps both current.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
