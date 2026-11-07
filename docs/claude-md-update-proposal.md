@@ -1,6 +1,8 @@
 # Proposta de atualização do `CLAUDE.md` (v1.1 para v1.2)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não altera o `CLAUDE.md`**: o texto abaixo só entra depois da sua aprovação, item a item.
+> **Status atual (2026-11-07): APLICADA.** O Fonseca aprovou todos os itens (A1 a A6, B1, C1 a C4), com o equivalente por REST no B1 e o mapa em nível de diretório no A4, e o texto entrou em `main` pela PR #57 (merge `17bcaf2`). O `CLAUDE.md` em `main` tem o SHA-256 `77658cfdd42294ae8d66ad56637c8b7672515aac87a2a85e9b7caccda3822d9c`, idêntico ao candidato descrito aqui. A pergunta Q4 (quais sugestões S1 a S10 viram PR) foi respondida com a ordem S4, S3, S5, S7, S6; as sugestões seguem como PRs próprias.
+> A versão revisada por digest deste documento é a do commit `d269a8f`, mesclada pela PR #58 (SHA-256 `203bb12cda7c3f908533462c65d7f9b1af2031886f2172bdf3b177cd8af13554`); esta versão só troca o status. O texto abaixo é o registro da proposta como foi revisada.
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autorizava merge e não alterava o `CLAUDE.md`.
 > Rótulos: **VERIFIED** (conferido no repositório nesta sessão), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte).
 > Base conferida: `main` em `0281786` (2026-11-07). `CLAUDE.md` atual: 302 linhas, SHA-256 `4002b0722067dfdb09b36c0db65ab79ea82cd9bb62f7cfc90b14a9958aaad110`, sem alteração desde 2026-10-22.
 > Todo bloco "Antes" abaixo foi **extraído do arquivo real** (aparece nele exatamente uma vez), e todo bloco "Depois" foi aplicado numa cópia para verificação; nada foi digitado à mão nos dois lados.
