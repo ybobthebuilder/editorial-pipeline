@@ -1,6 +1,7 @@
 # Proposta de contrato: `caption` e `cta` (D-17)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `contracts/`, `validators/`, `skills/` nem `config/`: o contrato, o validador e o prompt só são escritos depois da aprovação, como foi com `visual_spec`, `image_assets` e `visual_library`.
+> **Status atual (2026-11-07):** DECIDIDA (D-17, Fonseca, 2026-10-23) e implementada: `contracts/post_copy.schema.json`, o campo opcional `cta` de `cover_spec`, `validators/copy.js` e os prompts de `skills/` (PRs #42 a #45).
+> Status original: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria nenhum arquivo** em `contracts/`, `validators/`, `skills/` nem `config/`: o contrato, o validador e o prompt só são escritos depois da aprovação, como foi com `visual_spec`, `image_assets` e `visual_library`.
 > Rótulos: **VERIFIED** (decisão do Fonseca ou arquivo do repositório), **PROPOSED** (desenho meu), **UNKNOWN** (sem fonte; vira pergunta na §9).
 > Companheiros: `contracts-proposal.md` (§3 proveniência, §5 `cover_spec`, §8 validadores), `slot-map-v0.md`, `skills/copywriter-cfm/SKILL.md`, `validators/blocklist.js`, `validators/numbers.js`, `contexto.md` (D-05, D-16).
 

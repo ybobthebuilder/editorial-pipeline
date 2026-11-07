@@ -325,14 +325,14 @@ test('qa_result: gates need entries with a detail, semantic is optional, passed 
   assert.equal(Object.hasOwn(fixture('qa_result', 'valid-02'), 'semantic'), false);
 });
 
-test('the smallest valid documents are accepted: one-character strings, one slot, one gate', () => {
+test('the smallest valid documents are accepted: one-character texts, one slot, one gate, and ids in their formats', () => {
   const provenance = { job_id: '00000000-0000-4000-8000-000000000001', config_source: 'public', config_version: 'v', model: 'm', execution_id: 'e', created_at: '2026-10-22T12:00:00Z' };
   const minimal = {
-    visual_spec: { ...provenance, stage: '06_VISUAL', insight_id: 'i', evidence_ids: ['e'], grammar_id: 'g' },
-    cover_spec: { ...provenance, stage: '07_COVERS', visual_spec_id: 'v', template_id: 'post-01-manifesto', evidence_ids: ['e'], slots: [{ slot_id: 's', kind: 'chrome', lines: ['l'] }], alt_text: 'a' },
+    visual_spec: { ...provenance, stage: '06_VISUAL', insight_id: 'ins-0001', evidence_ids: ['ev-0001'], grammar_id: 'g' },
+    cover_spec: { ...provenance, stage: '07_COVERS', visual_spec_id: 'v', template_id: 'post-01-manifesto', evidence_ids: ['ev-0001'], slots: [{ slot_id: 's', kind: 'chrome', lines: ['l'] }], alt_text: 'a' },
     qa_result: { ...provenance, stage: '09_QA', cover_spec_id: 'c', gates: [{ gate_id: 'QA-DIM', status: 'passed', detail: 'd' }], passed: true },
     image_assets: { ...provenance, stage: '01_INGEST', images: [], exceptions: [] },
-    post_copy: { ...provenance, stage: '07_COVERS', evidence_ids: ['e'], caption: 'c' },
+    post_copy: { ...provenance, stage: '07_COVERS', evidence_ids: ['ev-0001'], caption: 'c' },
     evidence: { ...provenance, stage: '02_EXTRACT', evidence_id: 'ev-0001', page: 1, source_text: 's', claim: 'c', measures: [] },
     verification: { ...provenance, stage: '03_VERIFY', evidence_id: 'ev-0001', status: 'FAILED', checks: [{ check_id: 'CITATION', status: 'failed', reasons: [] }] },
     insight: { ...provenance, stage: '04_INSIGHTS', insight_id: 'ins-0001', text: 't', evidence_ids: ['ev-0001'] },
@@ -587,4 +587,34 @@ test('job_ref: file_sha256, page_count and media_type; the rules that the schema
   // limits of the schema, proven so nobody mistakes it for the whole contract
   assert.deepEqual(ok((d) => { d.page_count = 100000; }), [], 'equality with the stored pages is the code\'s');
   assert.deepEqual(ok((d) => { d.model = 'synthetic-model-v0'; }), [], 'that 01_INGEST uses no LLM is the stage\'s, not the schema\'s');
+});
+
+test('ids that name another row have their decided format: ev-NNNN for evidence, ins-NNNN for an insight (visual_spec, cover_spec, post_copy)', () => {
+  for (const name of ['visual_spec', 'cover_spec', 'post_copy']) {
+    for (const id of ['ev-0001', 'ev-9999']) {
+      const d = validOf(name); d.evidence_ids = [id];
+      assert.deepEqual(errorsOf(name, d), [], `${name} ${id}`);
+    }
+    const several = validOf(name); several.evidence_ids = ['ev-0001', 'ev-0002', 'ev-0003'];
+    assert.deepEqual(errorsOf(name, several), [], `${name} several`);
+    for (const id of ['e', 'ev-1', 'ev-123', 'ev-00001', 'EV-0001', 'ins-0001', ' ev-0001', 'ev-0001 ', 'ev-000a', '']) {
+      const d = validOf(name); d.evidence_ids = ['ev-0001', id];
+      assert.deepEqual(paths(name, d), ['$.evidence_ids[1]'], `${name} ${JSON.stringify(id)}`);
+    }
+  }
+  const spec = (id) => { const d = validOf('visual_spec'); d.insight_id = id; return errorsOf('visual_spec', d); };
+  for (const id of ['ins-0001', 'ins-9999']) assert.deepEqual(spec(id), [], id);
+  for (const id of ['i', 'ins-1', 'ins-123', 'ins-00001', 'INS-0001', 'ev-0001', ' ins-0001', 'ins-0001 ', 'ins-000a', '']) {
+    const d = validOf('visual_spec'); d.insight_id = id;
+    assert.deepEqual(paths('visual_spec', d), ['$.insight_id'], JSON.stringify(id));
+  }
+  // the same pattern in every contract that cites an evidence, so one format cannot drift from another
+  const patterns = ['visual_spec', 'cover_spec', 'post_copy', 'insight'].map((n) => schemaOf(n).properties.evidence_ids.items.pattern);
+  assert.deepEqual([...new Set(patterns)], ['^ev-[0-9]{4}$']);
+  assert.equal(schemaOf('visual_spec').properties.insight_id.pattern, schemaOf('insight').properties.insight_id.pattern);
+  assert.equal(schemaOf('evidence').properties.evidence_id.pattern, schemaOf('insight').properties.evidence_ids.items.pattern);
+  assert.doesNotMatch(schemaOf('visual_spec').properties.insight_id.description, /UNKNOWN/);
+  // ids of rows that have no id of their own stay loose until their format is decided
+  assert.equal(Object.hasOwn(schemaOf('cover_spec').properties.visual_spec_id, 'pattern'), false);
+  assert.equal(Object.hasOwn(schemaOf('qa_result').properties.cover_spec_id, 'pattern'), false);
 });

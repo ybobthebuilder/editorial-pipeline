@@ -54,7 +54,7 @@
       "minItems": 1,
       "items": {
         "type": "string",
-        "minLength": 1
+        "pattern": "^ev-[0-9]{4}$"
       },
       "description": "each id must exist in verification and be VERIFIED; checked by code. Every claim of the caption needs evidence (CLAUDE.md sections 4 and 8)"
     },
