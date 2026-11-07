@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "job_ref",
+  "description": "Output of 01_INGEST: the record of the file that entered the job. Contract proposal: docs/job-ref-contract-proposal.md (decisions of Fonseca, 2026-11-07; the H1 job-entry contract is treated as nonexistent). It holds facts of the file only: source_origin and input_context are columns of editorial.jobs, paper metadata has no consumer yet, and the page texts live elsewhere.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "file_sha256",
+    "page_count",
+    "media_type"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "01_INGEST",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "file_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the received file, in lowercase hexadecimal; computed by the 01_INGEST stage, so two jobs that processed the same file can be told apart from two that did not"
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "number of pages of the file; it must equal the number of page texts stored for the job, the list that validators/citation.js receives (checked by code)"
+    },
+    "media_type": {
+      "enum": [
+        "application/pdf"
+      ],
+      "description": "closed list: the MVP accepts only PDF (decision of Fonseca, 2026-11-07). Another type needs a way to extract text by page, which has no source yet"
+    }
+  }
+}

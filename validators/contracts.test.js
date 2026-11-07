@@ -1,6 +1,6 @@
 'use strict';
 
-// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy,evidence,verification,insight}.schema.json with validators/schema.js
+// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy,evidence,verification,insight,job_ref}.schema.json with validators/schema.js
 // (checkpoints CP-VL3.2 and CP-VL3.3). The fixtures are synthetic; see fixtures/synthetic/contracts.
 
 const { test } = require('node:test');
@@ -10,10 +10,10 @@ const { join } = require('node:path');
 const { validate } = require('./schema.js');
 
 const ROOT = join(__dirname, '..');
-const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy', 'evidence', 'verification', 'insight'];
+const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy', 'evidence', 'verification', 'insight', 'job_ref'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
-const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS', evidence: '02_EXTRACT', verification: '03_VERIFY', insight: '04_INSIGHTS' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [], evidence: [], verification: [], insight: [] };
+const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS', evidence: '02_EXTRACT', verification: '03_VERIFY', insight: '04_INSIGHTS', job_ref: '01_INGEST' };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [], evidence: [], verification: [], insight: [], job_ref: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -42,7 +42,7 @@ test('required lists every property except the documented optional ones', () => 
   }
 });
 
-test('the provenance block is identical in the eight schemas, except for the stage constant', () => {
+test('the provenance block is identical in the nine schemas, except for the stage constant', () => {
   const block = (name) => {
     const properties = clone(schemaOf(name).properties);
     const out = {};
@@ -57,6 +57,7 @@ test('the provenance block is identical in the eight schemas, except for the sta
   assert.deepEqual(block('evidence'), block('visual_spec'));
   assert.deepEqual(block('verification'), block('visual_spec'));
   assert.deepEqual(block('insight'), block('visual_spec'));
+  assert.deepEqual(block('job_ref'), block('visual_spec'));
   for (const name of CONTRACTS) assert.equal(schemaOf(name).properties.stage.const, STAGE[name], name);
 });
 
@@ -111,6 +112,10 @@ test('each invalid fixture fails for its stated cause and for no other', () => {
       'invalid-01-missing-execution_id': ['$.execution_id: missing required property'],
       'invalid-02-empty-evidence_ids': ['$.evidence_ids: has 0 items, below minItems 1'],
     },
+    job_ref: {
+      'invalid-01-missing-execution_id': ['$.execution_id: missing required property'],
+      'invalid-02-media_type-out-of-enum': ['$.media_type: value is not one of the allowed enum members'],
+    },
   };
   for (const name of CONTRACTS) {
     for (const [file, errors] of Object.entries(expected[name])) {
@@ -130,7 +135,7 @@ test('CP-VL3.3: each of the seven provenance fields is required in every contrac
 });
 
 test('CP-VL3.3: every other required field is required too', () => {
-  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'], evidence: ['evidence_id', 'page', 'source_text', 'claim', 'measures'], verification: ['evidence_id', 'status', 'checks'], insight: ['insight_id', 'text', 'evidence_ids'] };
+  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'], evidence: ['evidence_id', 'page', 'source_text', 'claim', 'measures'], verification: ['evidence_id', 'status', 'checks'], insight: ['insight_id', 'text', 'evidence_ids'], job_ref: ['file_sha256', 'page_count', 'media_type'] };
   for (const name of CONTRACTS) {
     for (const key of extra[name]) {
       const data = validOf(name);
@@ -331,6 +336,7 @@ test('the smallest valid documents are accepted: one-character strings, one slot
     evidence: { ...provenance, stage: '02_EXTRACT', evidence_id: 'ev-0001', page: 1, source_text: 's', claim: 'c', measures: [] },
     verification: { ...provenance, stage: '03_VERIFY', evidence_id: 'ev-0001', status: 'FAILED', checks: [{ check_id: 'CITATION', status: 'failed', reasons: [] }] },
     insight: { ...provenance, stage: '04_INSIGHTS', insight_id: 'ins-0001', text: 't', evidence_ids: ['ev-0001'] },
+    job_ref: { ...provenance, stage: '01_INGEST', file_sha256: 'a'.repeat(64), page_count: 1, media_type: 'application/pdf' },
   };
   for (const name of CONTRACTS) assert.deepEqual(errorsOf(name, minimal[name]), [], name);
 });
@@ -560,4 +566,25 @@ test('insight: id, text and evidence_ids; the rules that the schema cannot expre
   assert.deepEqual(ok((d) => { d.evidence_ids = ['ev-9999']; }), [], 'existence and VERIFIED are the code\'s');
   assert.deepEqual(ok((d) => { d.text = '   '; }), [], 'blank text is the code\'s');
   assert.deepEqual(ok((d) => { d.text = 'Subiu 99% e causou a melhora.'; }), [], 'numbers and the strength of the language are the code\'s and the QA\'s');
+});
+
+test('job_ref: file_sha256, page_count and media_type; the rules that the schema cannot express are the code\'s (one row per job, page count equals the stored pages)', () => {
+  const ok = (mutate) => { const d = validOf('job_ref'); mutate(d); return errorsOf('job_ref', d); };
+  const bad = (mutate, path) => { const d = validOf('job_ref'); mutate(d); assert.deepEqual(paths('job_ref', d), [path], path); };
+  for (const hash of ['0'.repeat(64), 'f'.repeat(64), '0123456789abcdef'.repeat(4)]) assert.deepEqual(ok((d) => { d.file_sha256 = hash; }), [], hash);
+  for (const hash of ['', 'a'.repeat(63), 'a'.repeat(65), 'A'.repeat(64), `${'a'.repeat(63)}g`, `sha256:${'a'.repeat(64)}`, ` ${'a'.repeat(64)}`, `${'a'.repeat(64)} `, `${'a'.repeat(32)} ${'a'.repeat(31)}`, 5, null]) {
+    bad((d) => { d.file_sha256 = hash; }, '$.file_sha256');
+  }
+  for (const n of [1, 2, 12, 5000]) assert.deepEqual(ok((d) => { d.page_count = n; }), [], String(n));
+  for (const n of [0, -1, 1.5, '1', null, true]) bad((d) => { d.page_count = n; }, '$.page_count');
+  assert.deepEqual(ok((d) => { d.media_type = 'application/pdf'; }), []);
+  for (const t of ['application/PDF', 'application/pdf ', 'pdf', 'text/plain', 'image/png', 'application/msword', '', 5, null]) bad((d) => { d.media_type = t; }, '$.media_type');
+  assert.deepEqual(schemaOf('job_ref').properties.media_type.enum, ['application/pdf']);
+  // what is not here: source_origin and input_context are columns of editorial.jobs; paper metadata has no consumer
+  for (const key of ['source_origin', 'input_context', 'file_name', 'size_bytes', 'language', 'title', 'authors', 'doi', 'year', 'pages', 'text']) bad((d) => { d[key] = 'x'; }, `$.${key}`);
+  assert.deepEqual(Object.keys(schemaOf('job_ref').properties).slice(-3), ['file_sha256', 'page_count', 'media_type']);
+  assert.equal(Object.hasOwn(schemaOf('job_ref').properties.page_count, 'maximum'), false, 'no ceiling: no source for one');
+  // limits of the schema, proven so nobody mistakes it for the whole contract
+  assert.deepEqual(ok((d) => { d.page_count = 100000; }), [], 'equality with the stored pages is the code\'s');
+  assert.deepEqual(ok((d) => { d.model = 'synthetic-model-v0'; }), [], 'that 01_INGEST uses no LLM is the stage\'s, not the schema\'s');
 });
