@@ -1,0 +1,28 @@
+{
+  "job_id": "00000000-0000-4000-8000-000000000002",
+  "stage": "03_VERIFY",
+  "config_source": "public",
+  "config_version": "v1",
+  "model": "not_reported",
+  "execution_id": "exec-0002",
+  "created_at": "2026-11-07T12:00:00Z",
+  "evidence_id": "ev-0002",
+  "status": "FAILED",
+  "checks": [
+    {
+      "check_id": "CITATION",
+      "status": "failed",
+      "reasons": [
+        "trecho_nao_encontrado"
+      ]
+    },
+    {
+      "check_id": "NUMBERS",
+      "status": "failed",
+      "reasons": [
+        "numero_nao_autorizado",
+        "medida_fora_do_trecho"
+      ]
+    }
+  ]
+}

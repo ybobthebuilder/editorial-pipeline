@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "verification",
+  "description": "Output of 03_VERIFY: the verdict on one evidence, with the result of each check of code. Contract proposal: docs/verification-contract-proposal.md (decisions of Fonseca, 2026-11-07). There is no confidence score: verification_thresholds has no schema yet (U5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "stage",
+    "config_source",
+    "config_version",
+    "model",
+    "execution_id",
+    "created_at",
+    "evidence_id",
+    "status",
+    "checks"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "editorial.jobs.id; existence is checked by code"
+    },
+    "stage": {
+      "const": "03_VERIFY",
+      "description": "stage that produced the row"
+    },
+    "config_source": {
+      "enum": [
+        "public",
+        "private"
+      ]
+    },
+    "config_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "model name, or not_reported when the stage used no LLM"
+    },
+    "execution_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "ISO 8601 in UTC, with the Z suffix"
+    },
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^ev-[0-9]{4}$",
+      "description": "id of the evidence this row judges; it must exist in evidence of the same job, with exactly one row per evidence (checked by code)"
+    },
+    "status": {
+      "enum": [
+        "VERIFIED",
+        "FAILED"
+      ],
+      "description": "verdict on the evidence; VERIFIED if and only if every check passed (checked by code). Downstream stages accept only VERIFIED (CLAUDE.md section 4)"
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check_id",
+          "status",
+          "reasons"
+        ],
+        "properties": {
+          "check_id": {
+            "enum": [
+              "CITATION",
+              "NUMBERS"
+            ],
+            "description": "CITATION: validators/citation.js. NUMBERS: validators/numbers.js on the claim and on measures[].raw. Each check_id appears once (checked by code)"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          },
+          "reasons": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "enum": [
+                "pagina_inexistente",
+                "trecho_vazio",
+                "trecho_nao_encontrado",
+                "formato_invalido",
+                "precisao_excedida",
+                "numero_nao_autorizado",
+                "unidade_divergente",
+                "medida_fora_do_trecho"
+              ]
+            },
+            "description": "empty if and only if passed; without repeats and consistent with check_id (checked by code). medida_fora_do_trecho: a measures[].raw that is not in source_text. No PDF text goes here, only reasons"
+          }
+        }
+      },
+      "description": "result of each deterministic check; the LLM does not write this"
+    }
+  }
+}
