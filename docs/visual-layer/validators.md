@@ -23,11 +23,12 @@ Todos os validadores estão em `main`, sem `require` (as dependências entram po
 | `verification.js` | regras entre campos do `verification` e a checagem NUMBERS | 22 |
 | `insight.js` | regras do `insight` (evidência `VERIFIED`, números) | 15 |
 | `job_ref.js` | regras do `job_ref` (uma linha por job, `page_count`) | 8 |
+| `qa_result.js` | regras do `qa_result` (`QA-CFM` nunca dispensado e sempre presente, `gate_id` único, `passed` calculado por código) | 12 |
 | `contracts.test.js` | os 9 contratos de linha de `contracts/` (todos menos `visual_library`) contra suas fixtures | 32 |
 
 O núcleo de render (`render/render.js`) tem 27 testes em `render/`. A interface de cada validador está no cabeçalho do próprio arquivo; as seções 2 e 3 abaixo continuam valendo para `math`, `contrast` e `schema`.
 
-**Lacunas conhecidas:** não existe validador das regras entre campos do `qa_result` (`waived` proibido em `QA-CFM`, `gate_id` sem repetição, `passed` coerente com os gates); e a numeração de página (impressa, decisão do Fonseca) ainda não bate com o `citation.js`, que busca por posição no arquivo.
+**Lacunas conhecidas:** a numeração de página (impressa, decisão do Fonseca) ainda não bate com o `citation.js`, que busca por posição no arquivo.
 
 ## 1. Estado por validador (histórico, 2026-10-22)
 
