@@ -37,7 +37,7 @@ O contrato da linha que o `03_VERIFY` grava: o veredito sobre **uma** evidência
 - **Sem `confidence` nem nota.** `verification_thresholds` ("limites de confiança") não existe em `config/baseline/` e o que ele limita é **UNKNOWN** (U5). Campo de nota sem fonte é invenção.
 - **Sem texto do PDF na linha.** Só motivos, como em `citation.js`.
 - A regra de negócio "uma evidência `FAILED` derruba o job" é do estágio, não do contrato: ver Q3.
-- O `medida_fora_do_trecho` e a conferência de `measures` precisam de código novo (`numbers.js` ou função própria); não estão neste contrato.
+- O `medida_fora_do_trecho` e a conferência de `measures` são código, não contrato: `runNumbersCheck` em `validators/verification.js`, que também traz `checkVerificationRows` (as regras entre campos e a cobertura do job).
 
 ## 5. Plano de teste (quando aprovada)
 
