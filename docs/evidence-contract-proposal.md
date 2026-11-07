@@ -31,7 +31,7 @@ O contrato da linha que o `02_EXTRACT` produz: uma afirmação do paper com o tr
 
 ## 4. Fora desta proposta, de propósito
 
-- `citation.js` (literalidade por página) é validador, não contrato; vem depois, com testes.
+- `citation.js` (literalidade por página) é validador, não contrato: implementado em `validators/citation.js`, com as páginas como lista de textos (`pages[0]` é a página 1; decisão do Fonseca, 2026-11-07).
 - O pareamento antes/depois para o `computeDeltas` é do código; o contrato só carrega os números crus (`measures`, Q1 = B).
 - `kind` ou tipo de afirmação: não há fonte para um enum, então não existe. Enum inventado é o que o `CLAUDE.md` §8 proíbe.
 
