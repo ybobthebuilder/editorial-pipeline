@@ -1,6 +1,6 @@
 # Proposta de contrato — `verification` (03_VERIFY)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria arquivo em `contracts/`**: o schema só é escrito depois da aprovação (U2).
+> Status: **DECIDIDA** pelo Fonseca em 2026-11-07 (as três recomendações: Q1, Q2 e Q3); o schema `contracts/verification.schema.json` segue esta proposta. Não autoriza merge.
 > Rótulos: **VERIFIED** (visto em arquivo do repo), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte).
 > Fontes: `CLAUDE.md` §4, §5, §7, §8, §9; `docs/STAGES.md` (cartão 03_VERIFY); `docs/ALUCINAÇÃO_GUARD.md` §7; `docs/evidence-contract-proposal.md`; `validators/citation.js`; `validators/numbers.js`.
 
@@ -28,7 +28,7 @@ O contrato da linha que o `03_VERIFY` grava: o veredito sobre **uma** evidência
 | `checks` | array | `minItems 1`, `maxItems 2`; itens `{ check_id, status, reasons }` | schema (forma) |
 | `checks[].check_id` | enum | `CITATION` (`citation.js`) \| `NUMBERS` (`numbers.js` sobre a `claim` e sobre `measures[].raw`) | schema; código (sem repetir) |
 | `checks[].status` | enum | `passed` \| `failed` | schema |
-| `checks[].reasons` | array de enum | vazio quando `passed`; os 7 motivos acima mais `medida_fora_do_trecho` (novo: um `measures[].raw` que não está em `source_text`; ainda não existe no código) | schema (enum); código (coerência) |
+| `checks[].reasons` | array de enum, `maxItems 8` (o tamanho do enum; o código tira repetidos) | vazio quando `passed`; os 7 motivos acima mais `medida_fora_do_trecho` (novo: um `measures[].raw` que não está em `source_text`; ainda não existe no código) | schema (enum); código (coerência) |
 
 `additionalProperties: false`. **Regras entre campos, de código e fora do schema:** `status = VERIFIED` se e somente se todos os `checks` estão `passed`; `reasons` vazio se e somente se `passed`; `check_id` sem repetição; coerência dos `reasons` com o `check_id` (os de citação só em `CITATION`).
 
@@ -45,8 +45,10 @@ O contrato da linha que o `03_VERIFY` grava: o veredito sobre **uma** evidência
 - `validators/contracts.test.js` ganha o contrato (mesmo padrão do `evidence`); mutação do schema (cada campo, enum, limite).
 - Validação: `node --test 'validators/*.test.js'`. Aceite: tudo verde e todos os mutantes detectados.
 
-## 6. Perguntas (uma por vez, com a minha recomendação)
+## 6. Perguntas (respondidas pelo Fonseca, 2026-11-07: as três recomendações)
 
-- **Q1.** A lista fechada de `status` é só `VERIFIED` e `FAILED`? **Recomendo sim:** o `STAGES.md` só distingue sucesso e `VERIFICATION_FAILED`. Se existir um terceiro valor (por exemplo, "em revisão"), preciso do nome.
-- **Q2.** `verification_thresholds` participa do `03_VERIFY`? Se sim, preciso do schema dele (U5) antes de qualquer campo de nota. **Recomendo adiar:** o contrato nasce sem nota e ganha o campo quando o schema do limite existir.
-- **Q3.** Uma evidência `FAILED` derruba o job inteiro (`VERIFICATION_FAILED`) ou só fica de fora das etapas criativas? **Recomendo derrubar:** é o que o `STAGES.md` descreve, e o `VERIFICATION_FAILED → EVIDENCE_EXTRACTED` já existe como retry. Isso vai para o estágio, não para o schema.
+`maxItems 2` em `checks` e `maxItems 8` em `reasons` são escolha minha, sem fonte, e não foram perguntados: ajustáveis.
+
+- **Q1 → sim.** A lista fechada de `status` é só `VERIFIED` e `FAILED`? **Recomendo sim:** o `STAGES.md` só distingue sucesso e `VERIFICATION_FAILED`. Se existir um terceiro valor (por exemplo, "em revisão"), preciso do nome.
+- **Q2 → adiar.** `verification_thresholds` participa do `03_VERIFY`? Se sim, preciso do schema dele (U5) antes de qualquer campo de nota. **Recomendo adiar:** o contrato nasce sem nota e ganha o campo quando o schema do limite existir.
+- **Q3 → derruba o job.** Uma evidência `FAILED` derruba o job inteiro (`VERIFICATION_FAILED`) ou só fica de fora das etapas criativas? **Recomendo derrubar:** é o que o `STAGES.md` descreve, e o `VERIFICATION_FAILED → EVIDENCE_EXTRACTED` já existe como retry. Isso vai para o estágio, não para o schema.
