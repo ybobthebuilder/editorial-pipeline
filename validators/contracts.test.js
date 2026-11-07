@@ -1,6 +1,6 @@
 'use strict';
 
-// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy,evidence,verification}.schema.json with validators/schema.js
+// Tests of contracts/{visual_spec,cover_spec,qa_result,image_assets,post_copy,evidence,verification,insight}.schema.json with validators/schema.js
 // (checkpoints CP-VL3.2 and CP-VL3.3). The fixtures are synthetic; see fixtures/synthetic/contracts.
 
 const { test } = require('node:test');
@@ -10,10 +10,10 @@ const { join } = require('node:path');
 const { validate } = require('./schema.js');
 
 const ROOT = join(__dirname, '..');
-const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy', 'evidence', 'verification'];
+const CONTRACTS = ['visual_spec', 'cover_spec', 'qa_result', 'image_assets', 'post_copy', 'evidence', 'verification', 'insight'];
 const PROVENANCE = ['job_id', 'stage', 'config_source', 'config_version', 'model', 'execution_id', 'created_at'];
-const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS', evidence: '02_EXTRACT', verification: '03_VERIFY' };
-const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [], evidence: [], verification: [] };
+const STAGE = { visual_spec: '06_VISUAL', cover_spec: '07_COVERS', qa_result: '09_QA', image_assets: '01_INGEST', post_copy: '07_COVERS', evidence: '02_EXTRACT', verification: '03_VERIFY', insight: '04_INSIGHTS' };
+const OPTIONAL = { visual_spec: ['rationale'], cover_spec: ['cta'], qa_result: ['semantic'], image_assets: [], post_copy: [], evidence: [], verification: [], insight: [] };
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const schemaOf = (name) => readJson(join(ROOT, 'contracts', `${name}.schema.json`));
@@ -42,7 +42,7 @@ test('required lists every property except the documented optional ones', () => 
   }
 });
 
-test('the provenance block is identical in the seven schemas, except for the stage constant', () => {
+test('the provenance block is identical in the eight schemas, except for the stage constant', () => {
   const block = (name) => {
     const properties = clone(schemaOf(name).properties);
     const out = {};
@@ -56,6 +56,7 @@ test('the provenance block is identical in the seven schemas, except for the sta
   assert.deepEqual(block('post_copy'), block('visual_spec'));
   assert.deepEqual(block('evidence'), block('visual_spec'));
   assert.deepEqual(block('verification'), block('visual_spec'));
+  assert.deepEqual(block('insight'), block('visual_spec'));
   for (const name of CONTRACTS) assert.equal(schemaOf(name).properties.stage.const, STAGE[name], name);
 });
 
@@ -106,6 +107,10 @@ test('each invalid fixture fails for its stated cause and for no other', () => {
       'invalid-01-missing-config_version': ['$.config_version: missing required property'],
       'invalid-02-status-out-of-enum': ['$.status: value is not one of the allowed enum members'],
     },
+    insight: {
+      'invalid-01-missing-execution_id': ['$.execution_id: missing required property'],
+      'invalid-02-empty-evidence_ids': ['$.evidence_ids: has 0 items, below minItems 1'],
+    },
   };
   for (const name of CONTRACTS) {
     for (const [file, errors] of Object.entries(expected[name])) {
@@ -125,7 +130,7 @@ test('CP-VL3.3: each of the seven provenance fields is required in every contrac
 });
 
 test('CP-VL3.3: every other required field is required too', () => {
-  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'], evidence: ['evidence_id', 'page', 'source_text', 'claim', 'measures'], verification: ['evidence_id', 'status', 'checks'] };
+  const extra = { visual_spec: ['insight_id', 'evidence_ids', 'grammar_id'], cover_spec: ['visual_spec_id', 'template_id', 'evidence_ids', 'slots', 'alt_text'], qa_result: ['cover_spec_id', 'gates', 'passed'], image_assets: ['images', 'exceptions'], post_copy: ['evidence_ids', 'caption'], evidence: ['evidence_id', 'page', 'source_text', 'claim', 'measures'], verification: ['evidence_id', 'status', 'checks'], insight: ['insight_id', 'text', 'evidence_ids'] };
   for (const name of CONTRACTS) {
     for (const key of extra[name]) {
       const data = validOf(name);
@@ -325,6 +330,7 @@ test('the smallest valid documents are accepted: one-character strings, one slot
     post_copy: { ...provenance, stage: '07_COVERS', evidence_ids: ['e'], caption: 'c' },
     evidence: { ...provenance, stage: '02_EXTRACT', evidence_id: 'ev-0001', page: 1, source_text: 's', claim: 'c', measures: [] },
     verification: { ...provenance, stage: '03_VERIFY', evidence_id: 'ev-0001', status: 'FAILED', checks: [{ check_id: 'CITATION', status: 'failed', reasons: [] }] },
+    insight: { ...provenance, stage: '04_INSIGHTS', insight_id: 'ins-0001', text: 't', evidence_ids: ['ev-0001'] },
   };
   for (const name of CONTRACTS) assert.deepEqual(errorsOf(name, minimal[name]), [], name);
 });
@@ -527,4 +533,31 @@ test('verification: evidence_id, status and checks; the rules between fields are
   inconsistent.checks[1].status = 'passed';
   inconsistent.checks[1].reasons = ['numero_nao_autorizado']; // a passed check with a reason, and a numbers reason under CITATION
   assert.deepEqual(errorsOf('verification', inconsistent), []);
+});
+
+test('insight: id, text and evidence_ids; the rules that the schema cannot express are the code\'s (unique id, VERIFIED evidence, numbers)', () => {
+  const ok = (mutate) => { const d = validOf('insight'); mutate(d); return errorsOf('insight', d); };
+  const bad = (mutate, path) => { const d = validOf('insight'); mutate(d); assert.deepEqual(paths('insight', d), [path], path); };
+  for (const id of ['ins-0001', 'ins-9999']) assert.deepEqual(ok((d) => { d.insight_id = id; }), [], id);
+  for (const id of ['', 'ins-1', 'ins-123', 'ins-00001', 'INS-0001', 'ev-0001', ' ins-0001', 'ins-0001 ', 'ins-000a', 5]) bad((d) => { d.insight_id = id; }, '$.insight_id');
+  assert.deepEqual(ok((d) => { d.text = 'x'; }), []);
+  assert.deepEqual(ok((d) => { d.text = 'x'.repeat(300); }), []);
+  assert.deepEqual(ok((d) => { d.text = '\u{1F600}'.repeat(300); }), [], 'length counts code points');
+  for (const t of ['', 'x'.repeat(301), '\u{1F600}'.repeat(301), 5, null, ['x']]) bad((d) => { d.text = t; }, '$.text');
+  // evidence_ids: one or more evidence ids; the others\' loose string items are stricter here because the id format is decided
+  assert.deepEqual(ok((d) => { d.evidence_ids = ['ev-0001', 'ev-0002', 'ev-0003']; }), [], 'several evidences');
+  bad((d) => { d.evidence_ids = []; }, '$.evidence_ids');
+  bad((d) => { d.evidence_ids = 'ev-0001'; }, '$.evidence_ids');
+  bad((d) => { d.evidence_ids = null; }, '$.evidence_ids');
+  for (const id of ['', 'ev-1', 'ev-123', 'EV-0001', 'ins-0001', ' ev-0001', 'ev-00001', 7, null]) bad((d) => { d.evidence_ids = [id]; }, '$.evidence_ids[0]');
+  assert.equal(schemaOf('insight').properties.evidence_ids.minItems, 1);
+  assert.equal(Object.hasOwn(schemaOf('insight').properties.evidence_ids, 'maxItems'), false, 'no ceiling: Q3 allows several');
+  // no score, rank, weight or kind: the 05_SCORE stage has its own contract
+  for (const key of ['score', 'rank', 'weight', 'kind', 'status', 'verified']) bad((d) => { d[key] = 1; }, `$.${key}`);
+  assert.deepEqual(Object.keys(schemaOf('insight').properties).slice(-3), ['insight_id', 'text', 'evidence_ids']);
+  // limits of the schema, proven so nobody mistakes it for the whole contract
+  assert.deepEqual(ok((d) => { d.evidence_ids = ['ev-0001', 'ev-0001']; }), [], 'repeated evidence id is the code\'s');
+  assert.deepEqual(ok((d) => { d.evidence_ids = ['ev-9999']; }), [], 'existence and VERIFIED are the code\'s');
+  assert.deepEqual(ok((d) => { d.text = '   '; }), [], 'blank text is the code\'s');
+  assert.deepEqual(ok((d) => { d.text = 'Subiu 99% e causou a melhora.'; }), [], 'numbers and the strength of the language are the code\'s and the QA\'s');
 });

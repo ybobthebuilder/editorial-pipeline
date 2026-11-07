@@ -1,6 +1,6 @@
 # Proposta de contrato — `insight` (04_INSIGHTS)
 
-> Status: **PROPOSED**, para revisão por digest (`reviewed_commit_sha = null`). Não autoriza merge e **não cria arquivo em `contracts/`**: o schema só é escrito depois da aprovação (U2).
+> Status: **DECIDIDA** pelo Fonseca em 2026-11-07 (as três recomendações: Q1, Q2 e Q3); o schema `contracts/insight.schema.json` segue esta proposta. Não autoriza merge.
 > Rótulos: **VERIFIED** (visto em arquivo do repo), **PROPOSED** (desenho nosso), **UNKNOWN** (sem fonte).
 > Fontes: `CLAUDE.md` §1, §3, §4, §6, §7, §8, §9; `docs/STAGES.md` (cartões 04_INSIGHTS e 05_SCORE); `docs/visual-layer/contracts-proposal.md` §4; `skills/art-director/SKILL.md`; `docs/evidence-contract-proposal.md`; `docs/verification-contract-proposal.md`.
 
@@ -26,7 +26,7 @@ O contrato da linha que o `04_INSIGHTS` grava: **um** insight, com o texto e as 
 | proveniência | — | os 7 campos; `stage` = `04_INSIGHTS` | schema |
 | `insight_id` | string | `^ins-[0-9]{4}$`; único no job | schema (formato), código (unicidade) |
 | `text` | string | `minLength 1`, `maxLength 300` (ver Q2); o texto do insight, em linguagem que a evidência sustenta | schema (tamanho); código (números); QA semântico (força da linguagem) |
-| `evidence_ids` | array de string | `minItems 1`; cada id existe em `verification` do mesmo job e está `VERIFIED` | schema (forma), código (existência, `VERIFIED`, mesmo job) |
+| `evidence_ids` | array de string | `minItems 1`, sem teto; cada item `^ev-[0-9]{4}$` (o formato decidido no contrato `evidence`; os outros contratos ainda aceitam qualquer texto); cada id existe em `verification` do mesmo job e está `VERIFIED` | schema (forma), código (existência, `VERIFIED`, mesmo job) |
 
 `additionalProperties: false`. **Regras de código fora do schema:** os números de `text` aparecem no conjunto permitido, montado pelo código a partir das evidências citadas (`numbers.js`, como na capa); `evidence_ids` sem repetição; nenhum `evidence_id` fora do job.
 
@@ -43,8 +43,8 @@ O contrato da linha que o `04_INSIGHTS` grava: **um** insight, com o texto e as 
 - `validators/contracts.test.js` ganha o contrato (mesmo padrão de `evidence` e `verification`); mutação do schema.
 - Validação: `node --test 'validators/*.test.js'`. Aceite: tudo verde e todos os mutantes detectados.
 
-## 6. Perguntas (uma por vez, com a minha recomendação)
+## 6. Perguntas (respondidas pelo Fonseca, 2026-11-07: as três recomendações)
 
-- **Q1 (bloqueante).** Onde mora o score e o ranking? **A (recomendo):** em contrato próprio do `05_SCORE`, uma linha por insight com `stage` = `05_SCORE`, referenciando `insight_id`; o contrato `insight` fica só com a saída do `04`. É o único desenho que respeita `(job_id, stage)`. **B:** campos de score opcionais na própria linha do insight, gravados pelo `05`. Exige abrir uma exceção à regra de `stage`, e eu não recomendo. Em qualquer caso o contrato do `05_SCORE` espera o schema de `scoring_weights` (hoje inexistente).
-- **Q2.** `text` ≤ 300 caracteres, como a `claim`? **Recomendo sim.** Se o insight puder ser um parágrafo, preciso do limite.
-- **Q3.** Um insight pode combinar várias evidências (`evidence_ids` com mais de um item)? **Recomendo sim:** "insight" é síntese, e o `art-director` já recebe "as evidências" no plural. O cuidado fica na checagem de números e no QA semântico.
+- **Q1 → A.** Onde mora o score e o ranking? **A (recomendo):** em contrato próprio do `05_SCORE`, uma linha por insight com `stage` = `05_SCORE`, referenciando `insight_id`; o contrato `insight` fica só com a saída do `04`. É o único desenho que respeita `(job_id, stage)`. **B:** campos de score opcionais na própria linha do insight, gravados pelo `05`. Exige abrir uma exceção à regra de `stage`, e eu não recomendo. Em qualquer caso o contrato do `05_SCORE` espera o schema de `scoring_weights` (hoje inexistente).
+- **Q2 → sim.** `text` ≤ 300 caracteres, como a `claim`? **Recomendo sim.** Se o insight puder ser um parágrafo, preciso do limite.
+- **Q3 → sim.** Um insight pode combinar várias evidências (`evidence_ids` com mais de um item)? **Recomendo sim:** "insight" é síntese, e o `art-director` já recebe "as evidências" no plural. O cuidado fica na checagem de números e no QA semântico.
