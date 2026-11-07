@@ -44,7 +44,7 @@ O contrato da linha que o `02_EXTRACT` produz: uma afirmação do paper com o tr
 ## 6. Perguntas (respondidas pelo Fonseca, 2026-11-07)
 
 Os limites de `maxItems 10` e de 40 caracteres em `raw` são escolha minha, sem fonte, e não foram perguntados: ajustáveis.
-Da Q3 se respondeu "a partir de 1" e, depois (2026-11-07), que a página é a **numeração impressa** na página, não a posição no arquivo. **Consequência em aberto:** o `citation.js` busca o texto por posição no arquivo (`pages[page - 1]`), e a numeração impressa pode diferir dela (capa e páginas romanas na frente, reinício de numeração) e nem sempre é um inteiro. Falta decidir como o número impresso de cada página do arquivo é obtido; ver a PR dos validadores `insight` e `job_ref`. O schema continua exigindo inteiro >= 1 até essa decisão.
+Da Q3 se respondeu "a partir de 1" e, depois (2026-11-07), que a página é a **numeração impressa** na página. **Revisto pelo Fonseca (2026-11-07):** `page` é a **posição da página no arquivo PDF**, contada a partir de 1, "se for mais fácil". É o que o `citation.js` já faz (`pages[page - 1]`), então a numeração impressa não entra no contrato, e capa, páginas romanas e reinício de numeração deixam de importar. Fecha a consequência que ficara em aberto aqui.
 
 
 - **Q1 → B.** Quem pareia o "84" e o "92" para o `computeDeltas`? **A:** a evidência não carrega números estruturados; um contrato posterior (insight) pareia. **B (recomendada):** a evidência ganha `measures`, array de `{ "role": "before" | "after" | "single", "raw": "84%" }`, com `raw` escrito como no trecho (PT-BR); o código lê com `numbers.js` e confere que `raw` está em `source_text`. B mantém o LLM só extraindo, como em `CLAUDE.md` §3.

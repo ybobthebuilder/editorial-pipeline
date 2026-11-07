@@ -60,7 +60,7 @@
     "page": {
       "type": "integer",
       "minimum": 1,
-      "description": "page of the PDF, counted from 1; that the page exists is checked by code"
+      "description": "position of the page in the PDF file, counted from 1 (not the number printed on the page); that the page exists is checked by code"
     },
     "source_text": {
       "type": "string",
