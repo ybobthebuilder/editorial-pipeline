@@ -18,7 +18,7 @@ Decisão do usuário em 2026-10-22: o relatório *Contratos primeiro: orquestran
 | --- | --- | --- |
 | `CLAUDE.md` (v1.0, 2026-10-11) | constituição do projeto | repo, baseline `e821de16140d0731b44b55fc9e12847d59b0a253` |
 | `docs/STAGES.md`, `PUBLIC_PRIVATE.md`, `ALUCINAÇÃO_GUARD.md` | regras de etapa, fronteira de repos, proibições | repo |
-| Relatório NATURE.exe | referência de design-time; não sobrepõe o `CLAUDE.md` | https://claude.ai/artifact/8y5CuhdSjRCNkC5raxQ7hN |
+| Relatório NATURE.exe | referência de design-time; não sobrepõe o `CLAUDE.md` | link removido do repositório público em 2026-11-07; o relatório não é distribuído aqui, e o Fonseca o fornece quando preciso |
 | Pacote de marca "Lambda-inspired" | insumo de design: `tokens.css`, `templates.json`, 6 SVGs, `DESIGN.md`, `README.md`, `brandbook.html` | zip e HTML enviados pelo usuário (fora do repo) |
 | Arquivo Figma | biblioteca de design-time, 3 páginas | `fileKey` z6p242KdZVImub4JZu4FlG |
 
