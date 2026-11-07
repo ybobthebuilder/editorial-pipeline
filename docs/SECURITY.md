@@ -38,6 +38,8 @@ A senha do papel `human_reviewer` fica num cofre separado e nunca entre as crede
 - **Segredos.** `gitleaks` no commit (hook) e no CI, sobre o histórico e a árvore, com autoteste que planta um segredo e exige que o scanner o pegue. Detalhes no `README.md`.
 - **Banco** (`CLAUDE.md`, "Segurança"): RLS ativado em todas as tabelas; `REVOKE ALL` para `anon` e `authenticated`; `n8n_pipeline` só executa funções, sem privilégio de tabela; `human_reviewer` é um papel separado, sem relação com `n8n_pipeline`; as funções são `SECURITY DEFINER`, com `search_path` fixo e dono `editorial_owner`; um banco por cliente. O banco não distingue pessoa de workflow, por isso a credencial do `human_reviewer` não fica em workflow sem supervisão.
 - **Dados.** Nenhum PDF real, saída de LLM, linha do banco ou métrica entra no repositório público.
+- **Actions do CI.** Cada Action dos workflows é fixada pelo SHA do commit, com a versão num comentário (`uses: dono/repo@<SHA> # v1.2.3`), porque uma tag pode ser movida depois. O teste `tests/docs/workflow-pins.test.js` recusa uma Action sem SHA. O `.github/dependabot.yml` abre uma pull request por semana quando há versão nova. Para conferir um SHA, compare-o com o commit da tag do comentário: `git ls-remote --tags https://github.com/<dono>/<repo>`.
+- **Análise de código.** CodeQL em configuração padrão, sobre JavaScript e sobre os próprios workflows (linguagem `actions`).
 
 ## Configuração do GitHub exigida
 
@@ -47,6 +49,8 @@ Fica fora do código e se confere em Settings. Os comandos abaixo só leem:
 | --- | --- |
 | Relato privado de vulnerabilidades | `gh api repos/ybobthebuilder/editorial-pipeline/private-vulnerability-reporting` devolve `{"enabled":true}` |
 | Secret scanning e push protection | `gh api repos/ybobthebuilder/editorial-pipeline --jq .security_and_analysis` mostra `secret_scanning` e `secret_scanning_push_protection` como `enabled` |
+| Code scanning (CodeQL, configuração padrão) | `gh api repos/ybobthebuilder/editorial-pipeline/code-scanning/default-setup --jq .state` devolve `configured` |
+| Atualizações de segurança do Dependabot | `gh api repos/ybobthebuilder/editorial-pipeline --jq .security_and_analysis.dependabot_security_updates.status` devolve `enabled` |
 | Proteção da branch `main`, exigindo os checks `test`, `scan` e `migrations` antes do merge | `gh api repos/ybobthebuilder/editorial-pipeline/branches/main/protection` lista os checks exigidos; a resposta 404 "Branch not protected" quer dizer que não há proteção |
 
 O `scan` (gitleaks) é o único portão de segredos do repositório: um merge antes de ele terminar o anula.
