@@ -28,7 +28,7 @@ Todos os validadores estão em `main`, sem `require` (as dependências entram po
 
 O núcleo de render (`render/render.js`) tem 27 testes em `render/`. A interface de cada validador está no cabeçalho do próprio arquivo; as seções 2 e 3 abaixo continuam valendo para `math`, `contrast` e `schema`.
 
-**Lacunas conhecidas:** a numeração de página (impressa, decisão do Fonseca) ainda não bate com o `citation.js`, que busca por posição no arquivo.
+**Numeração de página:** `page` é a posição da página no arquivo PDF, a partir de 1 (decisão do Fonseca, 2026-11-07), que é o que o `citation.js` usa.
 
 ## 1. Estado por validador (histórico, 2026-10-22)
 

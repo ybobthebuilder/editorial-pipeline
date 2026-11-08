@@ -8,6 +8,8 @@
 //   evidence  one evidence row (contracts/evidence.schema.json), already valid against the schema
 //   pages     the text of the PDF, one string per page: pages[0] is page 1. The 01_INGEST stage is the one
 //             that extracts it; how that text is stored and read back is not decided (UNKNOWN)
+//             The evidence's page is that position in the file, not the number printed on the page
+//             (decision of 2026-11-07)
 //
 // Result: { passed, errors }. Each error is { reason }:
 //   pagina_inexistente    page is not an integer from 1 to pages.length
