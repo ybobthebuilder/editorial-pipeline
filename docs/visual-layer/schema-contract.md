@@ -100,7 +100,7 @@ Este bloco não altera as seções 1 a 9, que continuam como foram revisadas. El
 | U11-c | `get_config` NÃO lê o schema privado. O público funciona sozinho | `get_config` lê só `editorial.config_baseline`; `source` é sempre `public`; chave ausente levanta erro |
 | U11-d | `set_status` valida a transição chamando `guard_transition` de forma explícita | `guard_transition(from, to)` é função. `set_status` NÃO está na migration (depende de U11-h) |
 | U11-e | `job_id` será UUID | Sem tabela de jobs na migration. Aplica-se quando U11-h fechar |
-| U11-f | Role `n8n_pipeline` com permissões mínimas: EXECUTE nas funções, SELECT nas tabelas | Role `NOLOGIN`; SELECT nas duas tabelas; EXECUTE nas duas funções; RLS com política de SELECT |
+| U11-f | Role `n8n_pipeline` com permissões mínimas: EXECUTE nas funções, SELECT nas tabelas (o SELECT foi retirado depois: ver §15) | Role `NOLOGIN`; SELECT nas duas tabelas; EXECUTE nas duas funções; RLS com política de SELECT |
 | U11-g | Tudo no schema `editorial` | Schema `editorial` |
 
 **Verificação:** 16 testes contra Postgres 16.15 limpo, na migration aplicada em uma transação com `ON_ERROR_STOP`. Nove mutantes que alteram comportamento foram detectados. Um mutante é equivalente: um `IF p_from = p_to` que levanta erro não muda nada, porque o guard já recusa auto-laços por não haver linha `X → X`.
