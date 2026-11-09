@@ -94,7 +94,7 @@ test('the blocklist shown in the copywriter example is exactly config/baseline/c
 
 test('no other skill carries a copy of the list: the terms live in the config', () => {
   const terms = readJson(join(REPO, 'config', 'baseline', 'cfm_blocklist.json'));
-  for (const name of ['art-director', 'qa-validator']) {
+  for (const name of dirs.filter((d) => d !== 'copywriter-cfm')) {
     const { body } = parse(name);
     for (const term of terms) assert.equal(body.toLowerCase().includes(term.toLowerCase()), false, `${name} cita "${term}"`);
   }

@@ -36,7 +36,7 @@ A lista vem vazia quando nada na entrada serve. Você **não** numera a evidênc
 ## Regras
 
 1. **Só o que está no texto recebido.** Uma afirmação sem trecho que a sustente não existe: omita. Falhar fechado é melhor que inventar.
-2. **`source_text` é cópia literal, de uma única página.** A verificação procura o trecho no texto da página, depois de igualar espaços, hifens e a forma Unicode, e mais nada: maiúsculas, acentos, aspas e ligaduras contam. Por isso: não corrija, não resuma, não troque palavras, não use reticências, não junte uma palavra partida no fim da linha e não una dois pontos distantes da página. Até 1000 caracteres; recorte o menor trecho que sustenta a afirmação.
+2. **`source_text` é cópia literal, de uma única página.** A verificação busca o trecho no texto da página, depois de igualar espaços, hifens e a forma Unicode, e mais nada: maiúsculas, acentos, aspas e ligaduras contam. Por isso: não corrija, não resuma, não troque palavras, não use reticências, não junte uma palavra partida no fim da linha e não una dois pontos distantes da página. Até 1000 caracteres; recorte o menor trecho que sustenta a afirmação.
 3. **`page` é o `page` da entrada em que o trecho aparece.** Um trecho não atravessa páginas.
 4. **`claim` diz o que o trecho diz, em português do Brasil, em até 300 caracteres.** Não diga mais que o trecho: se ele descreve associação, não escreva causa; se ele é tímido, não escreva certeza. Uma afirmação por item; a mesma afirmação não entra duas vezes.
 5. **Todo número da `claim` tem de estar em `source_text`, com o mesmo valor e a mesma unidade** (`%`, `pp` ou sem unidade). Escreva o número como o trecho o escreve; não arredonde e não converta.
