@@ -1,6 +1,6 @@
 # Registro de decisões
 
-Este arquivo reúne num só lugar as decisões que o `CLAUDE.md` e os documentos chamam por ID (`D-nn`, `U-nn`, `U11-x`). Até aqui elas viviam em quatro documentos, e a tabela principal (`docs/visual-layer/contexto.md` §11) se chama "Decisões pendentes" mas mistura itens já decididos.
+Este arquivo reúne num só lugar as decisões que o `CLAUDE.md` e os documentos chamam por ID (`D-nn`, `U-nn`, `U11-x`). Até aqui elas viviam em quatro documentos, e a tabela principal (`docs/visual-layer/contexto.md` §11) se chamava "Decisões pendentes" (hoje "Decisões (pendentes e decididas)") e mistura itens decididos, propostos e abertos.
 
 > **Status: PROPOSED até a conferência do Fonseca.** Extraído em 2026-11-07 dos documentos citados na coluna *Fonte*. Nada aqui é decisão nova: cada linha resume o que a fonte diz. Onde a fonte não registra decisão, a linha diz isso. Em caso de divergência entre este arquivo e a fonte, vale a fonte, até o Fonseca conferir.
 
@@ -42,7 +42,7 @@ Este arquivo reúne num só lugar as decisões que o `CLAUDE.md` e os documentos
 | ID | Data | Decisão | Quem | Estado | Fonte | Relação e observações |
 | --- | --- | --- | --- | --- | --- | --- |
 | U1 | 2026-10-22 | O baseline fica em `editorial.config_baseline`. | usuário | decidida | `contexto.md` §10 | Mesma decisão de D-02. A evidência de schema implantado segue UNKNOWN na fonte. |
-| U2 | 2026-10-22 | Campos de `visual_spec`, `cover_spec` e `qa_result`: a proposta de `contracts-proposal.md` foi aprovada (CP-VL3.1, PR #15) e os schemas estão em `contracts/` (PR #20). | Fonseca | decidida | `contracts-proposal.md` (status no topo) | A linha de `contexto.md` §10 ainda mostra o item como aberto. |
+| U2 | 2026-10-22 | Campos de `visual_spec`, `cover_spec` e `qa_result`: a proposta de `contracts-proposal.md` foi aprovada (CP-VL3.1, PR #15) e os schemas estão em `contracts/` (PR #20). | Fonseca | decidida | `contracts-proposal.md` (status no topo) | Corrigida em `contexto.md` §10 em 2026-11-08. |
 | U3 | 2026-10-22 | `grammar_id` é distinto de `template_id`; lista mínima de 5 gramáticas e o mapeamento para templates em `slot-map-v0.md` §5. | Fonseca | decidida | `contracts-proposal.md` §7 | Em `contexto.md` §10, U3 pergunta o conteúdo e o schema de `visual_library` (VL-4): o mesmo ID tem dois sentidos. `visual-library-proposal.md` registra essa parte como implementada; aprovação explícita não está registrada. |
 | U4 | — | Resolvido: os módulos permitidos no n8n Cloud, pela lista conferida pelo Fonseca (nota em `contexto.md` §10). Aberto: a engine e o formato do render (SVG × PNG). | Fonseca | aberta | `contexto.md` §10 | Bloqueia VL-5 e VL-6. D-03 propõe SVG no MVP. |
 | U5 | — | Schema de `verification_thresholds` e limiares de QA. | — | aberta | `contexto.md` §10 | A chave consta em `CLAUDE.md` §9; o arquivo é planejado. |
@@ -106,14 +106,15 @@ Estas decisões estão nos documentos, mas sem `D-nn` nem `U-nn`. Não entraram 
 
 ## Divergências encontradas nas fontes
 
-Conferidas em 2026-11-07 contra a árvore de `main`. Este registro não as corrige; cada correção é uma PR própria, a aprovar.
+Conferidas em 2026-11-07 contra a árvore de `main`. As de 1 a 5, 7, 8 e 9 foram corrigidas nas fontes em 2026-11-08, só quanto ao status (nenhuma decisão mudou); a 6 foi anotada nas duas linhas; a 10 é um retrato datado e não foi tocada.
 
-1. **PRs "abertas" que já foram mergeadas.** D-08 e U23 citam a PR #26 (aberta em D-08, mesclada em U23); D-13 e U22 citam a PR #25 como aberta. Pela API do GitHub, #25 e #26 estão `MERGED`, e `config/baseline/cfm_blocklist.json` tem `100% eficaz`.
-2. **D-15 e U24 dizem "implementado em PRs abertas, sem veredito; nada no `main` impõe o bloqueio ainda".** `main` tem `contracts/image_assets.schema.json`, `validators/media.js` e a migration `008_image_approvals.sql`.
-3. **D-17 diz "em PRs abertas".** `caption-cta-proposal.md` (status no topo) registra a implementação nas PRs #42 a #45.
-4. **U2 aparece aberto em `contexto.md` §10**, mas `contracts-proposal.md` (status no topo) registra a aprovação de 2026-10-22 e a implementação.
-5. **U1 diz que o `CLAUDE.md` §9 "ainda cita as duas formas".** Hoje o `CLAUDE.md` cita só `editorial.config_baseline`.
-6. **U3 tem dois sentidos** (`contexto.md` §10 e `contracts-proposal.md` §7).
-7. **D-04 ainda descreve os SVGs fora do repositório**, e `assets/brand/` está nele.
-8. **U11-f diz que `n8n_pipeline` tem SELECT nas tabelas.** A decisão de `schema-contract.md` §15 retirou esse privilégio.
-9. **`contexto.md` §11 se chama "Decisões pendentes"** e mistura decididas, propostas e abertas. D-01, D-03, D-06, D-07 e D-09 não têm decisão registrada.
+1. **PRs "abertas" que já foram mergeadas.** D-08, U19, D-13 e U22 citavam as PRs #25 e #26 como abertas. Pela API do GitHub, as duas estão `MERGED`, e `config/baseline/cfm_blocklist.json` tem `100% eficaz`. **Corrigida.**
+2. **D-15 e U24 diziam "implementado em PRs abertas, sem veredito; nada no `main` impõe o bloqueio ainda".** `main` tem `contracts/image_assets.schema.json`, `validators/media.js` e a migration `008_image_approvals.sql`. **Corrigida**, com a ressalva de que o bloqueio ainda não roda em estágio nenhum, porque os workflows não existem.
+3. **D-17 dizia "em PRs abertas".** `caption-cta-proposal.md` (status no topo) registra a implementação nas PRs #42 a #45, todas mescladas. **Corrigida.**
+4. **U2 aparecia aberto em `contexto.md` §10**, mas `contracts-proposal.md` (status no topo) registra a aprovação de 2026-10-22 e a implementação. **Corrigida.**
+5. **U1 dizia que o `CLAUDE.md` §9 "ainda cita as duas formas".** O `CLAUDE.md` cita só `editorial.config_baseline`. **Corrigida.**
+6. **U3 tem dois sentidos** (`contexto.md` §10 e `contracts-proposal.md` §7). **Anotada** na linha de `contexto.md`; o ID não foi trocado.
+7. **D-04 ainda descrevia os SVGs fora do repositório**, e `assets/brand/` está nele. **Corrigida** (substituída em parte, com a remissão a D-10 e a `assets/brand/README.md`).
+8. **U11-f dizia que `n8n_pipeline` tem SELECT nas tabelas.** A decisão de `schema-contract.md` §15 retirou esse privilégio. **Anotada** em `schema-contract.md` §10.
+9. **`contexto.md` §11 se chamava "Decisões pendentes"** e mistura decididas, propostas e abertas. **Renomeada.** D-01, D-03, D-06, D-07 e D-09 continuam sem decisão registrada.
+10. **`contexto.md` §12** ("Estado atual", `main` em `0c99259`, 2026-10-22) ainda diz que as PRs #25 e #26 estão abertas. É um retrato datado, e por isso não foi alterado.
