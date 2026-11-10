@@ -4,6 +4,7 @@
 > **Leitores:** o Fonseca (dono do projeto) e os agentes que trabalham no repositório (Claude Code, GitHub Copilot ou outro LLM).
 > **Rótulos:** **VERIFIED** (conferido em arquivo, teste, API ou documentação oficial na data indicada), **PROPOSED** (desenho deste plano), **UNKNOWN** (sem fonte; vira pergunta).
 > **Marca de decisão humana:** todo trecho com <mark>🟨 DECISÃO HUMANA</mark> só o Fonseca resolve. Um agente nunca escolhe por ele.
+> **Respostas já registradas (Fonseca, 2026-11-10):** H2 = A · H3 = todos os papers são em inglês · H4 = A · H7 = A. As demais seguem em aberto.
 
 ## 0. Protocolo para agentes
 
@@ -24,7 +25,7 @@ Regras de leitura obrigatória para qualquer LLM que atue neste repositório. To
 
 **Diagnóstico.** O que limita o resultado hoje não é volume de código. São três coisas:
 
-1. **Cinco decisões ou ações humanas de minutos** (H1 a H5) seguram quase todo o trabalho seguinte.
+1. **Cinco decisões ou ações humanas de minutos** (H1 a H5) seguravam quase todo o trabalho seguinte. Três foram respondidas em 2026-11-10 (H2, H3 e H4); restam duas ações, H1 e H5.
 2. **Três riscos estruturais** ainda não testados podem invalidar etapas inteiras: números em inglês reprovam no validador (R2), não há onde gravar as linhas sem o repositório privado (R3) e não se sabe se o n8n Cloud entrega o texto do PDF por página (R1).
 3. **Tudo o que falta depende do n8n para ser testado**, e o n8n é a parte com mais incógnitas.
 
@@ -35,10 +36,10 @@ Regras de leitura obrigatória para qualquer LLM que atue neste repositório. To
 | # | Ação | Quem | Esforço | O que destrava |
 | --- | --- | --- | --- | --- |
 | 1 | <mark>🟨 H1</mark>: importar o ruleset de proteção de `main` | Fonseca | 2 min | O `scan` (gitleaks) passa a ser portão de verdade; fecha o maior risco de segurança aberto |
-| 2 | <mark>🟨 H3</mark>: decidir o idioma dos papers | Fonseca | 1 resposta | O `02_EXTRACT` deixa de reprovar todo decimal em inglês |
-| 3 | <mark>🟨 H7</mark>: aprovar os núcleos de etapa e o teste de ponta a ponta sem n8n | Fonseca | 1 resposta | O primeiro job sintético completo no CI (marco M2) |
+| 2 | H3 ✔ respondida (2026-11-10): todos os papers são em inglês | Fonseca | feito | O validador de números passa a ler o formato inglês no trecho de origem (B03) |
+| 3 | H7 ✔ respondida (2026-11-10): aprovados os núcleos de etapa e o teste de ponta a ponta sem n8n | Fonseca | feito | O primeiro job sintético completo no CI (marco M2) |
 | 4 | <mark>🟨 H5</mark>: gerar o export de amostra do n8n e a amostra de PDF | Fonseca | 10 a 15 min | Toda a Fase 4 (marco M3) e o risco R1 |
-| 5 | <mark>🟨 H4</mark>: decidir a escala do `05_SCORE` | Fonseca | 1 resposta | O último contrato de linha que falta |
+| 5 | H4 ✔ respondida (2026-11-10): a régua de sete faixas rotula o total | Fonseca | feito | O último contrato de linha que falta (depende ainda de <mark>🟨 H8</mark>) |
 
 ## 2. Decisões humanas
 
@@ -54,7 +55,7 @@ Responda no formato `H1=A, H2=A, H3=B`, ou "todas as recomendadas". Cada respost
 - **B:** importar o `01` e o `03-arquivos-sensiveis.json` (recusa `.pdf`, chaves e arquivos acima de 5 MB). O `03` não foi verificado em repositório público.
 - **C:** adiar. O `scan` continua sem ser um portão.
 
-<mark>🟨 DECISÃO HUMANA H2</mark> — **Papéis dos agentes (Claude Code e GitHub Copilot)**
+**H2 — RESPONDIDA (Fonseca, 2026-11-10): A.** Papéis dos agentes: o Claude Code implementa e o GitHub Copilot revisa.
 
 - **Por que importa:** o `CLAUDE.md` §2 define o *implementer* como "o único escritor de mudanças aprovadas". Com dois agentes, é preciso dizer quem escreve e quem revisa, senão os dois escrevem sobre o mesmo ponto.
 - **A (recomendada):** Claude Code implementa; o Copilot revisa cada PR (ruleset `02-revisor-copilot.json`). Mantém um escritor só e ganha um segundo par de olhos independente.
@@ -62,14 +63,16 @@ Responda no formato `H1=A, H2=A, H3=B`, ou "todas as recomendadas". Cada respost
 - **C:** por tarefa: cada PR declara quem implementou e quem revisou.
 - **Vale em qualquer opção:** quem implementa não revisa a mesma PR, nenhum bot faz merge, um escritor por branch. As opções B e C pedem uma frase nova no `CLAUDE.md` §2, que é sua.
 
-<mark>🟨 DECISÃO HUMANA H3</mark> — **Idioma dos papers e formato dos números**
+**H3 — RESPONDIDA (Fonseca, 2026-11-10): "todos em inglês".** Idioma dos papers e formato dos números.
+
+- **Consequência (PROPOSED, item B03; a confirmar):** o trecho de origem é sempre lido no formato inglês (`9.52`, `1,234`), sem declarar idioma por job nesta versão. No `02_EXTRACT`, a afirmação e as medidas copiam o número como está no trecho, porque extrair não é converter. Do `04_INSIGHTS` em diante o texto é em português, no formato brasileiro (decisão U10), e o código compara por valor e unidade. O prompt da PR #71 e a descrição de `measures.raw` no contrato `evidence` (que hoje diz "in PT-BR") precisam acompanhar.
 
 - **Por que importa:** `validators/numbers.js` só lê o formato brasileiro (`9,52`). Num trecho em inglês, `9.52` é erro de formato por desenho, e a evidência reprova. Se os papers forem em inglês, o `02_EXTRACT` falha em quase todo número decimal.
 - **A (recomendada):** aceitar papers em português ou inglês. O job declara o idioma de origem; `numbers.js` ganha um parâmetro de formato para ler o trecho de origem; todo texto gerado (afirmação, insight, capa) continua em português, e a comparação é por valor e unidade. Custo: uma PR em `numbers.js` e nos validadores que o chamam.
 - **B:** só papers em português na primeira versão. Não muda código; restringe a entrada.
 - **C:** aceitar os dois formatos sem declarar o idioma. Não recomendo: `1.234` vira ambíguo (mil duzentos e trinta e quatro, ou um vírgula duzentos e trinta e quatro), e o validador teria de adivinhar.
 
-<mark>🟨 DECISÃO HUMANA H4</mark> — **Escala do `05_SCORE`**
+**H4 — RESPONDIDA (Fonseca, 2026-11-10): A.** Escala do `05_SCORE`: a régua de sete faixas rotula o total.
 
 - **Contexto (VERIFIED, resposta do Fonseca em 2026-11-09):** a régua é `0` não; `1–20` insuficiente; `21–40` medíocre; `41–60` útil; `61–80` válido; `81–99` north-star; `100` state-of-the-art. Falta dizer **onde** ela se aplica.
 - **A (recomendada):** o LLM classifica cada critério em quatro níveis (`sim`, `parcial`, `nao`, `not_reported`); o código converte, pondera e chega a um total de 0 a 100; a sua régua de sete faixas **rotula o total**. O modelo nunca escreve um número, e quatro níveis variam menos entre execuções do que sete.
@@ -92,7 +95,7 @@ Responda no formato `H1=A, H2=A, H3=B`, ou "todas as recomendadas". Cada respost
 - **B:** a mesma função genérica, mas com o DDL no repositório privado. O público documenta só o contrato e segue sem conseguir testar a gravação.
 - **C:** uma função de escrita por tabela, no privado (recomendação antiga, Q1 de `n8n-infra-proposal.md`). Cerca de dez funções e dez tabelas a escrever e manter.
 
-<mark>🟨 DECISÃO HUMANA H7</mark> — **Núcleos de etapa puros e teste de ponta a ponta sem n8n**
+**H7 — RESPONDIDA (Fonseca, 2026-11-10): A.** Núcleos de etapa puros e teste de ponta a ponta sem n8n: aprovados.
 
 - **Por que importa:** é a mudança que mais reduz risco. Hoje só se saberia se as etapas encaixam umas nas outras depois de montar tudo no n8n.
 - **A (recomendada):** aprovar. Cada etapa ganha uma função pura em `stages/` (entrada: job, configuração, linhas anteriores e a saída do LLM; saída: linhas a gravar e veredito). Um teste percorre um job sintético de `RECEIVED` a `QA_PASSED` num Postgres real, com as saídas de LLM vindas de fixtures. Primeira entrega: etapas 02 a 05.
@@ -150,12 +153,12 @@ Dois trilhos correm em paralelo: o **trilho A** não precisa do n8n (B03 a B09) 
 | ID | Entrega | Marco | Depende de | Validação e aceite |
 | --- | --- | --- | --- | --- |
 | B01 | Merge das PRs #70 e #71; abrir a PR do `04_INSIGHTS` | M1 | <mark>🟨 H1, H11</mark> | CI verde; conversa da #71 resolvida pelo Fonseca |
-| B02 | Arquivo de instruções para o Copilot, que só aponta para o `CLAUDE.md` e para este plano (sem copiar regra, para não divergir). **UNKNOWN:** quais arquivos o Copilot lê; a documentação do GitHub não abre no ambiente em que este plano foi escrito | M1 | <mark>🟨 H2</mark> | Conferir na documentação do GitHub antes de criar |
-| B03 | `numbers.js` lê o formato do idioma de origem | M2 | <mark>🟨 H3</mark> | Testes e mutação; `9.52` em inglês e `9,52` em português dão o mesmo valor; `1.234` nunca é adivinhado |
+| B02 | Arquivo de instruções para o Copilot, que só aponta para o `CLAUDE.md` e para este plano (sem copiar regra, para não divergir). **UNKNOWN:** quais arquivos o Copilot lê; a documentação do GitHub não abre no ambiente em que este plano foi escrito | M1 | H2 ✔ | Conferir na documentação do GitHub antes de criar |
+| B03 | `numbers.js` lê o formato do idioma de origem | M2 | H3 ✔ | Testes e mutação; `9.52` no trecho em inglês e `9,52` no texto em português dão o mesmo valor; cada texto é lido num só formato, nunca adivinhado |
 | B04 | Regra "texto é dado" nas três skills restantes e teste para todas | M2 | <mark>🟨 H11</mark> | `tests/skills` falha se uma skill não tiver a regra |
-| B05 | Contratos e validador do `05_SCORE` | M2 | <mark>🟨 H4, H8</mark> | 2 fixtures válidas e 2 inválidas por contrato; mutação |
+| B05 | Contratos e validador do `05_SCORE` | M2 | H4 ✔, <mark>🟨 H8</mark> | 2 fixtures válidas e 2 inválidas por contrato; mutação |
 | B06 | Migration 009: `replace_rows` e sua tabela, com rollback | M2 | <mark>🟨 H6</mark> | Testes em Postgres: rodar duas vezes não duplica; linha sem proveniência é recusada; `n8n_pipeline` só tem `EXECUTE` |
-| B07 | Núcleos das etapas 02 a 05 e o teste de ponta a ponta | M2 | <mark>🟨 H7</mark>, B03, B05 | Job sintético de `RECEIVED` a `INSIGHTS_RANKED` só por `set_status`; fecha a incógnita U9 |
+| B07 | Núcleos das etapas 02 a 05 e o teste de ponta a ponta | M2 | H7 ✔, B03, B05 | Job sintético de `RECEIVED` a `INSIGHTS_RANKED` só por `set_status`; fecha a incógnita U9 |
 | B08 | Conjunto adversarial sintético (§5, T7) | M2 | B07 | 100% dos casos ruins recusados; 0 caso válido reprovado |
 | B09 | Núcleos das etapas 06 a 09 (reusam validadores e render) | M2 | B07 | Job sintético até `QA_PASSED`; falhas injetadas levam a `RENDER_FAILED`, `QA_FAILED` e `NEEDS_REVIEW` |
 | B10 | `scripts/sanitize-workflow.js` com lista de permissão, e conferência do código embutido contra o repositório | M3 | <mark>🟨 H5</mark> | Recusa chave desconhecida, `pinData`, credencial e SQL fora das consultas permitidas; `--check` no CI |
@@ -181,7 +184,7 @@ Um item só é "feito" quando o controle correspondente está ativo **e** há um
 | S8 | Workflow lê ou altera o que não deve | `n8n_pipeline` só executa funções; nenhum privilégio de tabela; funções `SECURITY DEFINER` com `search_path` fixo | Ativo (VERIFIED) | Testes de migrations |
 | S9 | Export do n8n vaza credencial ou dado fixado | Sanitizador com lista de permissão, falha fechado | **Não existe** (B10) | `sanitize-workflow --check` no CI |
 | S10 | Código do n8n diverge do código testado | O nó de código é gerado a partir de `validators/` e `stages/`; o CI compara o hash | **Não existe** (B10); PROPOSED | Hash do código embutido igual ao do arquivo |
-| S11 | Dois agentes escrevem ou se aprovam | Papéis fixos; quem implementa não revisa; nenhum bot faz merge | **Pendente** (<mark>🟨 H2</mark>) | Cada PR declara implementador e revisor |
+| S11 | Dois agentes escrevem ou se aprovam | Papéis fixos; quem implementa não revisa; nenhum bot faz merge | Decidido em 2026-11-10 (H2 = A): o Claude Code implementa e o Copilot revisa | Cada PR declara implementador e revisor |
 | S12 | Dados de um cliente vistos por outro | Um banco por cliente | Decidido; sem workflow que o use (<mark>🟨 H15</mark>) | `CLAUDE.md`, Segurança |
 
 Fato que sustenta S6 e S10 (VERIFIED em `docs.n8n.io`, 2026-11-09): no n8n Cloud o nó de código não importa módulos externos (só `crypto` e `moment`), não lê arquivos e não faz requisição HTTP. Por isso os validadores são JavaScript puro, e por isso o código precisa ser embutido no workflow, onde pode divergir do repositório se for colado à mão.
@@ -219,7 +222,7 @@ As metas são PROPOSED; ajustá-las é do Fonseca. Valores de operação real (K
 
 | Objetivo | Resultados-chave |
 | --- | --- |
-| **O1. Trilho seguro** (M1) | KR1: ruleset ativo em `main` com os três checks · KR2: 100% das 10 PRs seguintes mergeadas com os três checks concluídos antes do merge (K1) · KR3: papéis dos agentes decididos e escritos |
+| **O1. Trilho seguro** (M1) | KR1: ruleset ativo em `main` com os três checks · KR2: 100% das 10 PRs seguintes mergeadas com os três checks concluídos antes do merge (K1) · KR3: papéis dos agentes decididos e escritos (feito em 2026-11-10, H2 = A) |
 | **O2. Pipeline sintético verde** (M2) | KR1: um job sintético de `RECEIVED` a `QA_PASSED` no CI · KR2: idempotência 1,00 em todas as etapas (K5) · KR3: 100% dos casos adversariais recusados e 0 caso válido reprovado (K3, K4) |
 | **O3. Fase 4 destravada** (M3) | KR1: as 7 incógnitas de `docs/n8n-sources.md` §2 resolvidas pelo export · KR2: `sanitize-workflow --check` no CI, com 0 credencial e 0 `pinData` · KR3: 100% do código embutido igual ao do repositório · KR4: um job sintético executado na instância de teste |
 
@@ -243,13 +246,13 @@ As metas são PROPOSED; ajustá-las é do Fonseca. Valores de operação real (K
 | # | Risco | Evidência | Mitigação | Decisão |
 | --- | --- | --- | --- | --- |
 | R1 | O n8n Cloud não entrega o texto do PDF por página; sem isso a citação literal por página não funciona | A documentação do *Extract From File* não diz (VERIFIED, 2026-11-09) | Amostra de PDF de duas páginas antes de escrever o `01_INGEST` | <mark>🟨 H5</mark> |
-| R2 | Números de papers em inglês reprovam no validador | `validators/numbers.js`: `9.52` é erro de formato por desenho | Formato declarado por job | <mark>🟨 H3</mark> |
+| R2 | Números de papers em inglês reprovam no validador | `validators/numbers.js`: `9.52` é erro de formato por desenho | O trecho de origem é lido no formato inglês (B03) | H3 ✔ |
 | R3 | Nenhuma etapa consegue gravar o que produz | Lacuna L1 de `docs/n8n-infra-proposal.md` | `replace_rows` público | <mark>🟨 H6</mark> |
 | R4 | Os prompts nunca rodaram contra um modelo | `skills/README.md` | Avaliação com papers sintéticos, medida pelos validadores | <mark>🟨 H14</mark> |
 | R5 | Não há como transformar o SVG em imagem publicável | Incógnita U4; o *Edit Image* não cita SVG como entrada | Testar na instância de teste ou usar serviço externo | <mark>🟨 H12</mark> |
 | R6 | Código colado no n8n diverge do código testado | O nó de código do n8n Cloud não importa módulos | Código gerado e hash conferido no CI (S10) | B10 |
 | R7 | Um só mantenedor, e merges antes dos checks | K1 | Ruleset | <mark>🟨 H1</mark> |
-| R8 | Dois agentes atuando sem papéis definidos | `CLAUDE.md` §2 prevê um único escritor | Papéis fixos e separação entre quem escreve e quem revisa | <mark>🟨 H2</mark> |
+| R8 | Dois agentes atuando sem papéis definidos | `CLAUDE.md` §2 prevê um único escritor | Papéis fixos e separação entre quem escreve e quem revisa | H2 ✔ |
 
 ## 8. Apêndice legível por máquina
 
@@ -263,12 +266,12 @@ plan:
   precedence: CLAUDE.md
 decisions:
   - {id: H1,  priority: P0, kind: action,   topic: protecao de main,                 recommended: A, answer: null}
-  - {id: H2,  priority: P0, kind: decision, topic: papeis dos agentes,               recommended: A, answer: null}
-  - {id: H3,  priority: P0, kind: decision, topic: idioma e formato dos numeros,     recommended: A, answer: null}
-  - {id: H4,  priority: P0, kind: decision, topic: escala do 05_SCORE,               recommended: A, answer: null}
+  - {id: H2,  priority: P0, kind: decision, topic: papeis dos agentes,               recommended: A, answer: A, answered_on: 2026-11-10}
+  - {id: H3,  priority: P0, kind: decision, topic: idioma e formato dos numeros,     recommended: A, answer: todos os papers em ingles, answered_on: 2026-11-10}
+  - {id: H4,  priority: P0, kind: decision, topic: escala do 05_SCORE,               recommended: A, answer: A, answered_on: 2026-11-10}
   - {id: H5,  priority: P0, kind: action,   topic: export do n8n e amostra de PDF,   recommended: A, answer: null}
   - {id: H6,  priority: P1, kind: decision, topic: gravacao das linhas,              recommended: A, answer: null}
-  - {id: H7,  priority: P1, kind: decision, topic: nucleos de etapa e teste E2E,     recommended: A, answer: null}
+  - {id: H7,  priority: P1, kind: decision, topic: nucleos de etapa e teste E2E,     recommended: A, answer: A, answered_on: 2026-11-10}
   - {id: H8,  priority: P1, kind: decision, topic: pesos e ordenacao dos insights,   recommended: A, answer: null}
   - {id: H9,  priority: P1, kind: decision, topic: 03_VERIFY sem LLM,                recommended: A, answer: null}
   - {id: H10, priority: P1, kind: decision, topic: instancia de teste do n8n,        recommended: A, answer: null}
