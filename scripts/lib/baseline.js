@@ -89,6 +89,7 @@ function loadVerified(dir) {
 // The closed list of prompt keys of CLAUDE.md section 9 that have a skill. A skill folder that is not
 // here is an error, so a new prompt is a reviewed change to this table.
 const PROMPT_KEYS = {
+  'evidence-extractor': 'prompt.02_extract',
   'art-director': 'prompt.06_visual',
   'copywriter-cfm': 'prompt.07_covers',
   'qa-validator': 'prompt.09_qa',
