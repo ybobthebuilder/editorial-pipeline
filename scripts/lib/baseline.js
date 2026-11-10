@@ -90,6 +90,7 @@ function loadVerified(dir) {
 // here is an error, so a new prompt is a reviewed change to this table.
 const PROMPT_KEYS = {
   'evidence-extractor': 'prompt.02_extract',
+  'insight-generator': 'prompt.04_insights',
   'art-director': 'prompt.06_visual',
   'copywriter-cfm': 'prompt.07_covers',
   'qa-validator': 'prompt.09_qa',

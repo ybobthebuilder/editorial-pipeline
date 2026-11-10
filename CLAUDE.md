@@ -123,7 +123,7 @@ Validações **determinísticas**, nunca confiando na saída crua do LLM:
 - `verification_thresholds` — limites de confiança
 - `hook_rules` — regras de hook para o orquestrador
 - `archetypes` — arquétipos de paper
-- `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa` — vêm de `skills/*/SKILL.md`, não de arquivos em `prompts/`. Hoje só 02, 06, 07 e 09 têm skill
+- `prompt.02_extract`, `prompt.03_verify`, `prompt.04_insights`, `prompt.06_visual`, `prompt.07_covers`, `prompt.09_qa` — vêm de `skills/*/SKILL.md`, não de arquivos em `prompts/`. Hoje só 02, 04, 06, 07 e 09 têm skill
 - `cfm_blocklist`, `cfm_footer` — termos proibidos e texto do rodapé das regras do CFM, que se aplicam ao sistema. `cfm_blocklist` tem conteúdo definido pelo Fonseca em 2026-10-22, em `config/baseline/cfm_blocklist.json`; a fonte normativa da regra do CFM ainda não foi verificada. `cfm_footer` tem o formato definido pelo Fonseca (`[Nome] – MÉDICO – CRM/[UF] [Número]`), mas a chave ainda não existe em `config/baseline/` e a origem de Nome, UF e Número está por definir
 
 ## 10. Contratos e Validadores
@@ -225,6 +225,7 @@ editorial-pipeline/
 │   ├── art-director/SKILL.md       # prompt.06_visual
 │   ├── copywriter-cfm/SKILL.md     # prompt.07_covers
 │   ├── evidence-extractor/SKILL.md # prompt.02_extract
+│   ├── insight-generator/SKILL.md  # prompt.04_insights
 │   ├── qa-validator/SKILL.md       # prompt.09_qa
 │   └── .checksums                  # sha256sum dos SKILL.md
 ├── validators/                     # JS puro, sem require: schema.js e uma validação por regra que o schema não expressa; *.test.js ao lado de cada um
@@ -316,7 +317,7 @@ _Estado em 2026-11-07 (atualizar quando uma fase fechar):_
 0. **Scaffold** dos repos, docs, CLAUDE.md, gitleaks, .env.example — ✔
 1. **Banco** — migrations, RLS, roles, funções, seed-baseline, verify-baseline — ✔ (migrations 001 a 008)
 2. **Validators** — JS puro com testes — ✔
-3. **Contratos** — JSON Schema + prompts (`skills/`) — contratos ✔ exceto o do `05_SCORE`; prompts 02, 06, 07 e 09 ✔, 03 e 04 pendentes
+3. **Contratos** — JSON Schema + prompts (`skills/`) — contratos ✔ exceto o do `05_SCORE`; prompts 02, 04, 06, 07 e 09 ✔, 03 pendente
 4. **Infraestrutura n8n** — 90_DB_HELPERS, 99_ERROR_HANDLER, _TEMPLATE_STAGE — bloqueada: falta a amostra de export do n8n
 5. **Etapas 01, 02** — ingest, extract — pendente (contratos prontos)
 6. **Etapas 03, 04, 05** — verify, insights, score — pendente (03 e 04 com contrato e validador; 05 sem contrato)
