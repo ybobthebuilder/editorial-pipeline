@@ -18,6 +18,7 @@ Cada `SKILL.md` é o **prompt de sistema e a fronteira** de um único nó de LLM
 | Arquivo | Estágio | O que o LLM faz | O que o código faz |
 | --- | --- | --- | --- |
 | `evidence-extractor` | 02_EXTRACT | extrai afirmações com o trecho literal, a página (posição no arquivo) e os números crus | confere o trecho (`citation.js`) e os números (`numbers.js`), atribui `evidence_id` e a proveniência |
+| `insight-generator` | 04_INSIGHTS | escreve insights curtos que sintetizam evidências `VERIFIED`, cada um ligado às evidências que o sustentam | numera o insight, atribui a proveniência, confere ids e números (`insight.js`) e ranqueia (05_SCORE) |
 | `art-director` | 06_VISUAL | escolhe `grammar_id` numa lista fechada | valida o enum, define template e cores |
 | `copywriter-cfm` | 07_COVERS | escreve o texto dos slots `claim` (inclusive `cta_label`, quando o template o tem), o `alt_text` e a legenda (`caption`, D-17) | limites de linha, limites do `cta` (40) e da legenda (300), números (`numbers.js`), termos proibidos, URL, `@`, `#` e telefone (`copy.js`) |
 | `qa-validator` | 09_QA | só o juízo semântico | geometria, contraste, números, enums e o `passed` final |
