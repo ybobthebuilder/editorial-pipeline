@@ -192,6 +192,7 @@ editorial-pipeline/
 │   ├── STAGES.md                   # Cartões de etapa (01_INGEST, 02_EXTRACT, ..., 00_ORCHESTRATOR)
 │   ├── PUBLIC_PRIVATE.md           # Fronteira de repos e schemas
 │   ├── DECISIONS.md                # Registro de decisões (D-nn, U-nn, U11-x), só acréscimo
+│   ├── IMPLEMENTATION_PLAN.md      # Plano priorizado (PROPOSED): decisões humanas pendentes, backlog, segurança, testes e OKRs
 │   ├── ALUCINAÇÃO_GUARD.md         # Checklist de proibições
 │   ├── API_CONTRACTS.md            # (planejado) O que cada stage recebe/devolve
 │   ├── SECURITY.md                 # Reporte de vulnerabilidade, credencial exposta, defesas e auditoria de 2026-11-07
