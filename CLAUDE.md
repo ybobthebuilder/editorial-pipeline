@@ -40,6 +40,15 @@ Before a candidate commit exists, review the proposal document by its SHA-256 di
 
 The public baseline remains independent of editorial-intel. A private-repository 404 leaves existence and access UNKNOWN; it neither authorizes private access nor supplies public implementation evidence.
 
+### Conduta de desenvolvimento
+
+Quatro diretrizes para os papéis que escrevem ou revisam código (master, implementer e reviewer), adaptadas das diretrizes publicadas em `multica-ai/andrej-karpathy-skills` (commit `2c60614`; licença MIT declarada no `plugin.json`; texto reescrito para este projeto, não copiado). Orientam o jeito de trabalhar e não prevalecem sobre as regras deste arquivo nem sobre a issue atribuída.
+
+1. **Pensar antes.** Registre na PR as suposições e as interpretações alternativas, rotuladas PROPOSED ou UNKNOWN; na dúvida, pergunte (§10). Se houver um caminho mais simples que o da issue, diga-o na PR e implemente a issue como escrita: quem decide é o Fonseca.
+2. **Simplicidade.** Faça o mínimo que cumpre os critérios de aceitação: sem funcionalidade, abstração de uso único nem opção de configuração que a issue não peça. Não é excesso o que este arquivo exige: falhar fechado e `TypeError` nos validadores (§10), enums fechados (§8) e configuração em camadas (§9).
+3. **Mudança cirúrgica.** Cada linha alterada rastreia para um critério da issue; o reviewer registra como achado toda linha que não rastrear. Siga o estilo do código existente. Remova o que a própria mudança deixou sem uso; código morto anterior só se aponta na PR, não se apaga.
+4. **Objetivo verificável.** O critério de sucesso é um comando com a saída esperada. A correção de um defeito começa por um teste que o reproduz. A repetição de tentativas é limitada: no máximo dois ciclos de correção por tarefa; depois, o que sobrar volta ao Fonseca.
+
 ## 3. LLM Extrai, Código Calcula
 
 - LLM: extração bruta, classificação

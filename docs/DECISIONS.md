@@ -103,6 +103,7 @@ Estas decisões estão nos documentos, mas sem `D-nn` nem `U-nn`. Não entraram 
 | 2026-11-07 | A página citada é a numeração impressa na página, e não a posição no arquivo. Em aberto: como o número impresso é obtido (`citation.js` usa a posição no arquivo). | Fonseca | `docs/evidence-contract-proposal.md` §6 |
 | 2026-11-07 | Itens A1 a A6, B1 e C1 a C4 da atualização do `CLAUDE.md` (v1.2), e a ordem S4, S3, S5, S7, S6 para as sugestões. | Fonseca | `docs/claude-md-update-proposal.md` (status no topo) |
 | 2026-11-07 | `page` é a posição da página no arquivo PDF, a partir de 1, "se for mais fácil"; o número impresso na página não entra no contrato. Substitui a linha anterior sobre a numeração impressa, cujo ponto em aberto fica fechado. | Fonseca | `docs/evidence-contract-proposal.md` §6 |
+| 2026-11-11 | As quatro diretrizes de conduta de `multica-ai/andrej-karpathy-skills` (commit `2c60614`) entram adaptadas em `CLAUDE.md` §2 («Conduta de desenvolvimento»); não entram como plugin, como `skills/<nome>` nem anexadas ao `CLAUDE.md`. | Fonseca | `CLAUDE.md` §2 |
 
 ## Divergências encontradas nas fontes
 
