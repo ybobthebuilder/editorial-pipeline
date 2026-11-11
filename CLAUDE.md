@@ -244,6 +244,7 @@ editorial-pipeline/
 │   ├── verify-baseline.js          # Confere arquivos, .checksums e banco
 │   ├── lib/baseline.js
 │   ├── extract-font-metrics.js     # Ferramenta de design-time: tabela de larguras de geometry.js
+│   ├── make-synthetic-pdfs.js      # Gera os PDFs de fixtures/synthetic/papers (sem dependências, determinístico)
 │   ├── hooks/pre-commit            # gitleaks no commit (git config core.hooksPath scripts/hooks)
 │   ├── n8n-push.ts                 # (planejado) Cria/atualiza workflows via API
 │   ├── n8n-pull.ts                 # (planejado) Baixa e sanitiza
@@ -262,9 +263,10 @@ editorial-pipeline/
 ├── fixtures/synthetic/
 │   ├── contracts/                  # 2 fixtures válidas e 2 inválidas por contrato
 │   ├── render/                     # cover_specs sintéticos dos 6 templates
-│   ├── papers/                     # (planejado) Papers fictícios
+│   ├── papers/                     # PDFs sintéticos de 2 páginas: 1 de controle e 7 com injeção indireta (OWASP LLM01), gerados por scripts/make-synthetic-pdfs.js
 │   └── gabaritos.json              # (planejado) Respostas esperadas
 ├── .env.example
+├── .gitattributes                  # PDFs sintéticos como binário: sem conversão de fim de linha
 ├── .gitignore
 └── .gitleaks.toml
 ```
