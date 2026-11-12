@@ -15,6 +15,7 @@
 // Decisions: 40 characters for cta (Fonseca, 2026-10-23); 300 for caption (Q3, approved); no hashtag
 // and no mention in the caption in v0.1 (Q4, approved); URL, @, # and phone in the CTA (Q7, approved).
 // No link in the caption, the cover text or alt_text (Fonseca, 2026-11-10); textual references to the study pass, and a phone number in the caption is still undecided, so it is not checked.
+// Symbol checks use an NFKC copy with combining marks and format characters removed; source text and length checks remain unchanged.
 //
 // Known false positives, on purpose (a rejected text is regenerated; a text that slips through is not
 // caught): "p.ex" and "Sr.Silva" read as domains and are now refused in the caption too, four numbers
@@ -34,6 +35,11 @@ const PHONE_RUN = /\p{Nd}[\p{Nd}\s().\-\u2010-\u2015\u2212]{6,}\p{Nd}/gu;
 
 /** Count Unicode code points, including any surrounding whitespace. */
 const codePoints = (text) => Array.from(text).length;
+
+/** Canonicalize only detector input; callers retain the original text. */
+function canonicalizeForChecks(text) {
+  return text.normalize('NFKC').replace(/[\p{M}\p{Cf}]/gu, '');
+}
 
 /** @throws {TypeError} If value is not a string, naming the field supplied in what. */
 function assertString(value, what) {
@@ -58,10 +64,11 @@ function hasPhone(text) {
  * Both ASCII and fullwidth at-signs and number signs count.
  */
 function symbols(text, prefix, errors, { url, phone }) {
-  if (url && hasUrl(text)) errors.push({ reason: `${prefix}_com_url` });
-  if (MENTION.test(text)) errors.push({ reason: `${prefix}_com_${prefix === 'cta' ? 'arroba' : 'mencao'}` });
-  if (HASHTAG.test(text)) errors.push({ reason: `${prefix}_com_hashtag` });
-  if (phone && hasPhone(text)) errors.push({ reason: `${prefix}_com_telefone` });
+  const canonicalText = canonicalizeForChecks(text);
+  if (url && hasUrl(canonicalText)) errors.push({ reason: `${prefix}_com_url` });
+  if (MENTION.test(canonicalText)) errors.push({ reason: `${prefix}_com_${prefix === 'cta' ? 'arroba' : 'mencao'}` });
+  if (HASHTAG.test(canonicalText)) errors.push({ reason: `${prefix}_com_hashtag` });
+  if (phone && hasPhone(canonicalText)) errors.push({ reason: `${prefix}_com_telefone` });
 }
 
 /**
@@ -144,10 +151,10 @@ function checkCoverText(coverSpec) {
     slot.kind === 'claim' &&
     slot.slot_id !== 'cta_label' &&
     Array.isArray(slot.lines) &&
-    slot.lines.some((line) => hasUrl(line)),
+    slot.lines.some((line) => hasUrl(canonicalizeForChecks(line))),
   );
   if (hasClaimUrl) errors.push({ reason: 'texto_da_capa_com_url' });
-  if (hasUrl(coverSpec.alt_text)) errors.push({ reason: 'alt_text_com_url' });
+  if (hasUrl(canonicalizeForChecks(coverSpec.alt_text))) errors.push({ reason: 'alt_text_com_url' });
   return { passed: errors.length === 0, errors };
 }
 

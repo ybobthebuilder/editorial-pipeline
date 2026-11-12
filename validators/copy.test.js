@@ -68,6 +68,12 @@ test('a CTA with a hashtag is refused, in both widths of the number sign', () =>
   for (const text of ['#tag', 'salve #1', 'a#b', '＃tag', '#']) assert.ok(cta(text).includes('cta_com_hashtag'), text);
 });
 
+test('all CTA symbol checks use NFKC text with combining marks and format characters removed', () => {
+  assert.ok(cta('﹫perfil').includes('cta_com_arroba'));
+  assert.ok(cta('﹟tag').includes('cta_com_hashtag'));
+  assert.ok(cta('¹²³⁴⁵⁶⁷⁸').includes('cta_com_telefone'));
+});
+
 test('a CTA with a phone number is refused: eight digits or more in one run of digits and separators', () => {
   // typographic dashes between the digits do not split the number (found in review of #44)
   for (const dash of ['\u2010', '\u2011', '\u2012', '\u2013', '\u2014', '\u2015', '\u2212']) {
@@ -176,6 +182,24 @@ test('caption: a phone number is still not checked (undecided)', () => {
 test('caption: a textual reference to the study passes', () => {
   for (const text of ['Fonte: Smith et al., N Engl J Med, 2025.', 'doi:10.1056/NEJMoa2034577']) {
     assert.deepEqual(caption(text), [], text);
+  }
+});
+
+test('Unicode domain variants are refused in the caption, claim text, and alt_text', () => {
+  const variants = [
+    'cafe\u0301.example',
+    'x\u0301.example',
+    'nejm\u200b.org',
+    'nejm\u200c.org',
+    'nejm\u200d.org',
+    'nejm\uFF0Eorg',
+    'nejm\u2024org',
+  ];
+  for (const text of variants) {
+    assert.ok(cta(text).includes('cta_com_url'), text);
+    assert.deepEqual(caption(text), ['legenda_com_url'], text);
+    assert.deepEqual(coverText(coverSpec([{ slot_id: 'headline', kind: 'claim', lines: [text] }])), ['texto_da_capa_com_url'], text);
+    assert.deepEqual(coverText(coverSpec(undefined, text)), ['alt_text_com_url'], text);
   }
 });
 
